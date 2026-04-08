@@ -1,0 +1,1942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ALM Phase 2 — Synthetic Data Strategy v2.0</title>
+<meta name="description" content="Phase 2 strategy and planning document for the ALM synthetic data pipeline — covering MAL seed authoring, Jinja2 expansion, LLM variant generation, validation, and dataset registry." />
+<meta name="author" content="Metafore AI — ALM Team" />
+<meta property="og:title" content="ALM Phase 2 — Synthetic Data Strategy" />
+<meta property="og:description" content="Living technical report for MAL synthetic data pipeline: seeds, Jinja2 templates, LLM expansion, validation, and registry design." />
+<meta property="og:type" content="article" />
+<meta name="theme-color" content="#12314a" />
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  /* ─── Design tokens ──────────────────────────────────────────────────── */
+  :root {
+    --brand:      #12314a;
+    --accent:     #0f766e;
+    --gold:       #a67c2d;
+    --rose:       #9b3a4a;
+    --light:      #f6f8fb;
+    --light-teal: #eef7f5;
+    --border:     #d7e1ea;
+    --text:       #1f2937;
+    --muted:      #617487;
+
+    --ok-bg:      #e9f6f3;   --ok-tx:      #0f5c56;
+    --warn-bg:    #fff8e8;   --warn-tx:    #8a5a12;
+    --risk-bg:    #fcf1f1;   --risk-tx:    #8f2d2d;
+    --plan-bg:    #f4f1fb;   --plan-tx:    #5b4aa2;
+    --info-bg:    #eff6ff;   --info-tx:    #1e4fa0;
+
+    --now-col:    #12314a;
+    --next-col:   #196b6b;
+    --later-col:  #4a6b35;
+  }
+
+  /* ─── Reset ──────────────────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: "Segoe UI", system-ui, sans-serif;
+    background: #e8eef5;
+    color: var(--text);
+    font-size: 13.5px;
+    line-height: 1.65;
+  }
+
+  /* ─── Page shell ─────────────────────────────────────────────────────── */
+  .page {
+    max-width: 1140px;
+    margin: 30px auto;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 12px 40px rgba(15, 23, 42, 0.09);
+    overflow: hidden;
+  }
+
+  /* ─── Cover ─────────────────────────────────────────────────────────── */
+  .cover {
+    background: linear-gradient(135deg, #102a43 0%, #174e5e 52%, #2d6f6b 100%);
+    color: #fff;
+    padding: 52px 56px 46px;
+  }
+  .cover .eyebrow {
+    font-size: 10.5px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    opacity: 0.65;
+    margin-bottom: 12px;
+  }
+  .cover h1 {
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 1.22;
+    margin-bottom: 14px;
+  }
+  .cover .sub {
+    font-size: 14.5px;
+    max-width: 860px;
+    opacity: 0.88;
+    line-height: 1.6;
+  }
+  .cover .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 26px;
+  }
+  .cover .meta span {
+    background: rgba(255,255,255,0.14);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 5px;
+    padding: 4px 11px;
+    font-size: 11.5px;
+  }
+
+  /* ─── Table of Contents ──────────────────────────────────────────────── */
+  .toc-wrap {
+    background: var(--light);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 56px 16px;
+  }
+  .toc-label {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1.5px; color: var(--muted); margin-bottom: 10px;
+  }
+  .toc-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 30px;
+  }
+  .toc-col { display: flex; flex-direction: column; gap: 14px; }
+  .toc-group-head {
+    font-size: 9.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1.5px; color: var(--accent);
+    padding-bottom: 5px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 4px;
+  }
+  .toc-pill {
+    font-size: 12px;
+    color: var(--brand);
+    text-decoration: none;
+    padding: 2px 0;
+    display: block;
+    border-bottom: 1px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .toc-pill:hover { color: var(--accent); border-bottom-color: var(--accent); }
+  .toc-num { color: var(--muted); font-size: 10.5px; margin-right: 6px; font-weight: 700; }
+
+  /* ─── Legend banner ──────────────────────────────────────────────────── */
+  .legend-bar {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    padding: 10px 56px;
+    background: #fff;
+    border-bottom: 2px solid var(--border);
+    align-items: center;
+  }
+  .legend-label {
+    font-size: 10px; color: var(--muted); font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px; flex-shrink: 0;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 12px; color: var(--muted);
+  }
+
+  /* ─── Body wrapper ───────────────────────────────────────────────────── */
+  .body { padding: 48px 56px; }
+
+  /* ─── Headings ───────────────────────────────────────────────────────── */
+  h2 {
+    font-size: 17.5px;
+    font-weight: 700;
+    color: var(--brand);
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 6px;
+    margin: 46px 0 18px;
+    position: relative;
+  }
+  h2::after {
+    content: "";
+    position: absolute;
+    left: 0; bottom: -2px;
+    width: 56px; height: 2px;
+    background: var(--gold);
+  }
+  .part-div + h2 { margin-top: 0; }
+
+  /* ─── Part dividers ──────────────────────────────────────────────────── */
+  .part-div {
+    margin: 44px -56px 20px;
+    padding: 12px 56px;
+    background: linear-gradient(135deg, #0e2436 0%, #18465a 100%);
+    color: #fff;
+  }
+  .part-div:first-child { margin-top: 0; }
+  .pd-num {
+    font-size: 9px; font-weight: 700; letter-spacing: 2.5px;
+    text-transform: uppercase; opacity: 0.5; margin-bottom: 2px;
+  }
+  .pd-title { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+  .pd-desc { font-size: 12px; opacity: 0.72; }
+
+  h3 {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--accent);
+    margin: 22px 0 9px;
+  }
+  h4 {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--brand);
+    margin: 14px 0 7px;
+  }
+
+  p  { margin-bottom: 11px; }
+  ul, ol { padding-left: 20px; margin-bottom: 11px; }
+  li { margin-bottom: 4px; }
+
+  /* ─── Tables ─────────────────────────────────────────────────────────── */
+  table { width: 100%; border-collapse: collapse; margin: 14px 0 22px; font-size: 12.5px; }
+  th {
+    background: var(--brand);
+    color: #fff;
+    padding: 9px 13px;
+    text-align: left;
+    font-size: 11.5px;
+    letter-spacing: 0.3px;
+  }
+  td { padding: 8px 13px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:nth-child(even) td { background: var(--light); }
+  tr:hover td { background: var(--light-teal); }
+
+  /* ─── Coverage table ─────────────────────────────────────────────────── */
+  .coverage-table th { font-size: 10.5px; text-align: center; }
+  .coverage-table th:first-child { text-align: left; }
+  .coverage-table td { text-align: center; font-size: 12px; font-weight: 600; }
+  .coverage-table td.construct-name { text-align: left; font-weight: 700; color: var(--brand); font-size: 12.5px; background: #fff; }
+  .coverage-table td.has-ex { background: var(--ok-bg) !important; color: var(--ok-tx); }
+  .coverage-table td.planned { background: var(--warn-bg) !important; color: var(--warn-tx); }
+  .coverage-table td.not-yet { background: var(--light) !important; color: var(--muted); font-weight: 400; font-size: 11px; }
+
+  /* ─── Methods table rows ─────────────────────────────────────────────── */
+  .methods-table tr.core td   { background: var(--ok-bg) !important; }
+  .methods-table tr.support td { background: var(--plan-bg) !important; }
+  .methods-table tr.core:hover td, .methods-table tr.support:hover td { background: var(--light-teal) !important; }
+
+  /* ─── Inline tags ────────────────────────────────────────────────────── */
+  .tag {
+    display: inline-block;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-right: 6px;
+  }
+  .tag-confirmed { background: var(--ok-bg);   color: var(--ok-tx);   }
+  .tag-planned   { background: var(--plan-bg);  color: var(--plan-tx); }
+  .tag-direction { background: var(--light-teal); color: #0f5c56;      }
+  .tag-open      { background: var(--warn-bg);  color: var(--warn-tx); }
+
+  /* ─── Exec list ──────────────────────────────────────────────────────── */
+  .exec-list { display: flex; flex-direction: column; gap: 8px; }
+  .exec-list li {
+    list-style: none;
+    background: var(--light);
+    border-left: 4px solid var(--accent);
+    border-radius: 0 6px 6px 0;
+    padding: 11px 16px;
+  }
+
+  /* ─── Note callout ───────────────────────────────────────────────────── */
+  .note {
+    border-left: 4px solid var(--accent);
+    background: var(--light-teal);
+    padding: 14px 16px;
+    border-radius: 0 6px 6px 0;
+    margin: 12px 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .note-line { font-size: 12.5px; }
+
+  /* ─── Metric cards ───────────────────────────────────────────────────── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; margin: 13px 0 20px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 13px; margin: 13px 0 20px; }
+  .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 13px; margin: 13px 0 20px; }
+
+  .metric-card {
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--accent);
+    border-radius: 8px;
+    background: linear-gradient(180deg, #fff 0%, #f8fbfd 100%);
+    padding: 18px 20px;
+  }
+  .metric-card .m-label {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1.1px; color: var(--muted); margin-bottom: 8px;
+  }
+  .metric-card .m-value {
+    font-size: 22px; font-weight: 700; color: var(--brand);
+    margin-bottom: 6px; line-height: 1.1;
+  }
+  .metric-card .m-desc { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+  .metric-card.tracker { border-top-color: var(--gold); }
+  .metric-card.tracker .m-value { font-size: 18px; color: var(--gold); }
+
+  /* ─── Info cards ─────────────────────────────────────────────────────── */
+  .card {
+    border: 1px solid var(--border);
+    border-top: 3px solid rgba(15,118,110,0.35);
+    border-radius: 8px;
+    padding: 15px 17px;
+    background: #fff;
+    font-size: 12.5px;
+  }
+  .card .ctag {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1px; margin-bottom: 5px;
+    color: var(--accent);
+  }
+  .card .ctag.gold  { color: var(--gold); }
+  .card .ctag.rose  { color: var(--rose); }
+  .card .ctag.navy  { color: var(--brand); }
+  .card .ctag.plan  { color: var(--plan-tx); }
+  .card .ctag.warn  { color: var(--warn-tx); }
+
+  /* ─── Stat pill ──────────────────────────────────────────────────────── */
+  .stat-pill {
+    display: inline-block;
+    margin-top: 10px;
+    border-radius: 4px;
+    padding: 5px 10px;
+    font-size: 11.5px;
+    font-weight: 600;
+    border: 1px solid #b2ddc8;
+    background: #fff;
+    color: var(--ok-tx);
+  }
+  .stat-pill.warn { background: var(--warn-bg); border-color: #f0d080; color: var(--warn-tx); }
+  .stat-pill.plan { background: var(--plan-bg); border-color: #c4b5fd; color: var(--plan-tx); }
+
+  /* ─── Phase strip ────────────────────────────────────────────────────── */
+  .phase-strip {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin: 15px 0 22px;
+  }
+  .phase-strip.cols-4 { grid-template-columns: repeat(4, 1fr); }
+  .phase-box {
+    border-radius: 8px;
+    padding: 14px 12px;
+    border: 1px solid var(--border);
+    background: linear-gradient(180deg, #fff 0%, #f9fbfd 100%);
+    text-align: center;
+  }
+  .phase-box .n {
+    display: inline-flex;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--brand), #1e5574);
+    color: #fff;
+    font-weight: 700;
+    font-size: 12px;
+    margin-bottom: 9px;
+  }
+  .phase-box h4  { font-size: 12px; margin-bottom: 6px; text-align: left; }
+  .phase-box p   { font-size: 11.5px; color: var(--muted); text-align: left; margin-bottom: 0; }
+
+  /* ─── Diagram box ────────────────────────────────────────────────────── */
+  .diagram-box {
+    background: linear-gradient(180deg, #f8fafc 0%, #f2f7fb 100%);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 22px 16px 18px;
+    margin: 14px 0 26px;
+    overflow-x: auto;
+  }
+  .diagram-label {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--muted);
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed var(--border);
+  }
+
+  /* ─── Timeline / Now-Next-Later ──────────────────────────────────────── */
+  .timeline-strip {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+    margin: 14px 0 22px;
+  }
+  .timeline-box {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+    overflow: hidden;
+  }
+  .timeline-head {
+    padding: 11px 15px;
+    color: #fff;
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .timeline-body { padding: 13px 15px; }
+  .timeline-body ul { margin-bottom: 0; }
+  .timeline-body li { font-size: 12.5px; margin-bottom: 5px; }
+
+  /* ─── Open-item blocks ───────────────────────────────────────────────── */
+  .oi {
+    display: grid;
+    grid-template-columns: 72px 1fr;
+    gap: 10px;
+    align-items: start;
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    font-size: 12.5px;
+  }
+  .sev {
+    display: inline-block;
+    border-radius: 4px;
+    padding: 3px 7px;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    text-align: center;
+  }
+  .sev-high { background: var(--risk-bg);  color: var(--risk-tx); }
+  .sev-mid  { background: var(--warn-bg);  color: var(--warn-tx); }
+  .sev-plan { background: var(--plan-bg);  color: var(--plan-tx); }
+  .oi-high  { background: #fff4f4; border-left: 3px solid #e57373; }
+  .oi-mid   { background: #fffbeb; border-left: 3px solid #f6c444; }
+  .oi-plan  { background: var(--plan-bg); border-left: 3px solid #a78bfa; }
+
+  /* ─── Recommendation blocks ──────────────────────────────────────────── */
+  .rec {
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+    font-size: 13px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .rec .rt { font-weight: 700; display: block; margin-bottom: 4px; color: var(--brand); }
+  .rec-go   { background: var(--ok-bg);   border: 1px solid #b9ddd7; }
+  .rec-keep { background: var(--light-teal); border: 1px solid #aad7cf; }
+  .rec-next { background: var(--plan-bg); border: 1px solid #d7caef; }
+  .rec-tag  {
+    border-radius: 4px;
+    padding: 3px 9px;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    flex-shrink: 0;
+    color: #fff;
+  }
+  .tag-go   { background: #0f766e; }
+  .tag-keep { background: var(--now-col); }
+  .tag-next { background: #6d5ca8; }
+
+  /* ─── Roadmap ────────────────────────────────────────────────────────── */
+  .roadmap { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin: 14px 0 30px; }
+  .rm-col  { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; font-size: 12.5px; }
+  .rm-head { padding: 11px 15px; color: #fff; }
+  .rm-head .rmlabel  { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; opacity: 0.75; margin-bottom: 2px; }
+  .rm-head .rmtitle  { font-size: 14px; font-weight: 700; }
+  .rm-body { padding: 12px 15px; background: #fff; display: flex; flex-direction: column; gap: 0; }
+  .rm-item {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .rm-item:last-child { border-bottom: none; }
+  .rm-item .rm-title { font-weight: 600; color: var(--brand); font-size: 12.5px; }
+  .rm-item .rm-desc  { color: var(--muted); font-size: 11.5px; margin-top: 2px; }
+
+  /* ─── Code / pre ─────────────────────────────────────────────────────── */
+  .pre-wrap { margin: 12px 0 20px; border-radius: 8px; overflow: hidden; border: 1px solid #1e3a52; }
+  .pre-header {
+    background: #1a3048;
+    color: rgba(255,255,255,0.55);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 7px 14px;
+    border-bottom: 1px solid #0f2235;
+  }
+  pre {
+    background: #112033;
+    color: #d4e6f0;
+    padding: 14px 16px;
+    overflow-x: auto;
+    font-size: 12px;
+    font-family: "Cascadia Code", Consolas, monospace;
+    line-height: 1.6;
+    margin: 0;
+    white-space: pre-wrap;
+  }
+
+  code {
+    background: #edf3f7;
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-size: 12px;
+    font-family: "Cascadia Code", Consolas, monospace;
+    color: var(--brand);
+  }
+
+  /* ─── Example pair card ──────────────────────────────────────────────── */
+  .example-pair {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .ep-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 16px;
+    background: var(--light);
+    border-bottom: 1px solid var(--border);
+  }
+  .ep-type {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1px; border-radius: 4px; padding: 2px 8px;
+  }
+  .ep-type.create   { background: var(--ok-bg);   color: var(--ok-tx);   }
+  .ep-type.policy   { background: var(--warn-bg);  color: var(--warn-tx); }
+  .ep-type.repair   { background: var(--risk-bg);  color: var(--risk-tx); }
+  .ep-type.explain  { background: var(--plan-bg);  color: var(--plan-tx); }
+  .ep-type.modify   { background: var(--info-bg);  color: var(--info-tx); }
+  .ep-type.disambig { background: #fdf4ff; color: #7c3aed; }
+  .ep-title { font-weight: 700; font-size: 13px; color: var(--brand); }
+  .ep-body  { display: grid; grid-template-columns: 1fr 1fr; }
+  .ep-col   { padding: 13px 16px; }
+  .ep-col:first-child { border-right: 1px solid var(--border); }
+  .ep-label {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1px; color: var(--muted); margin-bottom: 8px;
+  }
+  .ep-text  { font-size: 12.5px; line-height: 1.55; }
+  .ep-code  {
+    font-family: "Cascadia Code", Consolas, monospace;
+    font-size: 11.5px;
+    background: #112033;
+    color: #c9dfe9;
+    border-radius: 6px;
+    padding: 10px 12px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    overflow-x: auto;
+  }
+
+  /* ─── Footnote ───────────────────────────────────────────────────────── */
+  .footnote {
+    margin-top: 44px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    font-size: 11.5px;
+    color: var(--muted);
+  }
+
+  /* ─── Responsive ─────────────────────────────────────────────────────── */
+  @media (max-width: 1000px) {
+    .body { padding: 32px 28px; }
+    .cover { padding: 36px 28px 30px; }
+    .toc-wrap, .legend-bar { padding: 14px 28px; }
+    .toc-cols { grid-template-columns: 1fr; }
+    .part-div { margin: 44px -28px 20px; padding: 12px 28px; }
+    .part-div:first-child { margin-top: 0; }
+    .legend-bar { gap: 10px; }
+    .grid-2, .grid-3, .grid-4, .roadmap, .phase-strip, .timeline-strip {
+      grid-template-columns: 1fr;
+    }
+    .ep-body { grid-template-columns: 1fr; }
+    .ep-col:first-child { border-right: none; border-bottom: 1px solid var(--border); }
+  }
+
+  @media print {
+    body { background: #fff; }
+    .page { box-shadow: none; border-radius: 0; margin: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ══ COVER ══════════════════════════════════════════════════════════ -->
+  <div class="cover">
+    <div class="eyebrow">Phase 2 Strategy Report &mdash; Living Document v2.0</div>
+    <h1>ALM Synthetic Data Pipeline<br />Planning and Execution Blueprint</h1>
+    <div class="sub">
+      A maintained strategy document for Phase 2 of ALM, focused on a MAL-specific
+      synthetic-data factory starting with controlled Jinja2 and Python expansion,
+      then growing toward validator-gated model variation, review, and dataset promotion.
+    </div>
+    <div class="meta">
+      <span>Project: ALM / MAL</span>
+      <span>Phase: 2</span>
+      <span>Scope: MAL only</span>
+      <span>Status: In Planning</span>
+      <span>Primary certainty: Jinja2 + Python</span>
+      <span>LLM expansion: planned</span>
+      <span>Document type: living report</span>
+      <span>Version: 2.0</span>
+    </div>
+  </div>
+
+  <!-- ══ TABLE OF CONTENTS ══════════════════════════════════════════════ -->
+  <div class="toc-wrap">
+    <div class="toc-label">Contents</div>
+    <div class="toc-cols">
+      <div class="toc-col">
+        <div>
+          <div class="toc-group-head">Part I &mdash; Context &amp; Direction</div>
+          <a class="toc-pill" href="#s1"><span class="toc-num">1.</span>Executive Summary</a>
+          <a class="toc-pill" href="#s2"><span class="toc-num">2.</span>Status Dashboard</a>
+          <a class="toc-pill" href="#s3"><span class="toc-num">3.</span>Immediate Action Map</a>
+          <a class="toc-pill" href="#s4"><span class="toc-num">4.</span>Scope Definition</a>
+          <a class="toc-pill" href="#s5"><span class="toc-num">5.</span>Baseline &amp; Gap Analysis</a>
+        </div>
+        <div>
+          <div class="toc-group-head">Part III &mdash; Strategy &amp; Methods</div>
+          <a class="toc-pill" href="#s11"><span class="toc-num">11.</span>Model Adaptation Strategy</a>
+          <a class="toc-pill" href="#s12"><span class="toc-num">12.</span>Research Methods Reference</a>
+        </div>
+        <div>
+          <div class="toc-group-head">Part IV &mdash; Engineering Standards</div>
+          <a class="toc-pill" href="#s13"><span class="toc-num">13.</span>Governance &amp; Engineering Standards</a>
+          <a class="toc-pill" href="#s14"><span class="toc-num">14.</span>Data Schemas &amp; Contracts</a>
+        </div>
+      </div>
+      <div class="toc-col">
+        <div>
+          <div class="toc-group-head">Part II &mdash; Pipeline Design</div>
+          <a class="toc-pill" href="#s6"><span class="toc-num">6.</span>Task Coverage &amp; Construct Map</a>
+          <a class="toc-pill" href="#s7"><span class="toc-num">7.</span>Pipeline Architecture</a>
+          <a class="toc-pill" href="#s8"><span class="toc-num">8.</span>Jinja2-First Rationale</a>
+          <a class="toc-pill" href="#s9"><span class="toc-num">9.</span>Platform Readiness Assessment</a>
+          <a class="toc-pill" href="#s10"><span class="toc-num">10.</span>Execution Playbook</a>
+        </div>
+        <div>
+          <div class="toc-group-head">Part V &mdash; Reference &amp; Governance</div>
+          <a class="toc-pill" href="#s15"><span class="toc-num">15.</span>Example Library</a>
+          <a class="toc-pill" href="#s16"><span class="toc-num">16.</span>Risk Register</a>
+          <a class="toc-pill" href="#s17"><span class="toc-num">17.</span>Recommendation</a>
+          <a class="toc-pill" href="#s18"><span class="toc-num">18.</span>Roadmap</a>
+          <a class="toc-pill" href="#s19"><span class="toc-num">19.</span>Decision Log</a>
+          <a class="toc-pill" href="#s20"><span class="toc-num">20.</span>Document Maintenance</a>
+          <a class="toc-pill" href="#s21"><span class="toc-num">21.</span>Changelog</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ LEGEND BANNER ══════════════════════════════════════════════════ -->
+  <div class="legend-bar">
+    <span class="legend-label">Color Key:</span>
+    <span class="legend-item"><span class="tag tag-confirmed">Confirmed from repo</span> Verified in the existing ALM codebase</span>
+    <span class="legend-item"><span class="tag tag-direction">Planning direction</span> Agreed strategic direction, not yet built</span>
+    <span class="legend-item"><span class="tag tag-planned">Proposed for Phase 2</span> Proposed but not yet decided or confirmed</span>
+    <span class="legend-item"><span class="tag tag-open">Open question</span> Active research question requiring a decision</span>
+  </div>
+
+  <!-- ══ BODY ═══════════════════════════════════════════════════════════ -->
+  <div class="body">
+
+    <div class="part-div">
+      <div class="pd-num">Part I</div>
+      <div class="pd-title">Context &amp; Direction</div>
+      <div class="pd-desc">Strategic overview, scope definition, baseline gaps, and immediate priorities</div>
+    </div>
+    <!-- 1 -->
+    <h2 id="s1">1. Executive Summary</h2>
+    <ul class="exec-list">
+      <li>The ALM platform already provides runtime MAL generation, validation, graph compilation, and retrieval — but it has no offline synthetic-data pipeline for training or evaluation yet.</li>
+      <li>Phase 2 should stay <strong>MAL-specific</strong> and aligned to the current grammar: <code>application</code>, <code>entity</code>, <code>workflow</code>, <code>policy</code>, <code>agent</code>, <code>integration</code>, <code>event</code>, and <code>evolution</code>. UI constructs are out of scope for the first data wave.</li>
+      <li>The safest, most concrete first step is a <strong>Jinja2 + Python</strong> expansion layer that produces valid MAL variants by swapping approved values into known-good templates.</li>
+      <li>The <strong>LLM variant expansion</strong> stage should be introduced only after template expansion, validation gates, graph-compile checks, and registry discipline are all in place.</li>
+      <li>This document is a <strong>living technical report</strong>. New stages, model decisions, review metrics, and acceptance criteria should be added here as Phase 2 matures.</li>
+    </ul>
+
+    <!-- 2 -->
+    <h2 id="s2">2. Status Dashboard</h2>
+    <div class="grid-3">
+      <div class="metric-card">
+        <div class="m-label">What Exists Today</div>
+        <div class="m-value">Runtime ALM</div>
+        <div class="m-desc">Intent parsing, MAL generation, validation, graph compilation, retrieval, and versioned persistence are all live in the current platform.</div>
+      </div>
+      <div class="metric-card">
+        <div class="m-label">What Phase 2 Adds</div>
+        <div class="m-value">Data Factory</div>
+        <div class="m-desc">A repeatable offline pipeline for seeds, templates, model variants, validation, review, and accepted-dataset promotion.</div>
+      </div>
+      <div class="metric-card">
+        <div class="m-label">What Success Looks Like</div>
+        <div class="m-value">Accepted Registry</div>
+        <div class="m-desc">High-quality MAL examples that support prompting, evaluation, specification work, and later efficient fine-tuning.</div>
+      </div>
+    </div>
+
+    <h3>Pipeline Progress — Update These As Phase 2 Advances</h3>
+    <div class="grid-4">
+      <div class="metric-card tracker">
+        <div class="m-label">Gold Seeds Defined</div>
+        <div class="m-value">0 / 50</div>
+        <div class="m-desc">Target: 40–60 manually curated seed examples covering all MAL construct families.</div>
+        <div class="stat-pill warn">Not started</div>
+      </div>
+      <div class="metric-card tracker">
+        <div class="m-label">Jinja2 Templates Built</div>
+        <div class="m-value">0</div>
+        <div class="m-desc">Each gold seed should become at least one structured Jinja2 template with safe substitution zones.</div>
+        <div class="stat-pill warn">Not started</div>
+      </div>
+      <div class="metric-card tracker">
+        <div class="m-label">Candidates Validated</div>
+        <div class="m-value">0</div>
+        <div class="m-desc">Candidates that have passed syntax, schema, policy, graph, and duplicate checks.</div>
+        <div class="stat-pill warn">Not started</div>
+      </div>
+      <div class="metric-card tracker">
+        <div class="m-label">Records in Registry</div>
+        <div class="m-value">0</div>
+        <div class="m-desc">Human-reviewed and accepted records promoted into the official dataset registry.</div>
+        <div class="stat-pill warn">Not started</div>
+      </div>
+    </div>
+    <p style="font-size:12px;color:var(--muted);margin-top:-8px;">Update the four tracker cards above each sprint. They are the single source of truth for Phase 2 dataset progress.</p>
+
+    <div class="diagram-box">
+      <div class="diagram-label">How Phase 2 Fits Into The ALM Project</div>
+      <div class="mermaid">
+flowchart LR
+    userIntent["User Intent"] --> almRuntime["ALM Runtime"]
+    almRuntime --> malGen["MAL Generation"]
+    malGen --> graphCompile["Graph Compile"]
+    userIntent --> seedLib["Approved Seed Library"]
+    seedLib --> jinjaFactory["Jinja2 Expansion"]
+    jinjaFactory --> llmFactory["LLM Variant Expansion"]
+    llmFactory --> valFunnel["Validation Funnel"]
+    valFunnel --> review["Human Review"]
+    review --> registry["Accepted Dataset Registry"]
+    registry --> promptUse["Prompt Grounding"]
+    registry --> evalUse["Evaluation and Testing"]
+    registry --> ftUse["Efficient Fine-Tuning"]
+      </div>
+    </div>
+
+    <!-- 3 -->
+    <h2 id="s3">3. Immediate Action Map</h2>
+    <div class="timeline-strip">
+      <div class="timeline-box">
+        <div class="timeline-head" style="background:var(--now-col);">Now — Foundation</div>
+        <div class="timeline-body">
+          <ul>
+            <li>Freeze MAL-only scope for the first data wave.</li>
+            <li>Build and curate the gold seed library.</li>
+            <li>Create Jinja2 templates and Python payload generators.</li>
+            <li>Define dataset registry schema and lifecycle statuses.</li>
+            <li>Automate parser, validator, and graph-compile checks.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="timeline-box">
+        <div class="timeline-head" style="background:var(--next-col);">Next — Expansion</div>
+        <div class="timeline-body">
+          <ul>
+            <li>Add novelty and duplicate filtering.</li>
+            <li>Introduce human review and promotion workflow.</li>
+            <li>Pilot constrained LLM candidate generation.</li>
+            <li>Measure acceptance rate and construct coverage.</li>
+            <li>Package examples into the spec-ready library.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="timeline-box">
+        <div class="timeline-head" style="background:var(--later-col);">Later — Maturity</div>
+        <div class="timeline-body">
+          <ul>
+            <li>Compare models and prompting strategies.</li>
+            <li>Use accepted data for retrieval and evaluation sets.</li>
+            <li>Start efficient fine-tuning experiments.</li>
+            <li>Track feedback loops from rejected examples.</li>
+            <li>Grow and maintain the accepted dataset registry.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4 -->
+    <h2 id="s4">4. Scope Definition</h2>
+    <p>This page defines how Phase 2 synthetic-data work should be understood and communicated. It is not a pipeline implementation — it is a professional strategy artifact that should evolve alongside the real pipeline.</p>
+    <div class="note">
+      <div class="note-line"><span class="tag tag-confirmed">Confirmed from repo</span>Current ALM code supports MAL generation, deterministic intent parsing, validation, graph handling, vector retrieval, and versioned storage.</div>
+      <div class="note-line"><span class="tag tag-direction">Planning direction</span>The pipeline design defines five stages: gold seeds, Jinja2 expansion, LLM expansion, validation/filtering, and human review.</div>
+      <div class="note-line"><span class="tag tag-planned">Proposed for Phase 2</span>The offline synthetic-data factory is new work to be added outside the existing runtime flow.</div>
+    </div>
+    <table>
+      <thead><tr><th>Phase 2 Scope Rule</th><th>Decision</th></tr></thead>
+      <tbody>
+        <tr><td>Primary language scope</td><td>MAL only</td></tr>
+        <tr><td>Supported construct families</td><td><code>application</code>, <code>entity</code>, <code>workflow</code>, <code>policy</code>, <code>agent</code>, <code>integration</code>, <code>event</code>, <code>evolution</code></td></tr>
+        <tr><td>Excluded from first data wave</td><td>UI constructs such as screens, components, actions, and navigation</td></tr>
+        <tr><td>Primary objective</td><td>Produce validator-approved user-intent to MAL examples for generation quality, specification support, and later model adaptation</td></tr>
+      </tbody>
+    </table>
+
+    <!-- 5 -->
+    <h2 id="s5">5. Baseline &amp; Gap Analysis</h2>
+    <table>
+      <thead><tr><th>Area</th><th>Current ALM Repository</th><th>Phase 2 Need</th></tr></thead>
+      <tbody>
+        <tr><td>MAL generation</td><td>Supported through backend orchestration and MAL Agent</td><td>Generate large volumes of controlled synthetic MAL pairs for training and evaluation</td></tr>
+        <tr><td>Prompting</td><td>String-based prompts and DOCX-loaded prompt assets exist</td><td>Standardized template-driven generation and dataset authoring flow</td></tr>
+        <tr><td>Synthetic dataset creation</td><td>Not implemented as an offline pipeline</td><td>Dedicated seed, expansion, filtering, review, and registry process</td></tr>
+        <tr><td>Jinja2-based templating</td><td>Not present in repo yet</td><td>Primary concrete build-now mechanism for structured variant creation</td></tr>
+        <tr><td>LLM expansion</td><td>LLM generation exists for runtime MAL tasks</td><td>Controlled second-stage offline expansion with strict validation and review</td></tr>
+        <tr><td>Review and registry</td><td>Versioning and validation concepts exist in product flow</td><td>Dataset-specific approval, scoring, provenance, and promotion workflow</td></tr>
+      </tbody>
+    </table>
+
+    <div class="part-div">
+      <div class="pd-num">Part II</div>
+      <div class="pd-title">Pipeline Design</div>
+      <div class="pd-desc">Task coverage, pipeline architecture, Jinja2 rationale, platform readiness, and execution playbook</div>
+    </div>
+    <!-- 6 -->
+    <h2 id="s6">6. Task Coverage &amp; Construct Map</h2>
+    <p>Phase 2 should not only generate create-style examples. The dataset must cover the full operational task family that ALM needs.</p>
+    <table>
+      <thead><tr><th>MAL use case</th><th>Input pattern</th><th>Output target</th><th>Why it matters</th></tr></thead>
+      <tbody>
+        <tr><td>Create</td><td>New application request</td><td>Full MAL program</td><td>Core ALM behavior</td></tr>
+        <tr><td>Modify / evolution</td><td>Change request plus existing context</td><td>Evolution block or revised MAL</td><td>Safe updates</td></tr>
+        <tr><td>Explain</td><td>MAL, graph, or validator context</td><td>Structured explanation or agent output</td><td>Supports explainability</td></tr>
+        <tr><td>Policy-constrained</td><td>Intent plus business or domain rules</td><td>Compliant MAL</td><td>Supports policy and domain checks</td></tr>
+        <tr><td>Correction / repair</td><td>Invalid MAL or failure signal</td><td>Corrected MAL</td><td>Closes the validator loop</td></tr>
+        <tr><td>Ambiguity / disambiguation</td><td>Unclear project or entity reference</td><td>Safer explicit flow or confirmation policy</td><td>Reduces modify risk</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Construct Coverage Grid</h3>
+    <p>Tracks which MAL construct families have accepted examples for each task type. Update this grid each time new records are promoted to the registry. <span class="tag tag-confirmed">Has example</span><span class="tag tag-open">Planned</span></p>
+    <table class="coverage-table">
+      <thead>
+        <tr>
+          <th>Construct</th>
+          <th>Create</th>
+          <th>Modify</th>
+          <th>Explain</th>
+          <th>Policy-Const.</th>
+          <th>Repair</th>
+          <th>Disambiguate</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="construct-name">entity</td>
+          <td class="has-ex">✓</td>
+          <td class="planned">Plan</td>
+          <td class="planned">Plan</td>
+          <td class="planned">Plan</td>
+          <td class="has-ex">✓</td>
+          <td class="planned">Plan</td>
+        </tr>
+        <tr>
+          <td class="construct-name">workflow</td>
+          <td class="has-ex">✓</td>
+          <td class="has-ex">✓</td>
+          <td class="planned">Plan</td>
+          <td class="has-ex">✓</td>
+          <td class="has-ex">✓</td>
+          <td class="has-ex">✓</td>
+        </tr>
+        <tr>
+          <td class="construct-name">policy</td>
+          <td class="planned">Plan</td>
+          <td class="planned">Plan</td>
+          <td class="has-ex">✓</td>
+          <td class="has-ex">✓</td>
+          <td class="planned">Plan</td>
+          <td class="planned">Plan</td>
+        </tr>
+        <tr>
+          <td class="construct-name">evolution</td>
+          <td class="planned">Plan</td>
+          <td class="has-ex">✓</td>
+          <td class="planned">Plan</td>
+          <td class="planned">Plan</td>
+          <td class="planned">Plan</td>
+          <td class="planned">Plan</td>
+        </tr>
+        <tr>
+          <td class="construct-name">agent</td>
+          <td class="not-yet">—</td>
+          <td class="not-yet">—</td>
+          <td class="not-yet">—</td>
+          <td class="not-yet">—</td>
+          <td class="not-yet">—</td>
+          <td class="not-yet">—</td>
+        </tr>
+        <tr>
+          <td class="construct-name">integration</td>
+          <td class="not-yet">—</td>
+          <td class="not-yet">—</td>
+          <td class="not-yet">—</td>
+          <td class="not-yet">—</td>
+          <td class="not-yet">—</td>
+          <td class="not-yet">—</td>
+        </tr>
+        <tr>
+          <td class="construct-name">event</td>
+          <td class="not-yet">—</td>
+          <td class="not-yet">—</td>
+          <td class="not-yet">—</td>
+          <td class="not-yet">—</td>
+          <td class="not-yet">—</td>
+          <td class="not-yet">—</td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="font-size:11.5px;color:var(--muted);">✓ = example exists in the Example Library (Section 15) &nbsp;·&nbsp; Plan = targeted next &nbsp;·&nbsp; — = not yet scoped. Agent, integration, and event constructs need dedicated seed authoring before examples can be generated.</p>
+
+    <!-- 7 -->
+    <h2 id="s7">7. Pipeline Architecture</h2>
+    <div class="phase-strip">
+      <div class="phase-box">
+        <div class="n">1</div>
+        <h4>Gold Seed Examples</h4>
+        <p>Manually approved seed pairs that are valid, representative, and domain-correct.</p>
+      </div>
+      <div class="phase-box">
+        <div class="n">2</div>
+        <h4>Jinja2 Template Expansion</h4>
+        <p>Template variables and approved payloads produce high-volume, low-risk MAL variants.</p>
+      </div>
+      <div class="phase-box">
+        <div class="n">3</div>
+        <h4>LLM Variant Expansion</h4>
+        <p>Controlled diversity beyond deterministic slots using constrained prompts and domain packs.</p>
+      </div>
+      <div class="phase-box">
+        <div class="n">4</div>
+        <h4>Validation and Filtering</h4>
+        <p>Syntax, schema, policy, graph, and duplicate checks reject invalid or low-value outputs.</p>
+      </div>
+      <div class="phase-box">
+        <div class="n">5</div>
+        <h4>Human Review and Approval</h4>
+        <p>Only scored and accepted records are promoted into the official dataset registry.</p>
+      </div>
+    </div>
+
+    <div class="diagram-box">
+      <div class="diagram-label">End-to-End Phase 2 Pipeline</div>
+      <div class="mermaid">
+flowchart LR
+    seeds["Gold Seeds"] --> jinja["Jinja2 Expansion"]
+    jinja --> llm["LLM Expansion"]
+    llm --> val["Validation + Filtering"]
+    val --> review["Human Review"]
+    review --> registry["Accepted Registry"]
+      </div>
+    </div>
+
+    <!-- 8 -->
+    <h2 id="s8">8. Jinja2-First Rationale</h2>
+    <div class="grid-2">
+      <div class="card">
+        <div class="ctag navy">Immediate Build Path</div>
+        <h4>Controlled and Explainable</h4>
+        <ul>
+          <li>Uses approved templates instead of unconstrained generation</li>
+          <li>Maintains legal MAL structure while varying only allowed fields</li>
+          <li>Makes debugging easier because every change is template-driven</li>
+          <li>Fits cleanly into a seed-to-variant dataset pipeline</li>
+        </ul>
+        <div class="stat-pill">Best first implementation for Phase 2</div>
+      </div>
+      <div class="card">
+        <div class="ctag gold">Practical Benefit</div>
+        <h4>Strong Baseline Before LLM Expansion</h4>
+        <ul>
+          <li>Creates a clean benchmark set for later comparison</li>
+          <li>Provides stable examples for prompt design and few-shot inputs</li>
+          <li>Helps define schema and registry contracts early</li>
+          <li>Reduces early hallucination and grammar-drift risk</li>
+        </ul>
+        <div class="stat-pill warn">Build this before relying on model creativity</div>
+      </div>
+    </div>
+
+    <div class="diagram-box">
+      <div class="diagram-label">Jinja2 Variation Logic</div>
+      <div class="mermaid">
+flowchart LR
+    seed["Approved Seed Intent"] --> tmpl["Structured Template"]
+    tmpl --> payload["Approved Input Payload"]
+    payload --> variant["Rendered MAL Variant"]
+    variant --> syntaxCheck["Syntax + Schema Checks"]
+    syntaxCheck --> accepted["Accepted Template Variant"]
+      </div>
+    </div>
+
+    <!-- 9 -->
+    <h2 id="s9">9. Platform Readiness Assessment</h2>
+    <p>Phase 2 does not require a new platform. It needs new workflow and schema layers on top of the architecture that already exists in ALM.</p>
+    <table>
+      <thead><tr><th>Component</th><th>Current role</th><th>Phase 2 MAL role</th><th>Readiness</th></tr></thead>
+      <tbody>
+        <tr><td>FastAPI / services</td><td>Orchestration and validation surface</td><td>Generation, validation, review, and promotion workflows</td><td>Ready now</td></tr>
+        <tr><td>PostgreSQL</td><td>Durable operational records</td><td>Dataset registry and source of truth for accepted MAL examples</td><td>Ready — schema additions needed</td></tr>
+        <tr><td>Apache AGE</td><td>Compiled graph and traversal</td><td>Graph-compile sanity check for generated MAL</td><td>Ready now</td></tr>
+        <tr><td>Redis</td><td>Context and graph cache</td><td>Repeated prompt and validation fragment caching</td><td>Ready now</td></tr>
+        <tr><td>Qdrant</td><td>Semantic retrieval over intents and MAL chunks</td><td>Retrieve similar approved MAL examples and correction patterns</td><td>Ready now</td></tr>
+      </tbody>
+    </table>
+    <div class="note">
+      <div class="note-line">Phase 2 mainly needs: dataset registry tables, batch validation tooling, review states, novelty checks, and evaluation reporting on top of the existing platform.</div>
+    </div>
+
+    <!-- 10 -->
+    <h2 id="s10">10. Execution Playbook</h2>
+    <p>Each stage below should be treated as a distinct build target with its own acceptance criteria and completion signal before the next stage begins.</p>
+
+    <h3>10.0 Layered Capability Design</h3>
+    <p>The synthetic data strategy is built around four capability layers that define <em>what the model must learn</em> at each level of training data. Seeds and templates should consciously target each layer, not just the Create task type.</p>
+    <div class="phase-strip cols-4">
+      <div class="phase-box">
+        <div class="n">L1</div>
+        <h4>Syntax &amp; Structure</h4>
+        <p>Block order, keywords, grammar patterns, and simple correction.<br /><br />
+        <strong>Data:</strong> intent → MAL block; malformed → corrected; partial → completed.<br /><br />
+        <strong>Goal:</strong> Parser-aligned MAL fluency.</p>
+      </div>
+      <div class="phase-box">
+        <div class="n">L2</div>
+        <h4>Task Behavior</h4>
+        <p>Create, modify, explain, and repair behaviors across construct types.<br /><br />
+        <strong>Data:</strong> user intent → full MAL; change request → evolution; MAL context → explanation.<br /><br />
+        <strong>Goal:</strong> Aligns model with ALM operating modes.</p>
+      </div>
+      <div class="phase-box">
+        <div class="n">L3</div>
+        <h4>Domain &amp; Policy</h4>
+        <p>Telecom domain rules, business approvals, and policy constraints.<br /><br />
+        <strong>Data:</strong> intent + domain pack → domain-valid MAL; intent + constraints → policy-compliant MAL.<br /><br />
+        <strong>Goal:</strong> Safe, domain-correct output.</p>
+      </div>
+      <div class="phase-box">
+        <div class="n">L4</div>
+        <h4>Robustness &amp; Recovery</h4>
+        <p>Clarification handling, ambiguity, and recovery after failures.<br /><br />
+        <strong>Data:</strong> rejected output + validator feedback → corrected MAL; ambiguous request → confirmation-first flow.<br /><br />
+        <strong>Goal:</strong> Fewer production errors and repeat failures.</p>
+      </div>
+    </div>
+    <div class="note">
+      <div class="note-line"><span class="tag tag-direction">Planning direction</span> Seed authoring and Jinja2 templates should be distributed across all four layers — not concentrated only on L1 Create examples. Covering L2–L4 is what makes the dataset production-grade.</div>
+    </div>
+
+    <h3>10.1 Gold Seed Examples</h3>
+    <p>The seed layer is the foundation of the full pipeline. Seeds should represent canonical input-output pairs for MAL creation or change tasks. The goal is correctness and coverage, not volume.</p>
+    <ul>
+      <li>Target 40 to 60 clean seed examples as the starting range.</li>
+      <li>Cover distinct MAL construct families: entity, workflow, policy, integration, agent, event, evolution.</li>
+      <li>Keep the seed set versioned and manually curated.</li>
+      <li>Treat seeds as reference truth, not just examples.</li>
+    </ul>
+
+    <h3>10.2 Jinja2 Template Expansion</h3>
+    <p>The first implementation target. Each seed example should be converted into a structured template with allowed substitution zones. Payload generation is handled in Python so every variant stays inside a safe, approved design space.</p>
+    <ul>
+      <li>Use placeholders for names, enums, attributes, steps, integrations, roles, and policy options.</li>
+      <li>Keep business logic stable while varying legal values.</li>
+      <li>Generate JSON payloads separately from template files for auditability.</li>
+      <li>Export generated pairs in a registry-friendly structure.</li>
+    </ul>
+
+    <h3>10.3 LLM Variant Expansion</h3>
+
+    <h4>What We Know vs What We Don't Know Yet</h4>
+    <div class="grid-2">
+      <div class="card" style="border-top-color: #0f766e;">
+        <div class="ctag">What We Know</div>
+        <h4>Stable Foundation</h4>
+        <ul>
+          <li>Template expansion works and produces syntactically valid MAL.</li>
+          <li>The validation pipeline (parser, schema, policy, graph) is already defined.</li>
+          <li>The provenance model (seed → template → registry) is clear.</li>
+          <li>The registry lifecycle states are agreed: draft → validated → reviewed → accepted → archived.</li>
+          <li>LLM expansion must come after, not before, the template baseline.</li>
+        </ul>
+        <div class="stat-pill">Build on this — do not skip it</div>
+      </div>
+      <div class="card" style="border-top-color: #a67c2d;">
+        <div class="ctag warn">What We Don't Know Yet</div>
+        <h4>Open Research Questions</h4>
+        <ul>
+          <li>Which model gives the best balance of MAL structure-following and cost.</li>
+          <li>Whether direct instruction, few-shot, chain-of-thought, or repair prompting performs best.</li>
+          <li>How much diversity is useful before outputs become noisy or drift from grammar.</li>
+          <li>What score or rule set qualifies a candidate for human review.</li>
+          <li>What metadata must be stored now to support future fine-tuning use cases.</li>
+        </ul>
+        <div class="stat-pill warn">These must be answered before scaling LLM generation</div>
+      </div>
+    </div>
+
+    <p>This stage should be introduced only after template expansion and validation are stable. Its role is not to replace templates, but to extend diversity beyond deterministic slot filling. The correct goal is <strong>candidate generation under constraints</strong>, not free-form creativity.</p>
+    <div class="grid-2">
+      <div class="card">
+        <div class="ctag">What Can Be Done Now</div>
+        <h4>Immediate LLM Tasks</h4>
+        <ul>
+          <li>Generate paraphrased user intents from approved seed examples.</li>
+          <li>Produce harder modify, repair, and ambiguity-handling instructions from clean seeds.</li>
+          <li>Create controlled MAL variants using fixed output format and strict construct scope.</li>
+          <li>Generate explanation-oriented pairs: MAL to explanation, validator error to repair suggestion.</li>
+        </ul>
+        <div class="stat-pill">Use the MAL Agent as a candidate generator only — not as final acceptance source</div>
+      </div>
+      <div class="card">
+        <div class="ctag rose">Prerequisites</div>
+        <h4>What Must Exist First</h4>
+        <ul>
+          <li>Approved gold seed library with category coverage.</li>
+          <li>Stable MAL scope and construct rules.</li>
+          <li>Automated parser, validator, and graph-compile checks.</li>
+          <li>Prompt versioning, model version tracking, and dataset provenance fields.</li>
+          <li>Near-duplicate detection to prevent registry flooding.</li>
+        </ul>
+        <div class="stat-pill warn">Do not scale LLM generation before validation and provenance are operational</div>
+      </div>
+    </div>
+
+    <h4>Domain Pack — What It Is and Why It Matters</h4>
+    <div class="grid-2">
+      <div class="card">
+        <div class="ctag navy">Concept</div>
+        <h4>What a Domain Pack Is</h4>
+        <p>A domain pack is a versioned JSON file that defines the approved vocabulary for a specific domain (e.g., telecom). It is injected into the LLM prompt as a constraint, preventing the model from inventing field names, enum values, or roles that don't exist in the domain.</p>
+        <ul>
+          <li>Prevents grammar drift and hallucinated field names.</li>
+          <li>Makes outputs directly compatible with policy and validator checks.</li>
+          <li>Should be maintained separately and versioned alongside templates.</li>
+        </ul>
+      </div>
+      <div class="card" style="border-top-color:#1e3a52;">
+        <div class="ctag navy">Example</div>
+        <div class="ep-code" style="margin-top:8px;">{
+  "domain": "telecom",
+  "entity_names": [
+    "Subscriber", "SIMCard",
+    "ServicePlan", "Invoice"
+  ],
+  "attribute_types": [
+    "UUID", "STRING", "INTEGER",
+    "BOOLEAN", "ENUM", "DATE"
+  ],
+  "approved_enums": {
+    "kyc_status": ["Pending","Verified","Rejected"],
+    "subscription_type": ["Prepaid","Postpaid"]
+  },
+  "approved_roles": [
+    "subscriber","agent","supervisor"
+  ],
+  "workflow_trigger_prefixes": [
+    "new_","update_","cancel_","verify_"
+  ]
+}</div>
+      </div>
+    </div>
+
+    <h4>Constrained MAL Prompt Template</h4>
+    <p>What a production-ready constrained LLM prompt looks like for MAL candidate generation. This template format should be versioned and stored alongside the seed library.</p>
+    <div class="pre-wrap">
+      <div class="pre-header">Prompt Template — Constrained MAL Generation</div>
+      <pre>SYSTEM:
+  You are an expert MAL generator for the ALM platform.
+  - Only produce MAL inside the allowed construct scope below.
+  - Do NOT generate UI constructs (screens, components, nav).
+  - Follow MAL grammar strictly: application, entity, workflow,
+    policy, agent, integration, event, evolution.
+  - Apply the domain pack for all field names and enum values.
+  - Output format: raw MAL text only — no explanations or markdown.
+
+CONSTRAINT SCOPE:
+  allowed_constructs: [entity, workflow, policy]
+  domain: {{ domain_name }}
+  task_type: {{ task_type }}
+  domain_pack_version: {{ domain_pack_version }}
+
+REFERENCE SEED (approved — use as structural guide):
+{{ seed_mal_text }}
+
+USER INTENT:
+{{ user_intent }}
+
+INSTRUCTION:
+  Generate a valid MAL program that fulfills the user intent.
+  All entity attributes must come from the domain pack value set.
+  The output must pass parser validation and graph compile checks.
+  Do not add constructs outside the allowed_constructs list.</pre>
+    </div>
+
+    <h4>Recommended LLM Workflow</h4>
+    <ol>
+      <li>Start from an approved seed or approved Jinja2-generated record.</li>
+      <li>Build a constrained prompt with MAL-only scope, allowed constructs, domain pack, and output contract.</li>
+      <li>Generate one or more candidate variants with the model.</li>
+      <li>Run parser validation, domain and policy checks, and graph compile checks.</li>
+      <li>Run novelty and duplicate filtering against the accepted registry.</li>
+      <li>Send only surviving candidates to human review.</li>
+      <li>Promote accepted records into the registry with source, model, and prompt metadata.</li>
+    </ol>
+
+    <h4>Research Questions Still Open</h4>
+    <table>
+      <thead><tr><th>Research Area</th><th>What Needs To Be Decided</th><th>Why It Matters</th></tr></thead>
+      <tbody>
+        <tr><td>Model choice</td><td>Which provider gives the best balance of structure-following, cost, and controllability</td><td>Models behave very differently under grammar and constraint pressure</td></tr>
+        <tr><td>Prompt style</td><td>Direct instruction, few-shot examples, chain-of-thought, or repair-style prompting</td><td>Affects validity, diversity, and repeatability of outputs</td></tr>
+        <tr><td>Variant diversity targets</td><td>How much diversity is useful before outputs become noisy or unrealistic</td><td>Too little gives weak training value; too much causes drift</td></tr>
+        <tr><td>Acceptance thresholds</td><td>What score or rule set is required for a candidate to reach review</td><td>Without thresholds, review load becomes unmanageable</td></tr>
+        <tr><td>Registry usage</td><td>How accepted LLM data will be used: prompting, evaluation, or fine-tuning</td><td>This determines what metadata must be stored now</td></tr>
+      </tbody>
+    </table>
+
+    <h4>Safe Rollout Order</h4>
+    <div class="grid-3">
+      <div class="card">
+        <div class="ctag">Stage 1</div>
+        <h4>Intent Expansion First</h4>
+        <ul>
+          <li>Generate only intent paraphrases and edge-case instructions.</li>
+          <li>Keep MAL output fixed from approved seeds.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="ctag gold">Stage 2</div>
+        <h4>Constrained MAL Variants</h4>
+        <ul>
+          <li>Allow model-generated MAL inside strict MAL-only constraints.</li>
+          <li>Pass all outputs through validator and compile checks.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="ctag plan">Stage 3</div>
+        <h4>Adaptation-Ready Dataset</h4>
+        <ul>
+          <li>Use accepted records for evaluation and retrieval support.</li>
+          <li>Begin efficient fine-tuning only when quality is measurable.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>10.4 Validation and Filtering</h3>
+    <p>Every candidate — whether produced by Jinja2 or an LLM — must pass layered quality gates before entering the accepted dataset.</p>
+    <div class="grid-3">
+      <div class="card">
+        <div class="ctag">Gate 1</div>
+        <h4>Syntax and Schema</h4>
+        <ul>
+          <li>MAL syntax validity</li>
+          <li>Required fields present</li>
+          <li>Template payload completeness</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="ctag gold">Gate 2</div>
+        <h4>Policy and Graph</h4>
+        <ul>
+          <li>Policy compliance checks</li>
+          <li>Graph-aware validation</li>
+          <li>Structural consistency checks</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="ctag plan">Gate 3</div>
+        <h4>Quality and Duplication</h4>
+        <ul>
+          <li>Near-duplicate filtering</li>
+          <li>Diversity scoring</li>
+          <li>Low-value or noisy output rejection</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="diagram-box">
+      <div class="diagram-label">Validation Funnel — Candidate Acceptance Flow</div>
+      <div class="mermaid">
+flowchart TD
+    candidate["Generated Candidate"] --> g1["Syntax Check"]
+    g1 --> g2["Schema Check"]
+    g2 --> g3["Policy + Domain Check"]
+    g3 --> g4["Graph Compile Check"]
+    g4 --> g5["Novelty + Duplicate Check"]
+    g5 --> g6["Human Review"]
+    g6 --> accepted["Accepted Registry"]
+    g6 --> rejected["Rejected — Reason Logged"]
+      </div>
+    </div>
+
+    <div class="diagram-box">
+      <div class="diagram-label">Rejection Feedback Loop — Closed-Loop Pipeline Improvement</div>
+      <div class="mermaid">
+flowchart LR
+    rejected["Rejected Candidate"] --> reasonLog["Reason Log"]
+    reasonLog --> analysis["Root Cause Analysis"]
+    analysis --> tmplFix["Template Fix"]
+    analysis --> promptFix["Prompt Refinement"]
+    analysis --> seedFix["Seed Review"]
+    tmplFix --> reenter["Re-enter Pipeline"]
+    promptFix --> reenter
+    seedFix --> reenter
+      </div>
+    </div>
+    <p style="font-size:12px;color:var(--muted);">Every rejection is pipeline intelligence. Reason codes must be tracked so template rules, prompt constraints, and seed quality can all be improved from real failure data — not just accepted record counts.</p>
+
+    <h3>10.5 Human Review and Approval</h3>
+    <p>The human review layer is what turns a generation pipeline into a professional dataset pipeline. Reviewers should not only accept or reject — they should tag why records were corrected or dropped.</p>
+
+    <h4>Acceptance Criteria Checklist</h4>
+    <table>
+      <thead><tr><th>Criterion</th><th>Pass Condition</th><th>Reviewer Action if Fail</th></tr></thead>
+      <tbody>
+        <tr><td><strong>MAL syntax validity</strong></td><td>Parser returns zero errors</td><td>Reject — log syntax error category and source</td></tr>
+        <tr><td><strong>Required fields</strong></td><td>All mandatory construct fields are populated</td><td>Reject — note which fields are missing</td></tr>
+        <tr><td><strong>Policy compliance</strong></td><td>Domain policy check passes without warnings</td><td>Reject — flag specific policy violation</td></tr>
+        <tr><td><strong>Graph compile</strong></td><td>Graph compiler accepts the MAL without errors</td><td>Reject — log compile failure and construct type</td></tr>
+        <tr><td><strong>Novelty</strong></td><td>Cosine similarity to existing registry records &lt; 0.92</td><td>Reject — mark as near-duplicate, reference closest match</td></tr>
+        <tr><td><strong>Correctness</strong></td><td>Output correctly fulfills the stated user intent</td><td>Correct and re-submit, or reject with correction note</td></tr>
+        <tr><td><strong>Diversity</strong></td><td>Intent and output differ meaningfully from five nearest registry records</td><td>Accept with diversity note, or reject if too similar</td></tr>
+        <tr><td><strong>Usefulness</strong></td><td>Output teaches a distinct behavior the model should know</td><td>Flag as low-value — defer or reject</td></tr>
+        <tr><td><strong>Domain accuracy</strong></td><td>All field names, enums, and roles match the approved domain pack</td><td>Correct using domain pack, or reject if drift is significant</td></tr>
+      </tbody>
+    </table>
+    <ul>
+      <li>Score on: correctness, diversity, usefulness, and policy fit.</li>
+      <li>Capture reviewer notes and correction reasons.</li>
+      <li>Promote only accepted data into the official registry.</li>
+      <li>Keep rejected samples for error analysis, not for training.</li>
+    </ul>
+
+    <div class="part-div">
+      <div class="pd-num">Part III</div>
+      <div class="pd-title">Strategy &amp; Methods</div>
+      <div class="pd-desc">Model adaptation approach and research methods that inform the pipeline design</div>
+    </div>
+    <!-- 11 -->
+    <h2 id="s11">11. Model Adaptation Strategy</h2>
+    <p>The strategy report recommends efficient fine-tuning on the accepted MAL dataset as the first serious model-adaptation step — not full-parameter retraining.</p>
+    <table>
+      <thead><tr><th>Dimension</th><th>Full-parameter fine-tuning</th><th>Efficient fine-tuning</th></tr></thead>
+      <tbody>
+        <tr><td>What it updates</td><td>All model weights</td><td>Small trainable subset — adapters or LoRA-style methods</td></tr>
+        <tr><td>Strength</td><td>Highest adaptation capacity</td><td>Faster, cheaper, easier to iterate</td></tr>
+        <tr><td>Weakness</td><td>Expensive and riskier with evolving data</td><td>Lower adaptation ceiling than full retraining</td></tr>
+        <tr><td>Best fit for current Phase 2</td><td>Not first</td><td>Recommended first step</td></tr>
+      </tbody>
+    </table>
+    <div class="note">
+      <div class="note-line"><span class="tag tag-direction">Planning direction</span>Efficient fine-tuning should only begin once the accepted dataset has measurable quality. The accepted registry is the prerequisite — not the experiment target.</div>
+    </div>
+
+    <!-- 12 (NEW) -->
+    <h2 id="s12">12. Research Methods Reference</h2>
+    <p>These research methods informed the Phase 2 pipeline design. <strong>Core</strong> methods directly shape how data is generated and filtered. <strong>Supporting</strong> methods provide evidence and precedent for scaling and quality decisions.</p>
+    <table class="methods-table">
+      <thead>
+        <tr>
+          <th>Method / Reference</th>
+          <th>Main Idea</th>
+          <th>Best Use for MAL</th>
+          <th>Difficulty</th>
+          <th>Role</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="core">
+          <td><strong>Self-Instruct</strong></td>
+          <td>Seed → generate → filter bootstrapping loop</td>
+          <td>Base MAL synthetic pipeline — seeds drive generation, validation filters output</td>
+          <td>Medium</td>
+          <td><span class="tag tag-confirmed">Core</span></td>
+        </tr>
+        <tr class="core">
+          <td><strong>Evol-Instruct / WizardLM</strong></td>
+          <td>Grow instruction complexity through progressive rewriting</td>
+          <td>Harder modify, policy-edge, and repair examples from simpler seeds</td>
+          <td>Medium</td>
+          <td><span class="tag tag-confirmed">Core</span></td>
+        </tr>
+        <tr class="core">
+          <td><strong>Orca</strong></td>
+          <td>Explanation-rich synthetic supervision using chain-of-thought traces</td>
+          <td>Explain and repair pairs — richer MAL task behavior data</td>
+          <td>Medium</td>
+          <td><span class="tag tag-confirmed">Core</span></td>
+        </tr>
+        <tr class="core">
+          <td><strong>AgentInstruct</strong></td>
+          <td>Agentic prompt/response creation from raw document sources</td>
+          <td>Scaled MAL data-factory workflows — future high-volume generation</td>
+          <td>High</td>
+          <td><span class="tag tag-confirmed">Core reference</span></td>
+        </tr>
+        <tr class="support">
+          <td><strong>Phi-4</strong></td>
+          <td>Data-quality-centric training — curated synthetic data beats more raw data</td>
+          <td>Evidence for the curated-data-first strategy in Phase 2</td>
+          <td>Low</td>
+          <td><span class="tag tag-planned">Supporting</span></td>
+        </tr>
+        <tr class="support">
+          <td><strong>SmolLM workflow</strong></td>
+          <td>Practical small-model fine-tuning using synthetic data pipelines</td>
+          <td>MAL-specific efficient fine-tuning experiments (LoRA-scale)</td>
+          <td>Low</td>
+          <td><span class="tag tag-planned">Supporting</span></td>
+        </tr>
+        <tr class="support">
+          <td><strong>Scale Labs / Hybrid</strong></td>
+          <td>Combining human expert data with model-generated data at scale</td>
+          <td>Scaling signal for when Phase 2 outgrows manual seeding</td>
+          <td>Medium</td>
+          <td><span class="tag tag-planned">Supporting</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="note">
+      <div class="note-line"><span class="tag tag-direction">Planning direction</span>Core references (Self-Instruct, Evol-Instruct, Orca) should drive the design of the seed-to-registry pipeline. Supporting references inform scaling and quality decisions but should not dilute the MAL-specific focus.</div>
+    </div>
+
+    <div class="part-div">
+      <div class="pd-num">Part IV</div>
+      <div class="pd-title">Engineering Standards</div>
+      <div class="pd-desc">Governance practices, data schemas, and contract definitions for the pipeline</div>
+    </div>
+    <!-- 13 (was 12) -->
+    <h2 id="s13">13. Governance &amp; Engineering Standards</h2>
+    <table>
+      <thead><tr><th>Method</th><th>Why It Matters</th><th>Recommendation</th></tr></thead>
+      <tbody>
+        <tr><td>Dataset governance</td><td>Prevents silent drift in accepted training data</td><td>Version the dataset, registry, templates, prompts, and model choices separately</td></tr>
+        <tr><td>Decision log</td><td>Helps the team remember why approaches were chosen</td><td>Track confirmed choices, deferred choices, and rationale in the Decision Log (Section 19)</td></tr>
+        <tr><td>Acceptance criteria</td><td>Prevents subjective approvals and inconsistent review quality</td><td>Use the checklist in the Execution Playbook (Section 10.5) — update as new quality issues emerge</td></tr>
+        <tr><td>Provenance tracking</td><td>Allows every training record to be traced back to seed, template, prompt, and reviewer</td><td>Store origin metadata on every accepted record</td></tr>
+        <tr><td>Failure analysis</td><td>Improves later stages faster than only counting accepted records</td><td>Keep a reject log with reason codes and sample examples</td></tr>
+        <tr><td>Promotion workflow</td><td>Separates draft candidates from trusted registry data</td><td>Use draft, validated, reviewed, accepted, and archived states</td></tr>
+      </tbody>
+    </table>
+
+    <!-- 14 (was 13) -->
+    <h2 id="s14">14. Data Schemas &amp; Contracts</h2>
+    <p>Define these artifacts early so the pipeline stays maintainable from the first record forward.</p>
+
+    <h3>14.1 Seed Record</h3>
+    <div class="pre-wrap">
+      <div class="pre-header">JSON &mdash; Seed Record</div>
+      <pre>{
+  "seed_id":    "seed_onboarding_001",
+  "intent":     "Create onboarding app with KYC and OTP verification",
+  "mal_text":   "application SubscriberOnboarding domain Telecom ...",
+  "domain":     "telecom",
+  "constructs": ["entity", "workflow", "policy"],
+  "task_type":  "create",
+  "layer":      "L2",
+  "status":     "approved"
+}</pre>
+    </div>
+
+    <h3>14.2 Template Payload</h3>
+    <div class="pre-wrap">
+      <div class="pre-header">JSON &mdash; Jinja2 Payload</div>
+      <pre>{
+  "application_name": "OnboardCustomer",
+  "entity_name":      "Subscriber",
+  "attributes": [
+    { "name": "address", "type": "STRING" },
+    { "name": "phone",   "type": "STRING" }
+  ],
+  "workflow_steps": ["validate_kyc", "verify_otp", "activate_subscriber"],
+  "policy_name":    "KYCPolicy"
+}</pre>
+    </div>
+
+    <h3>14.3 Accepted Registry Record</h3>
+    <div class="pre-wrap">
+      <div class="pre-header">JSON &mdash; Registry Record</div>
+      <pre>{
+  "record_id":        "accepted_000421",
+  "origin_type":      "jinja2",
+  "source_seed_id":   "seed_onboarding_001",
+  "template_version": "v1.0",
+  "prompt_version":   null,
+  "model_version":    null,
+  "validation_status":"passed",
+  "review_status":    "accepted",
+  "review_score":     4.7,
+  "domain":           "telecom",
+  "task_type":        "create",
+  "layer":            "L2",
+  "mal_text":         "application OnboardCustomer domain Telecom ..."
+}</pre>
+    </div>
+
+    <h3>14.4 Registry Lifecycle</h3>
+    <table>
+      <thead><tr><th>Status</th><th>Meaning</th><th>When It Moves Forward</th></tr></thead>
+      <tbody>
+        <tr><td><code>draft</code></td><td>Freshly generated from seed, Jinja2, or LLM</td><td>After automated validation starts</td></tr>
+        <tr><td><code>validated</code></td><td>Passed parser, policy, and compile checks</td><td>After novelty and duplicate review</td></tr>
+        <tr><td><code>reviewed</code></td><td>Seen by a reviewer and scored</td><td>After acceptance decision</td></tr>
+        <tr><td><code>accepted</code></td><td>Approved for registry use</td><td>Available for prompting, evaluation, and later adaptation</td></tr>
+        <tr><td><code>archived</code></td><td>Kept for history but not active for current usage</td><td>When records are replaced or superseded</td></tr>
+      </tbody>
+    </table>
+
+    <div class="part-div">
+      <div class="pd-num">Part V</div>
+      <div class="pd-title">Reference &amp; Governance</div>
+      <div class="pd-desc">Example library, risk register, roadmap, decision log, and document history</div>
+    </div>
+    <!-- 15 (was 14) -->
+    <h2 id="s15">15. Example Library</h2>
+    <p>Representative intent-to-MAL pairs organized by task type. This library grows as Phase 2 produces accepted records. Each example maps to the construct coverage grid in the Task Coverage &amp; Construct Map (Section 6).</p>
+
+    <div class="example-pair">
+      <div class="ep-head">
+        <span class="ep-type create">Create</span>
+        <span class="ep-title">Telecom Subscriber Onboarding</span>
+      </div>
+      <div class="ep-body">
+        <div class="ep-col">
+          <div class="ep-label">User Intent</div>
+          <div class="ep-text">Create a telecom subscriber onboarding application with KYC verification and subscription activation.</div>
+        </div>
+        <div class="ep-col">
+          <div class="ep-label">MAL Output</div>
+          <div class="ep-code">application SubscriberOnboarding
+  domain Telecom version 1.0
+entity Subscriber
+  attributes
+    id UUID required
+    name STRING required
+    phone STRING required
+    kyc_status ENUM(Pending,Verified,Rejected)
+workflow OnboardSubscriber
+  trigger new_subscriber_request
+  steps
+    capture_subscriber_details
+    verify_kyc
+    create_account
+    activate_subscription</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="example-pair">
+      <div class="ep-head">
+        <span class="ep-type policy">Policy-Constrained</span>
+        <span class="ep-title">KYC Required Before Activation</span>
+      </div>
+      <div class="ep-body">
+        <div class="ep-col">
+          <div class="ep-label">User Intent</div>
+          <div class="ep-text">Allow subscription activation only when KYC is verified and keep an audit trail.</div>
+        </div>
+        <div class="ep-col">
+          <div class="ep-label">MAL Output</div>
+          <div class="ep-code">workflow ActivateSubscription
+  trigger activation_requested
+  steps
+    check_kyc
+    provision_subscription
+    confirm_activation
+policy KycBeforeActivation
+  applies_to ActivateSubscription
+  rules
+    require kyc_verified == true
+  audit true</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="example-pair">
+      <div class="ep-head">
+        <span class="ep-type repair">Correction / Repair</span>
+        <span class="ep-title">Missing Required Attribute Fix</span>
+      </div>
+      <div class="ep-body">
+        <div class="ep-col">
+          <div class="ep-label">Validator Signal</div>
+          <div class="ep-text">Validation error: entity <code>Subscriber</code> is missing required attribute <code>id</code> of type UUID. Workflow <code>OnboardSubscriber</code> references undefined entity step.</div>
+        </div>
+        <div class="ep-col">
+          <div class="ep-label">Corrected MAL</div>
+          <div class="ep-code">entity Subscriber
+  attributes
+    id UUID required
+    name STRING required
+    phone STRING required
+workflow OnboardSubscriber
+  trigger new_subscriber
+  steps
+    validate_identity
+    create_account
+    send_welcome</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="example-pair">
+      <div class="ep-head">
+        <span class="ep-type explain">Explain</span>
+        <span class="ep-title">Expense Approval with Threshold</span>
+      </div>
+      <div class="ep-body">
+        <div class="ep-col">
+          <div class="ep-label">User Intent</div>
+          <div class="ep-text">Explain how the expense approval policy works for high-value requests.</div>
+        </div>
+        <div class="ep-col">
+          <div class="ep-label">Expected Explanation Output</div>
+          <div class="ep-code">The policy HighValueApproval applies to the
+ReviewExpense workflow. It requires a
+supervisor to approve any request where
+request_amount > 5000. All approvals
+are audited. Requests below the threshold
+route directly to record_decision.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="example-pair">
+      <div class="ep-head">
+        <span class="ep-type modify">Modify / Evolution</span>
+        <span class="ep-title">Add Document Upload Step to Onboarding</span>
+      </div>
+      <div class="ep-body">
+        <div class="ep-col">
+          <div class="ep-label">Change Request Intent</div>
+          <div class="ep-text">Add a document upload step to the existing subscriber onboarding workflow and track upload status on the entity.</div>
+        </div>
+        <div class="ep-col">
+          <div class="ep-label">MAL Evolution Block</div>
+          <div class="ep-code">evolution SubscriberOnboarding version 2.0
+  modify entity Subscriber
+    add_attribute
+      upload_status ENUM(
+        Pending,Uploaded,Verified
+      )
+  modify workflow OnboardSubscriber
+    insert_step
+      after capture_subscriber_details
+      upload_documents
+    add_step
+      verify_documents</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="example-pair">
+      <div class="ep-head">
+        <span class="ep-type disambig">Ambiguity / Disambiguation</span>
+        <span class="ep-title">Unclear Subscriber Update Request</span>
+      </div>
+      <div class="ep-body">
+        <div class="ep-col">
+          <div class="ep-label">Ambiguous User Intent</div>
+          <div class="ep-text">"Update the subscriber record." — The intent is unclear: no subscriber ID, no field list, no change type specified. A safe MAL model should pause and confirm before generating output.</div>
+        </div>
+        <div class="ep-col">
+          <div class="ep-label">Confirmation-First MAL Output</div>
+          <div class="ep-code">policy DisambiguateSubscriberUpdate
+  applies_to UpdateSubscriber
+  requires_clarification
+    when subscriber_id is null
+      prompt
+        "Which subscriber record should
+         be updated? Provide subscriber
+         ID or lookup criteria."
+    when update_fields is null
+      prompt
+        "Which fields should be modified?
+         Specify attribute names and
+         new values."
+  fallback pause_and_confirm</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 16 (was 15) -->
+    <h2 id="s16">16. Risk Register</h2>
+    <div class="oi oi-high"><span class="sev sev-high">High</span><div><strong>LLM stage still not fully defined</strong> — Model choice, prompt strategy, and acceptance logic are all open. Keep this stage explicitly marked as proposed until each is resolved.</div></div>
+    <div class="oi oi-high"><span class="sev sev-high">High</span><div><strong>Invalid MAL risk</strong> — More volume creates more invalid outputs unless syntax and validation gates are automated before scaling generation.</div></div>
+    <div class="oi oi-mid"><span class="sev sev-mid">Medium</span><div><strong>Low-diversity dataset risk</strong> — Template expansion can become repetitive if payload generation is too narrow. Diversity criteria must be tracked, not assumed.</div></div>
+    <div class="oi oi-mid"><span class="sev sev-mid">Medium</span><div><strong>Review bottleneck</strong> — Human approval will slow the pipeline if scoring, batching, and rejection reasons are not standardized before scaling review.</div></div>
+    <div class="oi oi-mid"><span class="sev sev-mid">Medium</span><div><strong>Domain drift risk</strong> — UI or unrelated constructs can leak into the dataset if generation is not kept inside the MAL-only grammar scope.</div></div>
+    <div class="oi oi-mid"><span class="sev sev-mid">Medium</span><div><strong>Graph compile failure</strong> — Syntactically valid text can still fail downstream compile expectations. Graph checks must remain part of the acceptance funnel.</div></div>
+    <div class="oi oi-plan"><span class="sev sev-plan">Planned</span><div><strong>Registry discipline</strong> — Accepted records must move through explicit states (draft, validated, reviewed, accepted, archived) rather than accumulating in a flat file.</div></div>
+
+    <!-- 17 (was 16) -->
+    <h2 id="s17">17. Recommendation</h2>
+    <div class="rec rec-go">
+      <span class="rec-tag tag-go">Go</span>
+      <div>
+        <span class="rt">Build the Jinja2 and Python expansion layer first.</span>
+        The most concrete, lowest-risk, and easiest-to-govern Phase 2 starting point. It gives the team a controlled synthetic-data baseline before introducing model-driven variation.
+      </div>
+    </div>
+    <div class="rec rec-keep">
+      <span class="rec-tag tag-keep">Keep</span>
+      <div>
+        <span class="rt">Reuse existing ALM validation and governance architecture.</span>
+        The repo already models validation, graph reasoning, policy checks, and versioning. Those ideas should drive the synthetic-data pipeline design, not be duplicated separately.
+      </div>
+    </div>
+    <div class="rec rec-next">
+      <span class="rec-tag tag-next">Next</span>
+      <div>
+        <span class="rt">Introduce LLM expansion only after the baseline is measurable.</span>
+        Once template expansion produces accepted data with clear metrics, the team can add model-driven variation with much stronger confidence and better comparison data.
+      </div>
+    </div>
+
+    <!-- 18 (was 17) -->
+    <h2 id="s18">18. Roadmap</h2>
+    <div class="roadmap">
+      <div class="rm-col">
+        <div class="rm-head" style="background:var(--now-col);">
+          <div class="rmlabel">Now</div>
+          <div class="rmtitle">Phase 2 Foundation</div>
+        </div>
+        <div class="rm-body">
+          <div class="rm-item"><div class="rm-title">Define Gold Seeds</div><div class="rm-desc">Build a curated seed set covering all MAL task types and construct families across all four capability layers.</div></div>
+          <div class="rm-item"><div class="rm-title">Design Jinja2 Templates</div><div class="rm-desc">Convert seeds into structured templates with safe substitution zones.</div></div>
+          <div class="rm-item"><div class="rm-title">Create Payload Generator</div><div class="rm-desc">Use Python to generate approved payload combinations and emit deterministic variants.</div></div>
+          <div class="rm-item"><div class="rm-title">Define Registry Contract</div><div class="rm-desc">Set a simple but strict schema for accepted synthetic records and metadata.</div></div>
+        </div>
+      </div>
+      <div class="rm-col">
+        <div class="rm-head" style="background:var(--next-col);">
+          <div class="rmlabel">Next</div>
+          <div class="rmtitle">Controlled Expansion</div>
+        </div>
+        <div class="rm-body">
+          <div class="rm-item"><div class="rm-title">Add Validation Pipeline</div><div class="rm-desc">Apply syntax, schema, policy, graph, and duplicate checks automatically.</div></div>
+          <div class="rm-item"><div class="rm-title">Introduce Review Workflow</div><div class="rm-desc">Add scoring, acceptance states, reviewer notes, and promotion logic.</div></div>
+          <div class="rm-item"><div class="rm-title">Measure Coverage</div><div class="rm-desc">Track accepted count, diversity, rejection reasons, and construct coverage using Section 6 grid.</div></div>
+          <div class="rm-item"><div class="rm-title">Pilot LLM Expansion</div><div class="rm-desc">Run a controlled experiment with prompt versioning, domain packs, and strict filtering.</div></div>
+        </div>
+      </div>
+      <div class="rm-col">
+        <div class="rm-head" style="background:var(--later-col);">
+          <div class="rmlabel">Later</div>
+          <div class="rmtitle">Mature Data Factory</div>
+        </div>
+        <div class="rm-body">
+          <div class="rm-item"><div class="rm-title">Registry as Source of Truth</div><div class="rm-desc">Promote accepted data into a maintained dataset registry with full versioning.</div></div>
+          <div class="rm-item"><div class="rm-title">Model Strategy Layer</div><div class="rm-desc">Compare providers, prompting styles, and strategies by quality and cost using Section 12 methods.</div></div>
+          <div class="rm-item"><div class="rm-title">Active Error Learning</div><div class="rm-desc">Use rejection feedback loop (Section 10.4) to improve templates, payload rules, and prompts.</div></div>
+          <div class="rm-item"><div class="rm-title">Efficient Fine-Tuning</div><div class="rm-desc">Start LoRA-style adaptation experiments on the accepted MAL dataset.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 19 (NEW) -->
+    <h2 id="s19">19. Decision Log</h2>
+    <p>Tracks key architecture and strategy decisions made during Phase 2. Update this section whenever a significant choice is made or reversed. Open decisions should have a named owner and target resolution date.</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Decision</th>
+          <th>Choice Made</th>
+          <th>Rationale</th>
+          <th>Status</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Primary language scope</strong></td>
+          <td>MAL only — no UI constructs in wave 1</td>
+          <td>Keeps dataset tightly aligned with one grammar; prevents construct fragmentation and reduces review complexity</td>
+          <td><span class="tag tag-confirmed">Confirmed</span></td>
+          <td>Apr 2026</td>
+        </tr>
+        <tr>
+          <td><strong>First implementation method</strong></td>
+          <td>Jinja2 + Python template expansion</td>
+          <td>Highest certainty, lowest risk, fully explainable outputs — creates a clean baseline before introducing model creativity</td>
+          <td><span class="tag tag-confirmed">Confirmed</span></td>
+          <td>Apr 2026</td>
+        </tr>
+        <tr>
+          <td><strong>Model adaptation approach</strong></td>
+          <td>Efficient fine-tuning (LoRA-style) over full-parameter retraining</td>
+          <td>Cheaper, faster to iterate, fits current project maturity — consistent with Phi-4 and SmolLM precedents</td>
+          <td><span class="tag tag-confirmed">Confirmed</span></td>
+          <td>Apr 2026</td>
+        </tr>
+        <tr>
+          <td><strong>Registry lifecycle states</strong></td>
+          <td>draft → validated → reviewed → accepted → archived</td>
+          <td>Mirrors ALM versioning philosophy; prevents flat-file accumulation and enables traceability</td>
+          <td><span class="tag tag-confirmed">Confirmed</span></td>
+          <td>Apr 2026</td>
+        </tr>
+        <tr>
+          <td><strong>LLM expansion timing</strong></td>
+          <td>After Jinja2 baseline is measurable and validation is automated</td>
+          <td>Prevents premature scaling of unvalidated generation; baseline data enables meaningful comparison</td>
+          <td><span class="tag tag-confirmed">Confirmed</span></td>
+          <td>Apr 2026</td>
+        </tr>
+        <tr>
+          <td><strong>Capability layer coverage</strong></td>
+          <td>Seeds must span all four capability layers (L1–L4)</td>
+          <td>Concentrating only on L1 Create examples produces a weak, narrow dataset — L2–L4 are required for production-grade quality</td>
+          <td><span class="tag tag-confirmed">Confirmed</span></td>
+          <td>Apr 2026</td>
+        </tr>
+        <tr>
+          <td><strong>Model and prompt choice for LLM stage</strong></td>
+          <td>Not decided — open research question</td>
+          <td>Requires empirical comparison across providers and prompt styles on MAL grammar compliance</td>
+          <td><span class="tag tag-open">Open</span></td>
+          <td>Apr 2026</td>
+        </tr>
+        <tr>
+          <td><strong>Acceptance score formula</strong></td>
+          <td>Not defined — requires calibration</td>
+          <td>Must be set before scaling human review to prevent subjective inconsistency; depends on diversity and quality target</td>
+          <td><span class="tag tag-open">Open</span></td>
+          <td>Apr 2026</td>
+        </tr>
+        <tr>
+          <td><strong>Agent, integration, event seeding</strong></td>
+          <td>Deferred — not in first data wave</td>
+          <td>These constructs require additional domain expertise for correct seed authoring; prioritize entity, workflow, policy, evolution first</td>
+          <td><span class="tag tag-planned">Deferred</span></td>
+          <td>Apr 2026</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 20 (was 18) -->
+    <h2 id="s20">20. Document Maintenance</h2>
+    <div class="grid-2">
+      <div class="card">
+        <div class="ctag navy">Stable Sections</div>
+        <h4>Change Rarely</h4>
+        <ul>
+          <li>Project purpose and the five-stage pipeline structure</li>
+          <li>Why Jinja2 comes before LLM expansion</li>
+          <li>MAL grammar scope and excluded constructs</li>
+          <li>Core data contracts and registry lifecycle</li>
+          <li>Capability layer design (Section 10.0)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="ctag gold">Living Sections</div>
+        <h4>Update Regularly</h4>
+        <ul>
+          <li>Progress tracker counts in Section 2 — every sprint</li>
+          <li>Coverage grid in Section 6 — each time new examples are promoted</li>
+          <li>LLM strategy, chosen model, and prompt style decisions</li>
+          <li>Decision log (Section 19) — each key choice made or changed</li>
+          <li>Example library (Section 15) as new accepted pairs are approved</li>
+          <li>Changelog (Section 21) with each document update</li>
+        </ul>
+      </div>
+    </div>
+    <p>Recommended maintenance rule: update the cover metadata pills, progress tracker, roadmap, coverage grid, and decision log whenever the pipeline meaningfully changes. Add new example pairs to Section 15 each time a new MAL task type or construct family gains accepted records.</p>
+
+    <!-- 21 (NEW) -->
+    <h2 id="s21">21. Changelog</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Version</th>
+          <th>Date</th>
+          <th>Summary of Changes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>v1.0</strong></td>
+          <td>Apr 2026</td>
+          <td>Initial planning document — scope definition, five-stage pipeline overview, Jinja2-first rationale, seed and registry contracts.</td>
+        </tr>
+        <tr>
+          <td><strong>v1.1</strong></td>
+          <td>Apr 2026</td>
+          <td>Visual enhancements — metric cards, top-level Mermaid diagram, Now/Next/Later timeline strip, validation funnel diagram, redesigned example library with code pairs.</td>
+        </tr>
+        <tr>
+          <td><strong>v1.2</strong></td>
+          <td>Apr 2026</td>
+          <td>Defect audit and color composition fix — updated CSS variables, roadmap styles, code block pre-wrap, Mermaid theme, tag colors, h4 global rules, and cover metadata.</td>
+        </tr>
+        <tr>
+          <td><strong>v2.0</strong></td>
+          <td>Apr 2026</td>
+          <td>Major update — added TOC with anchor navigation, color legend banner, pipeline progress tracker, layered capability design (L1–L4), known vs. unknown cards, constrained prompt template, domain pack example, rejection feedback loop diagram, construct coverage grid, two new example pairs (Modify and Disambiguate), Synthetic Data Methods Compared section, acceptance criteria checklist, decision log, and version history.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="footnote">
+      Built as a Phase 2 planning and communication asset for ALM synthetic data strategy.
+      Grounded in the ALM repository architecture, the <code>MAL_Synthetic_Data_Strategy_Report_fixed.docx</code>,
+      and the current understanding that Jinja2 and Python-based expansion is the first concrete implementation step.
+      &nbsp;&middot;&nbsp;
+      Document version: 2.0 &nbsp;&middot;&nbsp; Last updated: April 2026
+    </div>
+  </div>
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: "base",
+    themeVariables: {
+      primaryColor:       "#e8f4f2",
+      primaryTextColor:   "#12314a",
+      primaryBorderColor: "#0f766e",
+      lineColor:          "#0f766e",
+      secondaryColor:     "#f4f8fb",
+      tertiaryColor:      "#ffffff",
+      fontSize:           "12.5px"
+    },
+    flowchart: { curve: "basis", padding: 20 }
+  });
+</script>
+</body>
+</html>
