@@ -339,10 +339,15 @@ tr:hover td { background: var(--light-teal); }
   display: flex; align-items: center; justify-content: space-between;
 }
 .metric-card .m-label::after {
-  content: "+"; font-size: 13px; color: var(--border);
-  font-weight: 400; transition: color 0.15s;
+  content: "+ details"; font-size: 9.5px; color: var(--accent);
+  font-weight: 700; letter-spacing: 0.5px;
+  background: var(--light-teal); border: 1px solid rgba(15,118,110,0.25);
+  border-radius: 3px; padding: 1px 6px;
+  transition: background 0.15s, color 0.15s;
 }
-.metric-card.expanded .m-label::after { content: "−"; color: var(--accent); }
+.metric-card.expanded .m-label::after {
+  content: "− hide"; background: var(--ok-bg); color: var(--ok-tx);
+}
 .metric-card .m-value {
   font-size: 22px; font-weight: 700; color: var(--brand);
   margin-bottom: 6px; line-height: 1.1;
@@ -369,7 +374,7 @@ tr:hover td { background: var(--light-teal); }
 .m-bar-fill.done { background: var(--ok-tx); }
 .m-bar-fill.zero { background: var(--border); }
 
-/* ─── Info cards ────────────────────────────────────────────────────────────── */
+/* ─── Info cards ─── start expanded; click to collapse ─────────────────────── */
 .card {
   border: 1px solid var(--border); border-top: 3px solid rgba(15,118,110,0.6);
   border-radius: 8px; padding: 15px 17px; background: #fff;
@@ -377,7 +382,30 @@ tr:hover td { background: var(--light-teal); }
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 .card:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(15,23,42,0.08); }
-.card .ctag {
+
+/* header row with collapse toggle */
+.card-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 8px; margin-bottom: 8px;
+}
+.card-head .ctag {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--accent);
+}
+.card-toggle {
+  flex-shrink: 0; font-size: 9.5px; font-weight: 700; letter-spacing: 0.5px;
+  color: var(--muted); background: var(--light); border: 1px solid var(--border);
+  border-radius: 3px; padding: 2px 7px; white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+  pointer-events: none; /* card itself handles click */
+}
+.card.collapsed .card-toggle { content: ""; }
+.card:not(.collapsed) .card-toggle::before { content: "− collapse"; }
+.card.collapsed .card-toggle::before { content: "+ expand"; color: var(--accent); }
+.card.collapsed .card-toggle { background: var(--light-teal); border-color: rgba(15,118,110,0.2); color: var(--accent); }
+
+/* legacy .ctag not inside .card-head */
+.card > .ctag {
   font-size: 10px; font-weight: 700; text-transform: uppercase;
   letter-spacing: 1px; margin-bottom: 5px; color: var(--accent);
 }
@@ -386,14 +414,13 @@ tr:hover td { background: var(--light-teal); }
 .card .ctag.navy  { color: var(--brand); }
 .card .ctag.plan  { color: var(--plan-tx); }
 .card .ctag.warn  { color: var(--warn-tx); }
-.card ul, .card p, .card ol {
-  display: none;
-}
-.card.expanded ul, .card.expanded p, .card.expanded ol {
-  display: block;
-}
-.card h4 { margin-bottom: 0; }
-.card.expanded h4 { margin-bottom: 7px; }
+
+/* content visible by default; hidden when .collapsed */
+.card ul, .card p, .card ol, .card .ep-code, .card .stat-pill { display: block; }
+.card.collapsed ul, .card.collapsed p,
+.card.collapsed ol, .card.collapsed .ep-code,
+.card.collapsed .stat-pill { display: none; }
+.card h4 { margin-bottom: 7px; }
 
 /* ─── Stat pill ─────────────────────────────────────────────────────────────── */
 .stat-pill {
