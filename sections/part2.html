@@ -83,8 +83,8 @@
   <div class="sv2 sv2-active">
     <div class="sv2-num">2</div>
     <div class="sv2-title">Jinja2 Expansion</div>
-    <div class="sv2-desc">Template-driven variant generation with domain vocabulary substitution</div>
-    <span class="sv2-tag">Stage 2 Done</span>
+    <div class="sv2-desc">Template-driven variant generation with domain vocabulary substitution &mdash; integrated into shared repo, 56 seeds, 336 candidates</div>
+    <span class="sv2-tag">Stage 2 Integrated</span>
   </div>
   <div class="sv2 sv2-dim">
     <div class="sv2-num">3</div>
@@ -111,8 +111,8 @@
   <div class="flow-nd">
     <div class="flow-box">
       <div class="fb-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg></div>
-      <div class="fb-lbl">seeds.json</div>
-      <div class="fb-sub">Gold seed records<br/>intent + MAL pairs</div>
+      <div class="fb-lbl">seed_scenarios/*.jsonl</div>
+      <div class="fb-sub">56 canonical seeds<br/>(primary source)<br/><em style="font-size:10px">fallback: pipeline/seeds/seeds.json</em></div>
     </div>
   </div>
   <div class="flow-arr"><svg viewBox="0 0 20 14"><line x1="0" y1="7" x2="16" y2="7"/><polyline points="10 2 16 7 10 12"/></svg><span>reads</span></div>
@@ -143,8 +143,8 @@
   <div class="flow-nd">
     <div class="flow-box">
       <div class="fb-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 15 11 17 15 12"/></svg></div>
-      <div class="fb-lbl">candidates.jsonl</div>
-      <div class="fb-sub">5&ndash;10 variants<br/>per seed record</div>
+      <div class="fb-lbl">data/jinja2_expansion/</div>
+      <div class="fb-sub">336 candidates<br/>6 variants per seed<br/>canonical TrainingRecord</div>
     </div>
   </div>
 </div>
@@ -198,7 +198,7 @@
   </div>
 </div>
 
-<h3>Variant Expansion &mdash; 1 Seed Becomes 5&ndash;10 Candidates</h3>
+<h3>Variant Expansion &mdash; 1 Seed Becomes 6 Candidates (56 seeds &times; 6 = 336 total)</h3>
 <div class="variant-demo">
   <div class="vd-label">Input &mdash; 1 gold seed record</div>
   <div class="vd-seed">intent: "Build a subscriber onboarding system for a telecom company"<br/>constructs: ["entity", "workflow"] &nbsp;&middot;&nbsp; type: "Create" &nbsp;&middot;&nbsp; domain: "telecom"</div>
@@ -206,19 +206,27 @@
   <div class="vd-sublabel">Jinja2 templates &times; Telecom domain vocabulary</div>
   <div class="vd-label">Output &mdash; 5 generated variant candidates</div>
   <div class="vd-row">
-    <div class="vd-card"><div class="vd-num">Variant 1</div><div class="vd-ent">Subscriber</div><div class="vd-wf">OnboardSubscriber<br/>trigger: new_subscriber</div></div>
-    <div class="vd-card"><div class="vd-num">Variant 2</div><div class="vd-ent">SIMCard</div><div class="vd-wf">ActivateSIM<br/>trigger: new_sim_request</div></div>
-    <div class="vd-card"><div class="vd-num">Variant 3</div><div class="vd-ent">ServicePlan</div><div class="vd-wf">UpdateServicePlan<br/>trigger: update_plan</div></div>
-    <div class="vd-card"><div class="vd-num">Variant 4</div><div class="vd-ent">Invoice</div><div class="vd-wf">CancelInvoice<br/>trigger: cancel_invoice</div></div>
-    <div class="vd-card"><div class="vd-num">Variant 5</div><div class="vd-ent">Subscriber</div><div class="vd-wf">VerifySubscriber<br/>trigger: verify_identity</div></div>
+    <div class="vd-card"><div class="vd-num">j01</div><div class="vd-ent">entity_subscriber</div><div class="vd-wf"><code>seed_00001_j01_entity_subscriber</code></div></div>
+    <div class="vd-card"><div class="vd-num">j02</div><div class="vd-ent">entity_simcard</div><div class="vd-wf"><code>seed_00001_j02_entity_simcard</code></div></div>
+    <div class="vd-card"><div class="vd-num">j03</div><div class="vd-ent">workflow_invoice</div><div class="vd-wf"><code>seed_00001_j03_workflow_invoice</code></div></div>
+    <div class="vd-card"><div class="vd-num">j04</div><div class="vd-ent">policy_subscriber_1</div><div class="vd-wf"><code>seed_00001_j04_policy_subscriber_1</code></div></div>
+    <div class="vd-card"><div class="vd-num">j05</div><div class="vd-ent">evolution_subscriber</div><div class="vd-wf"><code>seed_00001_j05_evolution_subscriber</code></div></div>
+    <div class="vd-card"><div class="vd-num">j06</div><div class="vd-ent">entity_serviceplan</div><div class="vd-wf"><code>seed_00001_j06_entity_serviceplan</code></div></div>
   </div>
 </div>
 
 <h3>Record Schemas &mdash; Input and Output</h3>
-<div class="schema-two">
-  <div class="pre-wrap">
-    <div class="pre-header">JSON &mdash; Seed Record (Input)</div>
-    <pre>{
+<div class="compare-wrap">
+  <div class="compare-header">
+    <div class="ch-left">Seed Record &mdash; Input (gold source)</div>
+    <div class="ch-arrow">&#8594;</div>
+    <div class="ch-right">Candidate Record &mdash; Output (Jinja2 expanded)</div>
+  </div>
+  <div class="compare-body">
+    <div class="compare-panel">
+      <div class="pre-wrap">
+        <div class="pre-header">JSON &mdash; Seed Record (Input)</div>
+        <pre>{
   "record_id": "seed_00001",
   "type":      "Create",
   "domain":    "telecom",
@@ -234,32 +242,42 @@
     "explanation": null
   },
   "metadata": {
-    "validated": true,
-    "quality_score": 0.95
+    "validated":      true,
+    "quality_score":  0.95
   }
 }</pre>
-  </div>
-  <div class="pre-wrap">
-    <div class="pre-header">JSON &mdash; Candidate Record (Output)</div>
-    <pre>{
-  "record_id":      "cand_seed00001_v02",
-  "source_seed_id": "seed_00001",
-  "origin_type":    "jinja2",
-  "template_version": "v1.0",
-  "domain":         "telecom",
-  "type":           "Create",
+      </div>
+    </div>
+    <div class="compare-panel">
+      <div class="pre-wrap">
+        <div class="pre-header">JSONL &mdash; Candidate Record (canonical TrainingRecord)</div>
+        <pre>{
+  "record_id": "seed_00001_j02_entity_simcard",
+  "type":      "Create",
+  "domain":    "telecom",
   "input": {
-    "intent": "Build a SIMCard management system"
+    "intent": "Build a SIMCard management system",
+    "domain_pack": null,
+    "current_graph": null,
+    "policy_constraints": []
   },
   "output": {
-    "mal": "application SIMCardApp ...",
-    "constructs": ["entity", "workflow"]
+    "mal": "application SIMCardApp\n  domain Telecom version 1.0\n...",
+    "constructs": ["entity"],
+    "explanation": null
   },
   "metadata": {
-    "status":     "candidate",
-    "provenance": "jinja2"
+    "source":         "jinja2_expansion",
+    "validated":      null,
+    "graph_compiled": false,
+    "quality_score":  null,
+    "stage":          "jinja2",
+    "source_seed":    "seed_00001",
+    "generated_at":   "2026-04-08T18:44:27Z"
   }
 }</pre>
+      </div>
+    </div>
   </div>
 </div>
 

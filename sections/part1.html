@@ -10,7 +10,7 @@
 <p>Phase 2 builds that factory in three stages. First, a Jinja2-based template engine produces controlled MAL variants from manually authored "gold seeds" — the safest, most explainable starting point. Second, LLM-driven expansion adds diversity once the template baseline is solid. Third, a human review layer promotes accepted records into a registry that feeds prompting, evaluation, and eventually fine-tuning.</p>
 <ul class="exec-list">
   <li><strong>Scope: MAL only.</strong> Phase 2 generates examples for <code>application</code>, <code>entity</code>, <code>workflow</code>, <code>policy</code>, <code>agent</code>, <code>integration</code>, <code>event</code>, and <code>evolution</code>. UI constructs are excluded from the first data wave.</li>
-  <li><strong>Stage 2 complete.</strong> The Jinja2 pipeline is built &mdash; 6 gold seeds, 4 grammar-compliant templates, a telecom domain pack, and 35 candidate records generated.</li>
+  <li><strong>Stage 2 integrated.</strong> The Jinja2 pipeline is built and merged into the shared team repo &mdash; 56 canonical gold seeds (Divya&rsquo;s <code>data/seed_scenarios/telecom_v1.jsonl</code>), 4 grammar-compliant templates, a telecom domain pack, 336 candidate records generated, and a React/Vite frontend dashboard active in mock mode.</li>
   <li><strong>LLM expansion comes later.</strong> Introduce it only after validation gates, graph-compile checks, and registry discipline are in place. Do not skip the template baseline.</li>
   <li><strong>This document is a living report.</strong> Update the progress tracker, decision log, coverage grid, and example library as Phase 2 matures.</li>
 </ul>
@@ -40,23 +40,23 @@
 <div class="grid-4">
   <div class="metric-card tracker">
     <div class="m-label">Gold Seeds Defined</div>
-    <div class="m-value">6 / 50</div>
-    <div class="m-bar"><div class="m-bar-fill" style="width:12%"></div></div>
-    <div class="m-desc">Target: 40&ndash;60 manually curated seed examples covering all MAL construct families. 6 seeds authored covering all 6 task types.</div>
-    <div class="stat-pill warn">In Progress</div>
+    <div class="m-value">56 / 60</div>
+    <div class="m-bar"><div class="m-bar-fill done" style="width:93%"></div></div>
+    <div class="m-desc">56 canonical telecom seeds in <code>data/seed_scenarios/telecom_v1.jsonl</code> (Divya&rsquo;s authoritative source). Aditya&rsquo;s 6 hand-authored seeds remain in <code>pipeline/seeds/seeds.json</code> as the fallback.</div>
+    <div class="stat-pill">Canonical Source Active</div>
   </div>
   <div class="metric-card tracker">
     <div class="m-label">Jinja2 Templates Built</div>
     <div class="m-value">4 Built</div>
     <div class="m-bar"><div class="m-bar-fill done" style="width:100%"></div></div>
-    <div class="m-desc">entity.j2, workflow.j2, policy.j2, evolution.j2 &mdash; all grammar-compliant. generate.py and telecom domain pack complete.</div>
-    <div class="stat-pill">Stage 2 Complete</div>
+    <div class="m-desc">entity.j2, workflow.j2, policy.j2, evolution.j2 &mdash; all grammar-compliant. generate.py and telecom domain pack integrated into shared repo.</div>
+    <div class="stat-pill">Stage 2 Integrated</div>
   </div>
   <div class="metric-card tracker">
     <div class="m-label">Candidates Generated</div>
-    <div class="m-value">35</div>
+    <div class="m-value">336</div>
     <div class="m-bar"><div class="m-bar-fill done" style="width:100%"></div></div>
-    <div class="m-desc">Jinja2 candidates generated from 6 seeds. Awaiting downstream validation by the MAL micro-validator service.</div>
+    <div class="m-desc">56 seeds &times; 6 variants each = 336 Jinja2 candidates. Output to <code>data/jinja2_expansion/</code>. Micro-validator called on each &mdash; <code>validated: null</code> until ALM parser is on PYTHONPATH.</div>
     <div class="stat-pill">Stage 2 Done</div>
   </div>
   <div class="metric-card tracker">
@@ -95,12 +95,13 @@ flowchart LR
     <div class="timeline-head" style="background:var(--now-col);">Now &mdash; Foundation</div>
     <div class="timeline-body">
       <ul>
-        <li>Freeze MAL-only scope for the first data wave.</li>
-        <li>Build and curate the gold seed library &mdash; 6 seeds authored across all task types.</li>
-        <li><strong>Jinja2 pipeline built</strong> &mdash; generate.py, 4 templates (entity, workflow, policy, evolution), telecom domain pack, 35 candidates generated.</li>
-        <li>Route candidates to MAL micro-validator for syntax, schema, and policy checks.</li>
-        <li>Define dataset registry schema and lifecycle statuses.</li>
-        <li>Automate parser, validator, and graph-compile checks.</li>
+        <li>&#10003; Freeze MAL-only scope for the first data wave.</li>
+        <li>&#10003; Gold seed library &mdash; 56 canonical seeds active (<code>data/seed_scenarios/telecom_v1.jsonl</code>).</li>
+        <li>&#10003; <strong>Jinja2 pipeline built and integrated</strong> &mdash; generate.py, 4 templates, telecom domain pack, 336 candidates, merged into shared repo (PR&nbsp;#1).</li>
+        <li>&#10003; Micro-validator called on each candidate &mdash; graceful null fallback when ALM.parser absent.</li>
+        <li>&#10003; Frontend dashboard active (mock mode) &mdash; Templates page, Validation console, stage badges.</li>
+        <li>&#8594; Route real validation output &mdash; set PYTHONPATH to enable live ALM parser scoring.</li>
+        <li>&#8594; Define dataset registry schema and lifecycle statuses.</li>
       </ul>
     </div>
   </div>
@@ -108,11 +109,12 @@ flowchart LR
     <div class="timeline-head" style="background:var(--next-col);">Next &mdash; Expansion</div>
     <div class="timeline-body">
       <ul>
+        <li>Activate real backend (connect frontend to FastAPI; remove mock mode).</li>
+        <li>Automate parser, validator, and graph-compile checks end-to-end.</li>
         <li>Add novelty and duplicate filtering.</li>
         <li>Introduce human review and promotion workflow.</li>
         <li>Pilot constrained LLM candidate generation.</li>
         <li>Measure acceptance rate and construct coverage.</li>
-        <li>Package examples into the spec-ready library.</li>
       </ul>
     </div>
   </div>
@@ -156,7 +158,7 @@ flowchart LR
     <tr><td>MAL generation</td><td>Supported through backend orchestration and MAL Agent</td><td>Generate large volumes of controlled synthetic MAL pairs for training and evaluation</td></tr>
     <tr><td>Prompting</td><td>String-based prompts and DOCX-loaded prompt assets exist</td><td>Standardized template-driven generation and dataset authoring flow</td></tr>
     <tr><td>Synthetic dataset creation</td><td>Not implemented as an offline pipeline</td><td>Dedicated seed, expansion, filtering, review, and registry process</td></tr>
-    <tr><td>Jinja2-based templating</td><td>Not present in repo yet</td><td>Primary concrete build-now mechanism for structured variant creation</td></tr>
+    <tr><td>Jinja2-based templating</td><td>Built and integrated into shared repo &mdash; 4 templates, 336 candidates, merged via PR&nbsp;#1</td><td>Primary concrete build-now mechanism for structured variant creation</td></tr>
     <tr><td>LLM expansion</td><td>LLM generation exists for runtime MAL tasks</td><td>Controlled second-stage offline expansion with strict validation and review</td></tr>
     <tr><td>Review and registry</td><td>Versioning and validation concepts exist in product flow</td><td>Dataset-specific approval, scoring, provenance, and promotion workflow</td></tr>
   </tbody>
