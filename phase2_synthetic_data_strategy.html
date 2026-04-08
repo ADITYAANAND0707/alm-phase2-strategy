@@ -38,6 +38,11 @@
   /* ─── Reset ──────────────────────────────────────────────────────────── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 56px;
+  }
+
   body {
     font-family: "Segoe UI", system-ui, sans-serif;
     background: #e8eef5;
@@ -45,6 +50,49 @@
     font-size: 13.5px;
     line-height: 1.65;
   }
+
+  /* ─── Selection color ────────────────────────────────────────────────── */
+  ::selection { background: rgba(15,118,110,0.18); color: var(--brand); }
+
+  /* ─── Focus ring ─────────────────────────────────────────────────────── */
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
+
+  /* ─── Reading progress bar ───────────────────────────────────────────── */
+  #read-progress {
+    position: fixed;
+    top: 0; left: 0;
+    width: 0%;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent) 0%, var(--gold) 100%);
+    z-index: 9999;
+    transition: width 0.08s linear;
+    border-radius: 0 2px 2px 0;
+  }
+
+  /* ─── Back to top button ─────────────────────────────────────────────── */
+  #back-top {
+    position: fixed;
+    bottom: 28px; right: 28px;
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    background: var(--brand);
+    color: #fff;
+    border: none;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: translateY(14px) scale(0.9);
+    transition: opacity 0.25s ease, transform 0.25s ease, background 0.2s;
+    box-shadow: 0 4px 18px rgba(15,23,42,0.25);
+    z-index: 9998;
+  }
+  #back-top.visible { opacity: 1; transform: translateY(0) scale(1); }
+  #back-top:hover { background: var(--accent); }
+  #back-top:active { transform: scale(0.94); }
 
   /* ─── Page shell ─────────────────────────────────────────────────────── */
   .page {
@@ -127,7 +175,8 @@
     border-bottom: 1px solid transparent;
     transition: color 0.15s, border-color 0.15s;
   }
-  .toc-pill:hover { color: var(--accent); border-bottom-color: var(--accent); }
+  .toc-pill:hover  { color: var(--accent); border-bottom-color: var(--accent); }
+  .toc-pill.active { color: var(--accent); font-weight: 700; border-bottom-color: var(--accent); }
   .toc-num { color: var(--muted); font-size: 10.5px; margin-right: 6px; font-weight: 700; }
 
   /* ─── Legend banner ──────────────────────────────────────────────────── */
@@ -213,7 +262,7 @@
     font-size: 11.5px;
     letter-spacing: 0.3px;
   }
-  td { padding: 8px 13px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  td { padding: 8px 13px; border-bottom: 1px solid var(--border); vertical-align: top; transition: background 0.15s; }
   tr:nth-child(even) td { background: var(--light); }
   tr:hover td { background: var(--light-teal); }
 
@@ -281,6 +330,11 @@
     border-radius: 8px;
     background: linear-gradient(180deg, #fff 0%, #f8fbfd 100%);
     padding: 18px 20px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .metric-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 28px rgba(15,23,42,0.11);
   }
   .metric-card .m-label {
     font-size: 10px; font-weight: 700; text-transform: uppercase;
@@ -302,6 +356,11 @@
     padding: 15px 17px;
     background: #fff;
     font-size: 12.5px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 22px rgba(15,23,42,0.09);
   }
   .card .ctag {
     font-size: 10px; font-weight: 700; text-transform: uppercase;
@@ -343,6 +402,11 @@
     border: 1px solid var(--border);
     background: linear-gradient(180deg, #fff 0%, #f9fbfd 100%);
     text-align: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .phase-box:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(15,23,42,0.09);
   }
   .phase-box .n {
     display: inline-flex;
@@ -390,6 +454,11 @@
     border-radius: 8px;
     background: #fff;
     overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .timeline-box:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(15,23,42,0.09);
   }
   .timeline-head {
     padding: 11px 15px;
@@ -560,6 +629,36 @@
     color: var(--muted);
   }
 
+  /* ─── Cover polish ───────────────────────────────────────────────────── */
+  .cover h1 { text-shadow: 0 2px 14px rgba(0,0,0,0.18); }
+  .cover .meta span {
+    transition: background 0.2s, border-color 0.2s;
+    cursor: default;
+  }
+  .cover .meta span:hover {
+    background: rgba(255,255,255,0.22);
+    border-color: rgba(255,255,255,0.32);
+  }
+
+  /* ─── Recommendation block hover ─────────────────────────────────────── */
+  .rec { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .rec:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(15,23,42,0.08); }
+
+  /* ─── Example pair hover ─────────────────────────────────────────────── */
+  .example-pair { transition: box-shadow 0.2s ease; }
+  .example-pair:hover { box-shadow: 0 6px 24px rgba(15,23,42,0.09); }
+
+  /* ─── Section fade-in on scroll ──────────────────────────────────────── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 0.55s ease, transform 0.55s ease;
+  }
+  .reveal.in-view {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
   /* ─── Responsive ─────────────────────────────────────────────────────── */
   @media (max-width: 1000px) {
     .body { padding: 32px 28px; }
@@ -583,6 +682,8 @@
 </style>
 </head>
 <body>
+<div id="read-progress"></div>
+<button id="back-top" aria-label="Back to top">&#8679;</button>
 <div class="page">
 
   <!-- ══ COVER ══════════════════════════════════════════════════════════ -->
@@ -1923,6 +2024,7 @@ route directly to record_decision.</div>
 </div>
 
 <script>
+  /* ── Mermaid ──────────────────────────────────────────────────────────── */
   mermaid.initialize({
     startOnLoad: true,
     theme: "base",
@@ -1937,6 +2039,59 @@ route directly to record_decision.</div>
     },
     flowchart: { curve: "basis", padding: 20 }
   });
+
+  /* ── Reading progress bar ─────────────────────────────────────────────── */
+  const prog    = document.getElementById('read-progress');
+  const backTop = document.getElementById('back-top');
+
+  window.addEventListener('scroll', () => {
+    const scrolled   = window.scrollY;
+    const docHeight  = document.documentElement.scrollHeight - window.innerHeight;
+    prog.style.width = Math.min(100, (scrolled / docHeight) * 100) + '%';
+    backTop.classList.toggle('visible', scrolled > 500);
+  }, { passive: true });
+
+  backTop.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  /* ── Active TOC link on scroll ────────────────────────────────────────── */
+  const sections  = document.querySelectorAll('h2[id]');
+  const tocLinks  = document.querySelectorAll('.toc-pill[href^="#"]');
+
+  const tocObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        tocLinks.forEach(l => l.classList.remove('active'));
+        const active = document.querySelector(`.toc-pill[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-15% 0px -75% 0px' });
+
+  sections.forEach(s => tocObserver.observe(s));
+
+  /* ── Section fade-in on scroll ────────────────────────────────────────── */
+  const revealTargets = [
+    'h2', '.grid-2', '.grid-3', '.grid-4',
+    '.diagram-box', '.phase-strip', '.timeline-strip',
+    '.example-pair', '.rec', '.roadmap', '.oi'
+  ].join(',');
+
+  document.querySelectorAll(revealTargets).forEach(el => {
+    el.classList.add('reveal');
+  });
+
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('in-view');
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.07 });
+
+  document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
 </script>
 </body>
 </html>
