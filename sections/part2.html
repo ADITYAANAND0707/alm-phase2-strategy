@@ -1,0 +1,479 @@
+<div class="part-div">
+  <div class="pd-num">Part II</div>
+  <div class="pd-title">Pipeline Design</div>
+  <div class="pd-desc">Task coverage, pipeline architecture, Jinja2 rationale, platform readiness, and execution playbook</div>
+</div>
+
+<!-- 6 -->
+<!-- TAG: feature | module:task-coverage | impact:high -->
+<h2 id="s6" data-context="feature:task-coverage-map">6. Task Coverage &amp; Construct Map</h2>
+<p>Phase 2 must cover the full operational task family that ALM handles &mdash; not just create-style examples. Each task type maps to a different Jinja2 template and training objective.</p>
+<table>
+  <thead><tr><th>MAL use case</th><th>Input pattern</th><th>Output target</th><th>Why it matters</th></tr></thead>
+  <tbody>
+    <tr><td>Create</td><td>New application request</td><td>Full MAL program</td><td>Core ALM behavior</td></tr>
+    <tr><td>Modify / evolution</td><td>Change request plus existing context</td><td>Evolution block or revised MAL</td><td>Safe updates</td></tr>
+    <tr><td>Explain</td><td>MAL, graph, or validator context</td><td>Structured explanation or agent output</td><td>Supports explainability</td></tr>
+    <tr><td>Policy-constrained</td><td>Intent plus business or domain rules</td><td>Compliant MAL</td><td>Supports policy and domain checks</td></tr>
+    <tr><td>Correction / repair</td><td>Invalid MAL or failure signal</td><td>Corrected MAL</td><td>Closes the validator loop</td></tr>
+    <tr><td>Ambiguity / disambiguation</td><td>Unclear project or entity reference</td><td>Safer explicit flow or confirmation policy</td><td>Reduces modify risk</td></tr>
+  </tbody>
+</table>
+
+<h3>Construct Coverage Grid</h3>
+<p>Tracks which MAL construct families have accepted examples for each task type. Update this grid each time new records are promoted to the registry.</p>
+<table class="coverage-table">
+  <thead>
+    <tr>
+      <th>Construct</th><th>Create</th><th>Modify</th><th>Explain</th><th>Policy-Const.</th><th>Repair</th><th>Disambiguate</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="construct-name">entity</td>
+      <td class="has-ex">&#10003;</td><td class="planned">Plan</td><td class="planned">Plan</td>
+      <td class="planned">Plan</td><td class="has-ex">&#10003;</td><td class="planned">Plan</td>
+    </tr>
+    <tr>
+      <td class="construct-name">workflow</td>
+      <td class="has-ex">&#10003;</td><td class="has-ex">&#10003;</td><td class="planned">Plan</td>
+      <td class="has-ex">&#10003;</td><td class="has-ex">&#10003;</td><td class="has-ex">&#10003;</td>
+    </tr>
+    <tr>
+      <td class="construct-name">policy</td>
+      <td class="planned">Plan</td><td class="planned">Plan</td><td class="has-ex">&#10003;</td>
+      <td class="has-ex">&#10003;</td><td class="planned">Plan</td><td class="planned">Plan</td>
+    </tr>
+    <tr>
+      <td class="construct-name">evolution</td>
+      <td class="planned">Plan</td><td class="has-ex">&#10003;</td><td class="planned">Plan</td>
+      <td class="planned">Plan</td><td class="planned">Plan</td><td class="planned">Plan</td>
+    </tr>
+    <tr>
+      <td class="construct-name">agent</td>
+      <td class="not-yet">&mdash;</td><td class="not-yet">&mdash;</td><td class="not-yet">&mdash;</td>
+      <td class="not-yet">&mdash;</td><td class="not-yet">&mdash;</td><td class="not-yet">&mdash;</td>
+    </tr>
+    <tr>
+      <td class="construct-name">integration</td>
+      <td class="not-yet">&mdash;</td><td class="not-yet">&mdash;</td><td class="not-yet">&mdash;</td>
+      <td class="not-yet">&mdash;</td><td class="not-yet">&mdash;</td><td class="not-yet">&mdash;</td>
+    </tr>
+    <tr>
+      <td class="construct-name">event</td>
+      <td class="not-yet">&mdash;</td><td class="not-yet">&mdash;</td><td class="not-yet">&mdash;</td>
+      <td class="not-yet">&mdash;</td><td class="not-yet">&mdash;</td><td class="not-yet">&mdash;</td>
+    </tr>
+  </tbody>
+</table>
+<p style="font-size:11.5px;color:var(--muted);">&#10003; = example exists in the Example Library (Section 15) &nbsp;&middot;&nbsp; Plan = targeted next &nbsp;&middot;&nbsp; &mdash; = not yet scoped.</p>
+
+<!-- 7 -->
+<!-- TAG: feature | module:jinja2-pipeline | impact:high -->
+<h2 id="s7" data-context="feature:jinja2-pipeline-architecture">7. Pipeline Architecture</h2>
+<p>The five-stage pipeline moves from manually authored gold seeds through controlled template expansion, automated validation, human review, and into the accepted dataset registry. Stage 2 &mdash; Jinja2 template expansion &mdash; is now complete.</p>
+
+<div class="stage-strip-v2">
+  <div class="sv2 sv2-dim">
+    <div class="sv2-num">1</div>
+    <div class="sv2-title">Gold Seeds</div>
+    <div class="sv2-desc">Manually authored canonical MAL intent-output pairs</div>
+    <span class="sv2-tag">6 Seeds Ready</span>
+  </div>
+  <div class="sv2 sv2-active">
+    <div class="sv2-num">2</div>
+    <div class="sv2-title">Jinja2 Expansion</div>
+    <div class="sv2-desc">Template-driven variant generation with domain vocabulary substitution</div>
+    <span class="sv2-tag">Stage 2 Done</span>
+  </div>
+  <div class="sv2 sv2-dim">
+    <div class="sv2-num">3</div>
+    <div class="sv2-title">MAL Validation</div>
+    <div class="sv2-desc">Syntax, schema, and policy checks on all generated candidates</div>
+    <span class="sv2-tag">Separate service</span>
+  </div>
+  <div class="sv2 sv2-dim">
+    <div class="sv2-num">4</div>
+    <div class="sv2-title">Human Review</div>
+    <div class="sv2-desc">Scored acceptance and correction of validated candidates</div>
+    <span class="sv2-tag">Later</span>
+  </div>
+  <div class="sv2 sv2-dim">
+    <div class="sv2-num">5</div>
+    <div class="sv2-title">Registry</div>
+    <div class="sv2-desc">Accepted records promoted to the official dataset registry</div>
+    <span class="sv2-tag">Later</span>
+  </div>
+</div>
+
+<h3>Stage 2 &mdash; Jinja2 Pipeline Data Flow</h3>
+<div class="flow-row">
+  <div class="flow-nd">
+    <div class="flow-box">
+      <div class="fb-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg></div>
+      <div class="fb-lbl">seeds.json</div>
+      <div class="fb-sub">Gold seed records<br/>intent + MAL pairs</div>
+    </div>
+  </div>
+  <div class="flow-arr"><svg viewBox="0 0 20 14"><line x1="0" y1="7" x2="16" y2="7"/><polyline points="10 2 16 7 10 12"/></svg><span>reads</span></div>
+  <div class="flow-nd">
+    <div class="flow-box fb-proc">
+      <div class="fb-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+      <div class="fb-lbl">generate.py</div>
+      <div class="fb-sub">Reads type field<br/>routes to template<br/>renders variants</div>
+    </div>
+  </div>
+  <div class="flow-arr"><svg viewBox="0 0 20 14"><line x1="2" y1="7" x2="18" y2="7"/><polyline points="12 2 18 7 12 12"/><polyline points="8 2 2 7 8 12"/></svg><span>uses</span></div>
+  <div class="flow-nd">
+    <div class="flow-box">
+      <div class="fb-icon"><svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg></div>
+      <div class="fb-lbl">templates/</div>
+      <div class="fb-sub">Jinja2 .j2 files<br/>one per construct</div>
+    </div>
+  </div>
+  <div class="flow-arr"><svg viewBox="0 0 20 14"><line x1="2" y1="7" x2="18" y2="7"/><polyline points="12 2 18 7 12 12"/><polyline points="8 2 2 7 8 12"/></svg><span>vocab</span></div>
+  <div class="flow-nd">
+    <div class="flow-box">
+      <div class="fb-icon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></div>
+      <div class="fb-lbl">telecom.json</div>
+      <div class="fb-sub">Entities, roles,<br/>enums, triggers</div>
+    </div>
+  </div>
+  <div class="flow-arr"><svg viewBox="0 0 20 14"><line x1="0" y1="7" x2="16" y2="7"/><polyline points="10 2 16 7 10 12"/></svg><span>writes</span></div>
+  <div class="flow-nd">
+    <div class="flow-box">
+      <div class="fb-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 15 11 17 15 12"/></svg></div>
+      <div class="fb-lbl">candidates.jsonl</div>
+      <div class="fb-sub">5&ndash;10 variants<br/>per seed record</div>
+    </div>
+  </div>
+</div>
+
+<h3>Seed Classification &mdash; 6 Task Types</h3>
+<p>Each seed record carries a <code>type</code> field that maps it to the correct Jinja2 template and generation strategy.</p>
+<div class="task-type-grid">
+  <div class="ttc tt-create"><div class="tt-letter">A</div><div class="tt-name">Create</div><div class="tt-desc">Build a new application or construct from scratch</div></div>
+  <div class="ttc tt-modify"><div class="tt-letter">B</div><div class="tt-name">Modify</div><div class="tt-desc">Change or extend an existing application</div></div>
+  <div class="ttc tt-repair"><div class="tt-letter">C</div><div class="tt-name">Repair</div><div class="tt-desc">Fix invalid or broken MAL from a validator signal</div></div>
+  <div class="ttc tt-explain"><div class="tt-letter">D</div><div class="tt-name">Explain</div><div class="tt-desc">Describe what a MAL construct or policy does</div></div>
+  <div class="ttc tt-policy"><div class="tt-letter">E</div><div class="tt-name">Policy</div><div class="tt-desc">Generate MAL compliant with business rules</div></div>
+  <div class="ttc tt-disambig"><div class="tt-letter">F</div><div class="tt-name">Disambiguate</div><div class="tt-desc">Handle unclear intent with confirmation-first output</div></div>
+</div>
+
+<h3>Jinja2 Templates &mdash; One Per MAL Construct</h3>
+<p>Each template uses substitution slots filled from the domain pack. All templates follow the formal grammar specification exactly.</p>
+<div class="tmpl-slot-grid">
+  <div class="tsc">
+    <div class="tsc-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg></div>
+    <div class="tsc-name">Entity</div><div class="tsc-file">entity.j2</div>
+    <div class="tsc-slots">
+      <div class="tsc-slot">{{ entity_name }}</div><div class="tsc-slot">{{ attribute_name }}</div>
+      <div class="tsc-slot">{{ type }}</div><div class="tsc-slot">{{ relationship_kind }}</div>
+      <div class="tsc-slot">{{ related_entity }}</div>
+    </div>
+  </div>
+  <div class="tsc">
+    <div class="tsc-icon"><svg viewBox="0 0 24 24"><polyline points="5 12 3 12 12 3 21 12 19 12"/><polyline points="5 12 5 20 19 20 19 12"/><line x1="12" y1="14" x2="12" y2="20"/></svg></div>
+    <div class="tsc-name">Workflow</div><div class="tsc-file">workflow.j2</div>
+    <div class="tsc-slots">
+      <div class="tsc-slot">{{ workflow_name }}</div><div class="tsc-slot">{{ trigger_prefix }}</div>
+      <div class="tsc-slot">{{ trigger_event }}</div><div class="tsc-slot">{{ steps[ ] }}</div>
+    </div>
+  </div>
+  <div class="tsc">
+    <div class="tsc-icon"><svg viewBox="0 0 24 24"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z"/><polyline points="9 12 11 14 15 10"/></svg></div>
+    <div class="tsc-name">Policy</div><div class="tsc-file">policy.j2</div>
+    <div class="tsc-slots">
+      <div class="tsc-slot">{{ policy_name }}</div><div class="tsc-slot">{{ applies_to }}</div>
+      <div class="tsc-slot">{{ rule_condition }}</div><div class="tsc-slot">{{ audit }}</div>
+    </div>
+  </div>
+  <div class="tsc">
+    <div class="tsc-icon"><svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg></div>
+    <div class="tsc-name">Evolution</div><div class="tsc-file">evolution.j2</div>
+    <div class="tsc-slots">
+      <div class="tsc-slot">{{ evolution_name }}</div><div class="tsc-slot">{{ changes[ ] }}</div>
+      <div class="tsc-slot">{{ impacts[ ] }}</div><div class="tsc-slot">{{ migration_steps[ ] }}</div>
+    </div>
+  </div>
+</div>
+
+<h3>Variant Expansion &mdash; 1 Seed Becomes 5&ndash;10 Candidates</h3>
+<div class="variant-demo">
+  <div class="vd-label">Input &mdash; 1 gold seed record</div>
+  <div class="vd-seed">intent: "Build a subscriber onboarding system for a telecom company"<br/>constructs: ["entity", "workflow"] &nbsp;&middot;&nbsp; type: "Create" &nbsp;&middot;&nbsp; domain: "telecom"</div>
+  <div class="vd-arrow"><svg viewBox="0 0 22 28"><line x1="11" y1="2" x2="11" y2="22"/><polyline points="4 16 11 23 18 16"/></svg></div>
+  <div class="vd-sublabel">Jinja2 templates &times; Telecom domain vocabulary</div>
+  <div class="vd-label">Output &mdash; 5 generated variant candidates</div>
+  <div class="vd-row">
+    <div class="vd-card"><div class="vd-num">Variant 1</div><div class="vd-ent">Subscriber</div><div class="vd-wf">OnboardSubscriber<br/>trigger: new_subscriber</div></div>
+    <div class="vd-card"><div class="vd-num">Variant 2</div><div class="vd-ent">SIMCard</div><div class="vd-wf">ActivateSIM<br/>trigger: new_sim_request</div></div>
+    <div class="vd-card"><div class="vd-num">Variant 3</div><div class="vd-ent">ServicePlan</div><div class="vd-wf">UpdateServicePlan<br/>trigger: update_plan</div></div>
+    <div class="vd-card"><div class="vd-num">Variant 4</div><div class="vd-ent">Invoice</div><div class="vd-wf">CancelInvoice<br/>trigger: cancel_invoice</div></div>
+    <div class="vd-card"><div class="vd-num">Variant 5</div><div class="vd-ent">Subscriber</div><div class="vd-wf">VerifySubscriber<br/>trigger: verify_identity</div></div>
+  </div>
+</div>
+
+<h3>Record Schemas &mdash; Input and Output</h3>
+<div class="schema-two">
+  <div class="pre-wrap">
+    <div class="pre-header">JSON &mdash; Seed Record (Input)</div>
+    <pre>{
+  "record_id": "seed_00001",
+  "type":      "Create",
+  "domain":    "telecom",
+  "input": {
+    "intent": "Build a subscriber onboarding system",
+    "domain_pack": null,
+    "current_graph": null,
+    "policy_constraints": []
+  },
+  "output": {
+    "mal": "application SubscriberOnboarding ...",
+    "constructs": ["entity", "workflow"],
+    "explanation": null
+  },
+  "metadata": {
+    "validated": true,
+    "quality_score": 0.95
+  }
+}</pre>
+  </div>
+  <div class="pre-wrap">
+    <div class="pre-header">JSON &mdash; Candidate Record (Output)</div>
+    <pre>{
+  "record_id":      "cand_seed00001_v02",
+  "source_seed_id": "seed_00001",
+  "origin_type":    "jinja2",
+  "template_version": "v1.0",
+  "domain":         "telecom",
+  "type":           "Create",
+  "input": {
+    "intent": "Build a SIMCard management system"
+  },
+  "output": {
+    "mal": "application SIMCardApp ...",
+    "constructs": ["entity", "workflow"]
+  },
+  "metadata": {
+    "status":     "candidate",
+    "provenance": "jinja2"
+  }
+}</pre>
+  </div>
+</div>
+
+<!-- 8 -->
+<h2 id="s8">8. Jinja2-First Rationale</h2>
+<div class="grid-2">
+  <div class="card">
+    <div class="ctag navy">Immediate Build Path</div>
+    <h4>Controlled and Explainable</h4>
+    <ul>
+      <li>Uses approved templates instead of unconstrained generation</li>
+      <li>Maintains legal MAL structure while varying only allowed fields</li>
+      <li>Makes debugging easier because every change is template-driven</li>
+      <li>Fits cleanly into a seed-to-variant dataset pipeline</li>
+    </ul>
+    <div class="stat-pill">Best first implementation for Phase 2</div>
+  </div>
+  <div class="card">
+    <div class="ctag gold">Practical Benefit</div>
+    <h4>Strong Baseline Before LLM Expansion</h4>
+    <ul>
+      <li>Creates a clean benchmark set for later comparison</li>
+      <li>Provides stable examples for prompt design and few-shot inputs</li>
+      <li>Helps define schema and registry contracts early</li>
+      <li>Reduces early hallucination and grammar-drift risk</li>
+    </ul>
+    <div class="stat-pill warn">Build this before relying on model creativity</div>
+  </div>
+</div>
+
+<div class="diagram-box">
+  <div class="diagram-label">Jinja2 Variation Logic</div>
+  <div class="mermaid">
+flowchart LR
+    seed["Approved Seed Intent"] --> tmpl["Structured Template"]
+    tmpl --> payload["Approved Input Payload"]
+    payload --> variant["Rendered MAL Variant"]
+    variant --> syntaxCheck["Syntax + Schema Checks"]
+    syntaxCheck --> accepted["Accepted Template Variant"]
+  </div>
+</div>
+
+<!-- 9 -->
+<h2 id="s9">9. Platform Readiness Assessment</h2>
+<p>Phase 2 does not require a new platform. It needs new workflow and schema layers on top of the architecture that already exists in ALM.</p>
+<table>
+  <thead><tr><th>Component</th><th>Current role</th><th>Phase 2 MAL role</th><th>Readiness</th></tr></thead>
+  <tbody>
+    <tr><td>FastAPI / services</td><td>Orchestration and validation surface</td><td>Generation, validation, review, and promotion workflows</td><td>Ready now</td></tr>
+    <tr><td>PostgreSQL</td><td>Durable operational records</td><td>Dataset registry and source of truth for accepted MAL examples</td><td>Ready &mdash; schema additions needed</td></tr>
+    <tr><td>Apache AGE</td><td>Compiled graph and traversal</td><td>Graph-compile sanity check for generated MAL</td><td>Ready now</td></tr>
+    <tr><td>Redis</td><td>Context and graph cache</td><td>Repeated prompt and validation fragment caching</td><td>Ready now</td></tr>
+    <tr><td>Qdrant</td><td>Semantic retrieval over intents and MAL chunks</td><td>Retrieve similar approved MAL examples and correction patterns</td><td>Ready now</td></tr>
+  </tbody>
+</table>
+<div class="note">
+  <div class="note-line">Phase 2 mainly needs: dataset registry tables, batch validation tooling, review states, novelty checks, and evaluation reporting on top of the existing platform.</div>
+</div>
+
+<!-- 10 -->
+<h2 id="s10">10. Execution Playbook</h2>
+<p>Each stage below should be treated as a distinct build target with its own acceptance criteria and completion signal before the next stage begins.</p>
+
+<h3>10.0 Layered Capability Design</h3>
+<p>Seeds and templates should consciously target each capability layer, not just the Create task type.</p>
+<div class="phase-strip cols-4">
+  <div class="phase-box">
+    <div class="n">L1</div>
+    <h4>Syntax &amp; Structure</h4>
+    <p>Block order, keywords, grammar patterns, and simple correction.<br/><br/><strong>Data:</strong> intent to MAL block; malformed to corrected.<br/><br/><strong>Goal:</strong> Parser-aligned MAL fluency.</p>
+  </div>
+  <div class="phase-box">
+    <div class="n">L2</div>
+    <h4>Task Behavior</h4>
+    <p>Create, modify, explain, and repair behaviors.<br/><br/><strong>Data:</strong> user intent to full MAL; change request to evolution.<br/><br/><strong>Goal:</strong> Aligns model with ALM operating modes.</p>
+  </div>
+  <div class="phase-box">
+    <div class="n">L3</div>
+    <h4>Domain &amp; Policy</h4>
+    <p>Telecom domain rules, business approvals, and policy constraints.<br/><br/><strong>Data:</strong> intent + domain pack to domain-valid MAL.<br/><br/><strong>Goal:</strong> Safe, domain-correct output.</p>
+  </div>
+  <div class="phase-box">
+    <div class="n">L4</div>
+    <h4>Robustness &amp; Recovery</h4>
+    <p>Clarification handling, ambiguity, and recovery after failures.<br/><br/><strong>Data:</strong> rejected output + validator feedback to corrected MAL.<br/><br/><strong>Goal:</strong> Fewer production errors.</p>
+  </div>
+</div>
+<div class="note">
+  <div class="note-line"><span class="tag tag-direction">Planning direction</span>Seed authoring and Jinja2 templates should be distributed across all four layers &mdash; not concentrated only on L1 Create examples. Covering L2&ndash;L4 is what makes the dataset production-grade.</div>
+</div>
+
+<h3>10.1 Gold Seed Examples</h3>
+<ul>
+  <li>Target 40 to 60 clean seed examples as the starting range.</li>
+  <li>Cover distinct MAL construct families: entity, workflow, policy, integration, agent, event, evolution.</li>
+  <li>Keep the seed set versioned and manually curated.</li>
+  <li>Treat seeds as reference truth, not just examples.</li>
+</ul>
+
+<h3>10.2 Jinja2 Template Expansion</h3>
+<ul>
+  <li>Use placeholders for names, enums, attributes, steps, integrations, roles, and policy options.</li>
+  <li>Keep business logic stable while varying legal values.</li>
+  <li>Generate JSON payloads separately from template files for auditability.</li>
+  <li>Export generated pairs in a registry-friendly structure.</li>
+</ul>
+
+<h3>10.3 LLM Variant Expansion</h3>
+<div class="grid-2">
+  <div class="card" style="border-top-color:#0f766e;">
+    <div class="ctag">What We Know</div>
+    <h4>Stable Foundation</h4>
+    <ul>
+      <li>Template expansion works and produces syntactically valid MAL.</li>
+      <li>The validation pipeline (parser, schema, policy, graph) is already defined.</li>
+      <li>The provenance model (seed to template to registry) is clear.</li>
+      <li>The registry lifecycle states are agreed: draft, validated, reviewed, accepted, archived.</li>
+      <li>LLM expansion must come after, not before, the template baseline.</li>
+    </ul>
+    <div class="stat-pill">Build on this &mdash; do not skip it</div>
+  </div>
+  <div class="card" style="border-top-color:#a67c2d;">
+    <div class="ctag warn">What We Don't Know Yet</div>
+    <h4>Open Research Questions</h4>
+    <ul>
+      <li>Which model gives the best balance of MAL structure-following and cost.</li>
+      <li>Whether direct instruction, few-shot, chain-of-thought, or repair prompting performs best.</li>
+      <li>How much diversity is useful before outputs drift from grammar.</li>
+      <li>What score or rule set qualifies a candidate for human review.</li>
+      <li>What metadata must be stored now to support future fine-tuning.</li>
+    </ul>
+    <div class="stat-pill warn">These must be answered before scaling LLM generation</div>
+  </div>
+</div>
+
+<div class="pre-wrap">
+  <div class="pre-header">Prompt Template &mdash; Constrained MAL Generation</div>
+  <pre>SYSTEM:
+  You are an expert MAL generator for the ALM platform.
+  - Only produce MAL inside the allowed construct scope below.
+  - Do NOT generate UI constructs (screens, components, nav).
+  - Follow MAL grammar strictly: application, entity, workflow,
+    policy, agent, integration, event, evolution.
+  - Apply the domain pack for all field names and enum values.
+  - Output format: raw MAL text only.
+
+CONSTRAINT SCOPE:
+  allowed_constructs: [entity, workflow, policy]
+  domain: {{ domain_name }}
+  task_type: {{ task_type }}
+
+REFERENCE SEED:
+{{ seed_mal_text }}
+
+USER INTENT:
+{{ user_intent }}</pre>
+</div>
+
+<h3>10.4 Validation and Filtering</h3>
+<div class="grid-3">
+  <div class="card">
+    <div class="ctag">Gate 1</div><h4>Syntax and Schema</h4>
+    <ul><li>MAL syntax validity</li><li>Required fields present</li><li>Template payload completeness</li></ul>
+  </div>
+  <div class="card">
+    <div class="ctag gold">Gate 2</div><h4>Policy and Graph</h4>
+    <ul><li>Policy compliance checks</li><li>Graph-aware validation</li><li>Structural consistency checks</li></ul>
+  </div>
+  <div class="card">
+    <div class="ctag plan">Gate 3</div><h4>Quality and Duplication</h4>
+    <ul><li>Near-duplicate filtering</li><li>Diversity scoring</li><li>Low-value output rejection</li></ul>
+  </div>
+</div>
+
+<div class="diagram-box">
+  <div class="diagram-label">Validation Funnel &mdash; Candidate Acceptance Flow</div>
+  <div class="mermaid">
+flowchart TD
+    candidate["Generated Candidate"] --> g1["Syntax Check"]
+    g1 --> g2["Schema Check"]
+    g2 --> g3["Policy + Domain Check"]
+    g3 --> g4["Graph Compile Check"]
+    g4 --> g5["Novelty + Duplicate Check"]
+    g5 --> g6["Human Review"]
+    g6 --> accepted["Accepted Registry"]
+    g6 --> rejected["Rejected — Reason Logged"]
+  </div>
+</div>
+
+<div class="diagram-box">
+  <div class="diagram-label">Rejection Feedback Loop &mdash; Closed-Loop Pipeline Improvement</div>
+  <div class="mermaid">
+flowchart LR
+    rejected["Rejected Candidate"] --> reasonLog["Reason Log"]
+    reasonLog --> analysis["Root Cause Analysis"]
+    analysis --> tmplFix["Template Fix"]
+    analysis --> promptFix["Prompt Refinement"]
+    analysis --> seedFix["Seed Review"]
+    tmplFix --> reenter["Re-enter Pipeline"]
+    promptFix --> reenter
+    seedFix --> reenter
+  </div>
+</div>
+
+<h3>10.5 Human Review and Approval</h3>
+<table>
+  <thead><tr><th>Criterion</th><th>Pass Condition</th><th>Reviewer Action if Fail</th></tr></thead>
+  <tbody>
+    <tr><td><strong>MAL syntax validity</strong></td><td>Parser returns zero errors</td><td>Reject &mdash; log syntax error category and source</td></tr>
+    <tr><td><strong>Required fields</strong></td><td>All mandatory construct fields are populated</td><td>Reject &mdash; note which fields are missing</td></tr>
+    <tr><td><strong>Policy compliance</strong></td><td>Domain policy check passes without warnings</td><td>Reject &mdash; flag specific policy violation</td></tr>
+    <tr><td><strong>Graph compile</strong></td><td>Graph compiler accepts the MAL without errors</td><td>Reject &mdash; log compile failure and construct type</td></tr>
+    <tr><td><strong>Novelty</strong></td><td>Cosine similarity to existing registry records &lt; 0.92</td><td>Reject &mdash; mark as near-duplicate</td></tr>
+    <tr><td><strong>Correctness</strong></td><td>Output correctly fulfills the stated user intent</td><td>Correct and re-submit, or reject with correction note</td></tr>
+    <tr><td><strong>Domain accuracy</strong></td><td>All field names, enums, and roles match the approved domain pack</td><td>Correct using domain pack, or reject if drift is significant</td></tr>
+  </tbody>
+</table>

@@ -1,0 +1,100 @@
+<div class="part-div">
+  <div class="pd-num">Part IV</div>
+  <div class="pd-title">Engineering Standards</div>
+  <div class="pd-desc">Governance practices, data schemas, and contract definitions for the pipeline</div>
+</div>
+
+<!-- 13 -->
+<h2 id="s13">13. Governance &amp; Engineering Standards</h2>
+<table>
+  <thead><tr><th>Method</th><th>Why It Matters</th><th>Recommendation</th></tr></thead>
+  <tbody>
+    <tr><td>Dataset governance</td><td>Prevents silent drift in accepted training data</td><td>Version the dataset, registry, templates, prompts, and model choices separately</td></tr>
+    <tr><td>Decision log</td><td>Helps the team remember why approaches were chosen</td><td>Track confirmed choices, deferred choices, and rationale in the Decision Log (Section 19)</td></tr>
+    <tr><td>Acceptance criteria</td><td>Prevents subjective approvals and inconsistent review quality</td><td>Use the checklist in the Execution Playbook (Section 10.5) &mdash; update as new quality issues emerge</td></tr>
+    <tr><td>Provenance tracking</td><td>Allows every training record to be traced back to seed, template, prompt, and reviewer</td><td>Store origin metadata on every accepted record</td></tr>
+    <tr><td>Failure analysis</td><td>Improves later stages faster than only counting accepted records</td><td>Keep a reject log with reason codes and sample examples</td></tr>
+    <tr><td>Promotion workflow</td><td>Separates draft candidates from trusted registry data</td><td>Use draft, validated, reviewed, accepted, and archived states</td></tr>
+  </tbody>
+</table>
+
+<!-- 14 -->
+<!-- TAG: feature | module:data-schema | impact:high -->
+<h2 id="s14" data-context="feature:data-schema-contracts">14. Data Schemas &amp; Contracts</h2>
+<p>Define these artifacts early so the pipeline stays maintainable from the first record forward.</p>
+
+<h3>14.1 Seed Record</h3>
+<div class="pre-wrap">
+  <div class="pre-header">JSON &mdash; Seed Record (confirmed schema)</div>
+  <pre>{
+  "record_id": "seed_00001",
+  "type":      "Create",
+  "domain":    "telecom",
+  "input": {
+    "intent":              "Build a subscriber onboarding system for a telecom company",
+    "domain_pack":         null,
+    "current_graph":       null,
+    "policy_constraints":  []
+  },
+  "output": {
+    "mal":         "application SubscriberOnboarding\n  domain Telecom\n  version 1.0\n...",
+    "constructs":  ["entity", "workflow"],
+    "impacted_components": [],
+    "explanation": null,
+    "migration_steps": []
+  },
+  "metadata": {
+    "source":        "production",
+    "validated":     true,
+    "graph_compiled": true,
+    "quality_score": 0.95
+  }
+}</pre>
+</div>
+
+<h3>14.2 Template Payload</h3>
+<div class="pre-wrap">
+  <div class="pre-header">JSON &mdash; Jinja2 Payload</div>
+  <pre>{
+  "application_name": "OnboardCustomer",
+  "entity_name":      "Subscriber",
+  "attributes": [
+    { "name": "address", "type": "STRING" },
+    { "name": "phone",   "type": "STRING" }
+  ],
+  "workflow_steps": ["validate_kyc", "verify_otp", "activate_subscriber"],
+  "policy_name":    "KYCPolicy"
+}</pre>
+</div>
+
+<h3>14.3 Accepted Registry Record</h3>
+<div class="pre-wrap">
+  <div class="pre-header">JSON &mdash; Registry Record</div>
+  <pre>{
+  "record_id":        "accepted_000421",
+  "origin_type":      "jinja2",
+  "source_seed_id":   "seed_onboarding_001",
+  "template_version": "v1.0",
+  "prompt_version":   null,
+  "model_version":    null,
+  "validation_status":"passed",
+  "review_status":    "accepted",
+  "review_score":     4.7,
+  "domain":           "telecom",
+  "task_type":        "create",
+  "layer":            "L2",
+  "mal_text":         "application OnboardCustomer domain Telecom ..."
+}</pre>
+</div>
+
+<h3>14.4 Registry Lifecycle</h3>
+<table>
+  <thead><tr><th>Status</th><th>Meaning</th><th>When It Moves Forward</th></tr></thead>
+  <tbody>
+    <tr><td><code>draft</code></td><td>Freshly generated from seed, Jinja2, or LLM</td><td>After automated validation starts</td></tr>
+    <tr><td><code>validated</code></td><td>Passed parser, policy, and compile checks</td><td>After novelty and duplicate review</td></tr>
+    <tr><td><code>reviewed</code></td><td>Seen by a reviewer and scored</td><td>After acceptance decision</td></tr>
+    <tr><td><code>accepted</code></td><td>Approved for registry use</td><td>Available for prompting, evaluation, and later adaptation</td></tr>
+    <tr><td><code>archived</code></td><td>Kept for history but not active for current usage</td><td>When records are replaced or superseded</td></tr>
+  </tbody>
+</table>

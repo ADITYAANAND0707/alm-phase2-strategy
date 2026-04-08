@@ -1,0 +1,433 @@
+<div class="part-div">
+  <div class="pd-num">Part V</div>
+  <div class="pd-title">Reference &amp; Governance</div>
+  <div class="pd-desc">Example library, risk register, roadmap, decision log, and document history</div>
+</div>
+
+<!-- 15 -->
+<!-- TAG: feature | module:example-library | impact:medium -->
+<h2 id="s15" data-context="feature:example-library">15. Example Library</h2>
+<p>Representative intent-to-MAL pairs organized by task type. This library grows as Phase 2 produces accepted records. Each example maps to the construct coverage grid in Section 6.</p>
+
+<div class="example-pair">
+  <div class="ep-head">
+    <span class="ep-type create">Create</span>
+    <span class="ep-title">Telecom Subscriber Onboarding</span>
+  </div>
+  <div class="ep-body">
+    <div class="ep-col">
+      <div class="ep-label">User Intent</div>
+      <div class="ep-text">Create a telecom subscriber onboarding application with KYC verification and subscription activation.</div>
+    </div>
+    <div class="ep-col">
+      <div class="ep-label">MAL Output</div>
+      <div class="ep-code">application SubscriberOnboarding
+  domain Telecom version 1.0
+entity Subscriber
+  attributes
+    id UUID required
+    name STRING required
+    phone STRING required
+    kyc_status ENUM(Pending,Verified,Rejected)
+workflow OnboardSubscriber
+  trigger new_subscriber_request
+  steps
+    capture_subscriber_details
+    verify_kyc
+    create_account
+    activate_subscription</div>
+    </div>
+  </div>
+</div>
+
+<div class="example-pair">
+  <div class="ep-head">
+    <span class="ep-type policy">Policy-Constrained</span>
+    <span class="ep-title">KYC Required Before Activation</span>
+  </div>
+  <div class="ep-body">
+    <div class="ep-col">
+      <div class="ep-label">User Intent</div>
+      <div class="ep-text">Allow subscription activation only when KYC is verified and keep an audit trail.</div>
+    </div>
+    <div class="ep-col">
+      <div class="ep-label">MAL Output</div>
+      <div class="ep-code">workflow ActivateSubscription
+  trigger activation_requested
+  steps
+    check_kyc
+    provision_subscription
+    confirm_activation
+policy KycBeforeActivation
+  applies_to ActivateSubscription
+  rules
+    require kyc_verified == true
+  audit true</div>
+    </div>
+  </div>
+</div>
+
+<div class="example-pair">
+  <div class="ep-head">
+    <span class="ep-type repair">Correction / Repair</span>
+    <span class="ep-title">Missing Required Attribute Fix</span>
+  </div>
+  <div class="ep-body">
+    <div class="ep-col">
+      <div class="ep-label">Validator Signal</div>
+      <div class="ep-text">Validation error: entity <code>Subscriber</code> is missing required attribute <code>id</code> of type UUID. Workflow <code>OnboardSubscriber</code> references undefined entity step.</div>
+    </div>
+    <div class="ep-col">
+      <div class="ep-label">Corrected MAL</div>
+      <div class="ep-code">entity Subscriber
+  attributes
+    id UUID required
+    name STRING required
+    phone STRING required
+workflow OnboardSubscriber
+  trigger new_subscriber
+  steps
+    validate_identity
+    create_account
+    send_welcome</div>
+    </div>
+  </div>
+</div>
+
+<div class="example-pair">
+  <div class="ep-head">
+    <span class="ep-type explain">Explain</span>
+    <span class="ep-title">Expense Approval with Threshold</span>
+  </div>
+  <div class="ep-body">
+    <div class="ep-col">
+      <div class="ep-label">User Intent</div>
+      <div class="ep-text">Explain how the expense approval policy works for high-value requests.</div>
+    </div>
+    <div class="ep-col">
+      <div class="ep-label">Expected Explanation Output</div>
+      <div class="ep-code">The policy HighValueApproval applies to the
+ReviewExpense workflow. It requires a
+supervisor to approve any request where
+request_amount > 5000. All approvals
+are audited. Requests below the threshold
+route directly to record_decision.</div>
+    </div>
+  </div>
+</div>
+
+<div class="example-pair">
+  <div class="ep-head">
+    <span class="ep-type modify">Modify / Evolution</span>
+    <span class="ep-title">Add Document Upload Step to Onboarding</span>
+  </div>
+  <div class="ep-body">
+    <div class="ep-col">
+      <div class="ep-label">Change Request Intent</div>
+      <div class="ep-text">Add a document upload step to the existing subscriber onboarding workflow and track upload status on the entity.</div>
+    </div>
+    <div class="ep-col">
+      <div class="ep-label">MAL Evolution Block</div>
+      <div class="ep-code">evolution SubscriberOnboarding version 2.0
+  changes
+    Subscriber
+    UpdateOnboardSubscriberWorkflow
+  impacts
+    SubscriberOnboardingApp
+  migration_steps
+    "Add upload_status attribute to Subscriber"
+    "Insert upload_documents step after capture"
+    "Add verify_documents as final step"</div>
+    </div>
+  </div>
+</div>
+
+<div class="example-pair">
+  <div class="ep-head">
+    <span class="ep-type disambig">Ambiguity / Disambiguation</span>
+    <span class="ep-title">Unclear Subscriber Update Request</span>
+  </div>
+  <div class="ep-body">
+    <div class="ep-col">
+      <div class="ep-label">Ambiguous User Intent</div>
+      <div class="ep-text">"Update the subscriber record." &mdash; The intent is unclear: no subscriber ID, no field list, no change type specified. A safe MAL model should pause and confirm before generating output.</div>
+    </div>
+    <div class="ep-col">
+      <div class="ep-label">Confirmation-First MAL Output</div>
+      <div class="ep-code">policy DisambiguateSubscriberUpdate
+  applies_to UpdateSubscriber
+  requires_clarification
+    when subscriber_id is null
+      prompt
+        "Which subscriber record should
+         be updated? Provide subscriber
+         ID or lookup criteria."
+    when update_fields is null
+      prompt
+        "Which fields should be modified?
+         Specify attribute names and
+         new values."
+  fallback pause_and_confirm</div>
+    </div>
+  </div>
+</div>
+
+<!-- 16 -->
+<h2 id="s16">16. Risk Register</h2>
+<div class="oi oi-high"><span class="sev sev-high">High</span><div><strong>LLM stage still not fully defined</strong> &mdash; Model choice, prompt strategy, and acceptance logic are all open. Keep this stage explicitly marked as proposed until each is resolved.</div></div>
+<div class="oi oi-high"><span class="sev sev-high">High</span><div><strong>Invalid MAL risk</strong> &mdash; More volume creates more invalid outputs unless syntax and validation gates are automated before scaling generation.</div></div>
+<div class="oi oi-mid"><span class="sev sev-mid">Medium</span><div><strong>Low-diversity dataset risk</strong> &mdash; Template expansion can become repetitive if payload generation is too narrow. Diversity criteria must be tracked, not assumed.</div></div>
+<div class="oi oi-mid"><span class="sev sev-mid">Medium</span><div><strong>Review bottleneck</strong> &mdash; Human approval will slow the pipeline if scoring, batching, and rejection reasons are not standardized before scaling review.</div></div>
+<div class="oi oi-mid"><span class="sev sev-mid">Medium</span><div><strong>Domain drift risk</strong> &mdash; UI or unrelated constructs can leak into the dataset if generation is not kept inside the MAL-only grammar scope.</div></div>
+<div class="oi oi-mid"><span class="sev sev-mid">Medium</span><div><strong>Graph compile failure</strong> &mdash; Syntactically valid text can still fail downstream compile expectations. Graph checks must remain part of the acceptance funnel.</div></div>
+<div class="oi oi-plan"><span class="sev sev-plan">Planned</span><div><strong>Registry discipline</strong> &mdash; Accepted records must move through explicit states (draft, validated, reviewed, accepted, archived) rather than accumulating in a flat file.</div></div>
+
+<!-- 17 -->
+<h2 id="s17">17. Recommendation</h2>
+<div class="rec rec-go">
+  <span class="rec-tag tag-go">Go</span>
+  <div>
+    <span class="rt">Build the Jinja2 and Python expansion layer first.</span>
+    The most concrete, lowest-risk, and easiest-to-govern Phase 2 starting point. It gives the team a controlled synthetic-data baseline before introducing model-driven variation.
+  </div>
+</div>
+<div class="rec rec-keep">
+  <span class="rec-tag tag-keep">Keep</span>
+  <div>
+    <span class="rt">Reuse existing ALM validation and governance architecture.</span>
+    The repo already models validation, graph reasoning, policy checks, and versioning. Those ideas should drive the synthetic-data pipeline design, not be duplicated separately.
+  </div>
+</div>
+<div class="rec rec-next">
+  <span class="rec-tag tag-next">Next</span>
+  <div>
+    <span class="rt">Introduce LLM expansion only after the baseline is measurable.</span>
+    Once template expansion produces accepted data with clear metrics, the team can add model-driven variation with much stronger confidence and better comparison data.
+  </div>
+</div>
+
+<!-- 18 -->
+<h2 id="s18">18. Roadmap</h2>
+<div class="roadmap">
+  <div class="rm-col">
+    <div class="rm-head" style="background:var(--now-col);">
+      <div class="rmlabel">Now</div>
+      <div class="rmtitle">Phase 2 Foundation</div>
+    </div>
+    <div class="rm-body">
+      <div class="rm-item"><div class="rm-title">Define Gold Seeds</div><div class="rm-desc">Build a curated seed set covering all MAL task types and construct families across all four capability layers.</div></div>
+      <div class="rm-item"><div class="rm-title">Design Jinja2 Templates</div><div class="rm-desc">Convert seeds into structured templates with safe substitution zones.</div></div>
+      <div class="rm-item"><div class="rm-title">Create Payload Generator</div><div class="rm-desc">Use Python to generate approved payload combinations and emit deterministic variants.</div></div>
+      <div class="rm-item"><div class="rm-title">Define Registry Contract</div><div class="rm-desc">Set a simple but strict schema for accepted synthetic records and metadata.</div></div>
+    </div>
+  </div>
+  <div class="rm-col">
+    <div class="rm-head" style="background:var(--next-col);">
+      <div class="rmlabel">Next</div>
+      <div class="rmtitle">Controlled Expansion</div>
+    </div>
+    <div class="rm-body">
+      <div class="rm-item"><div class="rm-title">Add Validation Pipeline</div><div class="rm-desc">Apply syntax, schema, policy, graph, and duplicate checks automatically.</div></div>
+      <div class="rm-item"><div class="rm-title">Introduce Review Workflow</div><div class="rm-desc">Add scoring, acceptance states, reviewer notes, and promotion logic.</div></div>
+      <div class="rm-item"><div class="rm-title">Measure Coverage</div><div class="rm-desc">Track accepted count, diversity, rejection reasons, and construct coverage using Section 6 grid.</div></div>
+      <div class="rm-item"><div class="rm-title">Pilot LLM Expansion</div><div class="rm-desc">Run a controlled experiment with prompt versioning, domain packs, and strict filtering.</div></div>
+    </div>
+  </div>
+  <div class="rm-col">
+    <div class="rm-head" style="background:var(--later-col);">
+      <div class="rmlabel">Later</div>
+      <div class="rmtitle">Mature Data Factory</div>
+    </div>
+    <div class="rm-body">
+      <div class="rm-item"><div class="rm-title">Registry as Source of Truth</div><div class="rm-desc">Promote accepted data into a maintained dataset registry with full versioning.</div></div>
+      <div class="rm-item"><div class="rm-title">Model Strategy Layer</div><div class="rm-desc">Compare providers, prompting styles, and strategies by quality and cost using Section 12 methods.</div></div>
+      <div class="rm-item"><div class="rm-title">Active Error Learning</div><div class="rm-desc">Use rejection feedback loop (Section 10.4) to improve templates, payload rules, and prompts.</div></div>
+      <div class="rm-item"><div class="rm-title">Efficient Fine-Tuning</div><div class="rm-desc">Start LoRA-style adaptation experiments on the accepted MAL dataset.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- 19 -->
+<!-- TAG: improvement | module:governance | impact:medium -->
+<h2 id="s19">19. Decision Log</h2>
+<p>Tracks key architecture and strategy decisions made during Phase 2. Update this section whenever a significant choice is made or reversed.</p>
+<table>
+  <thead>
+    <tr><th>Decision</th><th>Choice Made</th><th>Rationale</th><th>Status</th><th>Date</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Primary language scope</strong></td>
+      <td>MAL only &mdash; no UI constructs in wave 1</td>
+      <td>Keeps dataset tightly aligned with one grammar; prevents construct fragmentation</td>
+      <td><span class="tag tag-confirmed">Confirmed</span></td>
+      <td>Apr 2026</td>
+    </tr>
+    <tr>
+      <td><strong>First implementation method</strong></td>
+      <td>Jinja2 + Python template expansion</td>
+      <td>Highest certainty, lowest risk, fully explainable outputs</td>
+      <td><span class="tag tag-confirmed">Confirmed</span></td>
+      <td>Apr 2026</td>
+    </tr>
+    <tr>
+      <td><strong>Model adaptation approach</strong></td>
+      <td>Efficient fine-tuning (LoRA-style) over full-parameter retraining</td>
+      <td>Cheaper, faster to iterate, fits current project maturity</td>
+      <td><span class="tag tag-confirmed">Confirmed</span></td>
+      <td>Apr 2026</td>
+    </tr>
+    <tr>
+      <td><strong>Registry lifecycle states</strong></td>
+      <td>draft &rarr; validated &rarr; reviewed &rarr; accepted &rarr; archived</td>
+      <td>Mirrors ALM versioning philosophy; prevents flat-file accumulation</td>
+      <td><span class="tag tag-confirmed">Confirmed</span></td>
+      <td>Apr 2026</td>
+    </tr>
+    <tr>
+      <td><strong>LLM expansion timing</strong></td>
+      <td>After Jinja2 baseline is measurable and validation is automated</td>
+      <td>Prevents premature scaling of unvalidated generation</td>
+      <td><span class="tag tag-confirmed">Confirmed</span></td>
+      <td>Apr 2026</td>
+    </tr>
+    <tr>
+      <td><strong>Capability layer coverage</strong></td>
+      <td>Seeds must span all four capability layers (L1&ndash;L4)</td>
+      <td>Concentrating only on L1 Create examples produces a weak, narrow dataset</td>
+      <td><span class="tag tag-confirmed">Confirmed</span></td>
+      <td>Apr 2026</td>
+    </tr>
+    <tr>
+      <td><strong>Model and prompt choice for LLM stage</strong></td>
+      <td>Not decided &mdash; open research question</td>
+      <td>Requires empirical comparison across providers and prompt styles on MAL grammar compliance</td>
+      <td><span class="tag tag-open">Open</span></td>
+      <td>Apr 2026</td>
+    </tr>
+    <tr>
+      <td><strong>Acceptance score formula</strong></td>
+      <td>Not defined &mdash; requires calibration</td>
+      <td>Must be set before scaling human review to prevent subjective inconsistency</td>
+      <td><span class="tag tag-open">Open</span></td>
+      <td>Apr 2026</td>
+    </tr>
+    <tr>
+      <td><strong>Agent, integration, event seeding</strong></td>
+      <td>Deferred &mdash; not in first data wave</td>
+      <td>These constructs require additional domain expertise for correct seed authoring</td>
+      <td><span class="tag tag-planned">Deferred</span></td>
+      <td>Apr 2026</td>
+    </tr>
+    <tr>
+      <td><strong>Seed JSON schema</strong></td>
+      <td>Confirmed format: <code>type</code>, <code>input.intent</code>, <code>output.mal</code>, <code>output.constructs</code></td>
+      <td>Schema confirmed with seed authoring team; pipeline reads this structure directly</td>
+      <td><span class="tag tag-confirmed">Confirmed</span></td>
+      <td>Apr 2026</td>
+    </tr>
+    <tr>
+      <td><strong>Seed <code>type</code> field meaning</strong></td>
+      <td>Task category &mdash; 6 values: Create / Modify / Repair / Explain / Policy / Disambiguate</td>
+      <td>Directly maps each seed to the correct Jinja2 template</td>
+      <td><span class="tag tag-confirmed">Confirmed</span></td>
+      <td>Apr 2026</td>
+    </tr>
+    <tr>
+      <td><strong>MAL grammar authority</strong></td>
+      <td>Formal grammar document is authoritative; strategy doc MAL examples are not normative</td>
+      <td>Grammar doc defines the parser-compatible structure all templates must follow</td>
+      <td><span class="tag tag-confirmed">Confirmed</span></td>
+      <td>Apr 2026</td>
+    </tr>
+    <tr>
+      <td><strong>Evolution MAL format</strong></td>
+      <td>Grammar doc style &mdash; <code>changes</code> + <code>impacts</code> + <code>migration_steps</code> blocks</td>
+      <td>Overrides the modify entity / insert_step style used in earlier strategy doc examples</td>
+      <td><span class="tag tag-confirmed">Confirmed</span></td>
+      <td>Apr 2026</td>
+    </tr>
+    <tr>
+      <td><strong>MAL validation ownership</strong></td>
+      <td>Separate micro-validator service handles all syntax and schema checks</td>
+      <td>Clean separation of concerns &mdash; Jinja2 pipeline generates candidates only</td>
+      <td><span class="tag tag-confirmed">Confirmed</span></td>
+      <td>Apr 2026</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- 20 -->
+<h2 id="s20">20. Document Maintenance</h2>
+<div class="grid-2">
+  <div class="card">
+    <div class="ctag navy">Stable Sections</div>
+    <h4>Change Rarely</h4>
+    <ul>
+      <li>Project purpose and the five-stage pipeline structure</li>
+      <li>Why Jinja2 comes before LLM expansion</li>
+      <li>MAL grammar scope and excluded constructs</li>
+      <li>Core data contracts and registry lifecycle</li>
+      <li>Capability layer design (Section 10.0)</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="ctag gold">Living Sections</div>
+    <h4>Update Regularly</h4>
+    <ul>
+      <li>Progress tracker counts in Section 2 &mdash; every sprint</li>
+      <li>Coverage grid in Section 6 &mdash; each time new examples are promoted</li>
+      <li>LLM strategy, chosen model, and prompt style decisions</li>
+      <li>Decision log (Section 19) &mdash; each key choice made or changed</li>
+      <li>Example library (Section 15) as new accepted pairs are approved</li>
+      <li>Changelog (Section 21) with each document update</li>
+    </ul>
+  </div>
+</div>
+
+<!-- 21 -->
+<!-- TAG: improvement | module:versioning | impact:low -->
+<h2 id="s21">21. Changelog</h2>
+<table>
+  <thead>
+    <tr><th>Version</th><th>Date</th><th>Summary of Changes</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>v1.0</strong></td><td>Apr 2026</td>
+      <td>Initial planning document &mdash; scope definition, five-stage pipeline overview, Jinja2-first rationale, seed and registry contracts.</td>
+    </tr>
+    <tr>
+      <td><strong>v1.1</strong></td><td>Apr 2026</td>
+      <td>Visual enhancements &mdash; metric cards, top-level Mermaid diagram, Now/Next/Later timeline strip, validation funnel diagram, redesigned example library with code pairs.</td>
+    </tr>
+    <tr>
+      <td><strong>v1.2</strong></td><td>Apr 2026</td>
+      <td>Defect audit and color composition fix &mdash; updated CSS variables, roadmap styles, code block pre-wrap, Mermaid theme, tag colors, h4 global rules, and cover metadata.</td>
+    </tr>
+    <tr data-log-id="log_2026_04_06_01">
+      <td><strong>v2.0</strong></td><td>Apr 2026</td>
+      <td>Major update &mdash; added TOC with anchor navigation, color legend banner, pipeline progress tracker, layered capability design (L1&ndash;L4), known vs. unknown cards, constrained prompt template, domain pack example, rejection feedback loop diagram, construct coverage grid, two new example pairs (Modify and Disambiguate), Synthetic Data Methods section, acceptance criteria checklist, decision log, and version history.</td>
+    </tr>
+    <tr data-log-id="log_2026_04_08_02">
+      <td><strong>v2.2</strong></td><td>Apr 2026</td>
+      <td>Stage 2 pipeline built and deployed &mdash; 6 gold seeds authored (one per task type), 4 Jinja2 templates (entity.j2, workflow.j2, policy.j2, evolution.j2), telecom domain pack, and generate.py producing 35 candidate records. Status dashboard updated to reflect current counts. All emoji icons replaced with inline SVGs. Cover status updated to Stage 2 Built.</td>
+    </tr>
+    <tr data-log-id="log_2026_04_07_01">
+      <td><strong>v2.1</strong></td><td>Apr 2026</td>
+      <td>Pipeline implementation update &mdash; replaced Section 7 phase strip with full visual pipeline overview (stage strip, data flow diagram, 6 task type cards, 4 Jinja2 template cards, variant expansion demo, input/output schemas). Confirmed seed JSON schema, type field classification, grammar doc as MAL authority, evolution format, and validation ownership.</td>
+    </tr>
+    <tr>
+      <td><strong>v3.0</strong></td><td>Apr 2026</td>
+      <td>Document refactored &mdash; split into shell + external CSS/JS + dynamic HTML sections for maintainability. Added Quick Brief section, lighter visual theme, KPI progress bars, coverage heatmap, click-to-expand cards, rewritten Executive Summary in plain language.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="footnote">
+  Built as a Phase 2 planning and communication asset for ALM synthetic data strategy.
+  Grounded in the ALM repository architecture, the <code>MAL_Synthetic_Data_Strategy_Report_fixed.docx</code>,
+  and the current understanding that Jinja2 and Python-based expansion is the first concrete implementation step.
+  &nbsp;&middot;&nbsp;
+  Document version: 3.0 &nbsp;&middot;&nbsp; Last updated: April 2026
+</div>

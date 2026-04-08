@@ -1,0 +1,90 @@
+<div class="part-div">
+  <div class="pd-num">Part III</div>
+  <div class="pd-title">Strategy &amp; Methods</div>
+  <div class="pd-desc">Model adaptation approach and research methods that inform the pipeline design</div>
+</div>
+
+<!-- 11 -->
+<h2 id="s11">11. Model Adaptation Strategy</h2>
+<p>The strategy recommends efficient fine-tuning on the accepted MAL dataset as the first serious model-adaptation step &mdash; not full-parameter retraining. The accepted registry is the prerequisite, not the experiment target.</p>
+<table>
+  <thead><tr><th>Dimension</th><th>Full-parameter fine-tuning</th><th>Efficient fine-tuning</th></tr></thead>
+  <tbody>
+    <tr><td>What it updates</td><td>All model weights</td><td>Small trainable subset &mdash; adapters or LoRA-style methods</td></tr>
+    <tr><td>Strength</td><td>Highest adaptation capacity</td><td>Faster, cheaper, easier to iterate</td></tr>
+    <tr><td>Weakness</td><td>Expensive and riskier with evolving data</td><td>Lower adaptation ceiling than full retraining</td></tr>
+    <tr><td>Best fit for current Phase 2</td><td>Not first</td><td>Recommended first step</td></tr>
+  </tbody>
+</table>
+<div class="note">
+  <div class="note-line"><span class="tag tag-direction">Planning direction</span>Efficient fine-tuning should only begin once the accepted dataset has measurable quality. The accepted registry is the prerequisite &mdash; not the experiment target.</div>
+</div>
+
+<!-- 12 -->
+<h2 id="s12">12. Research Methods Reference</h2>
+<p>These research methods informed the Phase 2 pipeline design. <strong>Core</strong> methods directly shape how data is generated and filtered. <strong>Supporting</strong> methods provide evidence and precedent for scaling and quality decisions.</p>
+<table class="methods-table">
+  <thead>
+    <tr>
+      <th>Method / Reference</th>
+      <th>Main Idea</th>
+      <th>Best Use for MAL</th>
+      <th>Difficulty</th>
+      <th>Role</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr class="core">
+      <td><strong>Self-Instruct</strong></td>
+      <td>Seed to generate to filter bootstrapping loop</td>
+      <td>Base MAL synthetic pipeline &mdash; seeds drive generation, validation filters output</td>
+      <td>Medium</td>
+      <td><span class="tag tag-confirmed">Core</span></td>
+    </tr>
+    <tr class="core">
+      <td><strong>Evol-Instruct / WizardLM</strong></td>
+      <td>Grow instruction complexity through progressive rewriting</td>
+      <td>Harder modify, policy-edge, and repair examples from simpler seeds</td>
+      <td>Medium</td>
+      <td><span class="tag tag-confirmed">Core</span></td>
+    </tr>
+    <tr class="core">
+      <td><strong>Orca</strong></td>
+      <td>Explanation-rich synthetic supervision using chain-of-thought traces</td>
+      <td>Explain and repair pairs &mdash; richer MAL task behavior data</td>
+      <td>Medium</td>
+      <td><span class="tag tag-confirmed">Core</span></td>
+    </tr>
+    <tr class="core">
+      <td><strong>AgentInstruct</strong></td>
+      <td>Agentic prompt/response creation from raw document sources</td>
+      <td>Scaled MAL data-factory workflows &mdash; future high-volume generation</td>
+      <td>High</td>
+      <td><span class="tag tag-confirmed">Core reference</span></td>
+    </tr>
+    <tr class="support">
+      <td><strong>Phi-4</strong></td>
+      <td>Data-quality-centric training &mdash; curated synthetic data beats more raw data</td>
+      <td>Evidence for the curated-data-first strategy in Phase 2</td>
+      <td>Low</td>
+      <td><span class="tag tag-planned">Supporting</span></td>
+    </tr>
+    <tr class="support">
+      <td><strong>SmolLM workflow</strong></td>
+      <td>Practical small-model fine-tuning using synthetic data pipelines</td>
+      <td>MAL-specific efficient fine-tuning experiments (LoRA-scale)</td>
+      <td>Low</td>
+      <td><span class="tag tag-planned">Supporting</span></td>
+    </tr>
+    <tr class="support">
+      <td><strong>Scale Labs / Hybrid</strong></td>
+      <td>Combining human expert data with model-generated data at scale</td>
+      <td>Scaling signal for when Phase 2 outgrows manual seeding</td>
+      <td>Medium</td>
+      <td><span class="tag tag-planned">Supporting</span></td>
+    </tr>
+  </tbody>
+</table>
+<div class="note">
+  <div class="note-line"><span class="tag tag-direction">Planning direction</span>Core references (Self-Instruct, Evol-Instruct, Orca) should drive the design of the seed-to-registry pipeline. Supporting references inform scaling and quality decisions but should not dilute the MAL-specific focus.</div>
+</div>
