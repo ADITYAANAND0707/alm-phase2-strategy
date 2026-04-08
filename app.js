@@ -117,20 +117,30 @@ function initReveal() {
   document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
 }
 
-/* ── Click-to-expand toggles ──────────────────────────────────────────────── */
+/* ── Click-to-expand/collapse toggles ────────────────────────────────────── */
 function initToggles() {
-  /* metric-card: click anywhere on card to expand/collapse description */
+  /* metric-card: starts collapsed, click to expand description */
   document.querySelectorAll('.metric-card').forEach(card => {
     if (card.dataset.toggleBound) return;
     card.dataset.toggleBound = '1';
     card.addEventListener('click', () => card.classList.toggle('expanded'));
   });
 
-  /* .card: click header area to expand/collapse body content */
+  /* .card: starts open, click to collapse.
+     Inject a visible toggle badge into each card automatically. */
   document.querySelectorAll('.card').forEach(card => {
     if (card.dataset.toggleBound) return;
     card.dataset.toggleBound = '1';
-    card.addEventListener('click', () => card.classList.toggle('expanded'));
+
+    /* Insert a toggle badge after the first .ctag if not already present */
+    const ctag = card.querySelector('.ctag');
+    if (ctag && !card.querySelector('.card-toggle')) {
+      const badge = document.createElement('span');
+      badge.className = 'card-toggle';
+      ctag.insertAdjacentElement('afterend', badge);
+    }
+
+    card.addEventListener('click', () => card.classList.toggle('collapsed'));
   });
 }
 
