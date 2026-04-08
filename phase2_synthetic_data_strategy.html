@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ALM Phase 2 — Synthetic Data Strategy v2.0</title>
+<title>ALM Phase 2 — Synthetic Data Strategy v2.2</title>
 <meta name="description" content="Phase 2 strategy and planning document for the ALM synthetic data pipeline — covering MAL seed authoring, Jinja2 expansion, LLM variant generation, validation, and dataset registry." />
 <meta name="author" content="Metafore AI — ALM Team" />
 <meta property="og:title" content="ALM Phase 2 — Synthetic Data Strategy" />
@@ -764,6 +764,29 @@
     font-size: 10.5px; color: var(--muted); font-family: Consolas, monospace; text-align: left;
   }
 
+  /* ─── Inline SVG icons (flow boxes + template cards) ────────────────── */
+  .fb-icon, .tsc-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 6px;
+  }
+  .fb-icon svg  { width: 26px; height: 26px; stroke: var(--brand); stroke-width: 1.6; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .tsc-icon svg { width: 28px; height: 28px; stroke: var(--accent); stroke-width: 1.6; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .flow-box.fb-proc .fb-icon svg { stroke: var(--accent); }
+
+  /* ─── SVG flow arrows ────────────────────────────────────────────────── */
+  .flow-arr {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 0 4px; flex-shrink: 0; margin-top: 10px;
+  }
+  .flow-arr svg { width: 20px; height: 14px; stroke: var(--accent); stroke-width: 1.8; fill: none; stroke-linecap: round; }
+  .flow-arr span { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; margin-top: 3px; }
+
+  /* ─── Variant demo arrow ─────────────────────────────────────────────── */
+  .vd-arrow { display: flex; justify-content: center; margin: 10px 0 4px; }
+  .vd-arrow svg { width: 22px; height: 28px; stroke: var(--accent); stroke-width: 1.8; fill: none; stroke-linecap: round; }
+
   /* Variant demo */
   .variant-demo { background: var(--light); border: 1px solid var(--border); border-radius: 10px; padding: 22px; margin: 14px 0 22px; }
   .vd-seed {
@@ -805,7 +828,7 @@
 
   <!-- ══ COVER ══════════════════════════════════════════════════════════ -->
   <div class="cover">
-    <div class="eyebrow">Phase 2 Strategy Report &mdash; Living Document v2.1</div>
+    <div class="eyebrow">Phase 2 Strategy Report &mdash; Living Document v2.2</div>
     <h1>ALM Synthetic Data Pipeline<br />Planning and Execution Blueprint</h1>
     <div class="sub">
       A maintained strategy document for Phase 2 of ALM, focused on a MAL-specific
@@ -816,11 +839,11 @@
       <span>Project: ALM / MAL</span>
       <span>Phase: 2</span>
       <span>Scope: MAL only</span>
-      <span>Status: In Planning</span>
+      <span>Status: Stage 2 Built</span>
       <span>Primary certainty: Jinja2 + Python</span>
       <span>LLM expansion: planned</span>
       <span>Document type: living report</span>
-      <span>Version: 2.1</span>
+      <span>Version: 2.2</span>
     </div>
   </div>
 
@@ -922,21 +945,21 @@
     <div class="grid-4">
       <div class="metric-card tracker">
         <div class="m-label">Gold Seeds Defined</div>
-        <div class="m-value">0 / 50</div>
-        <div class="m-desc">Target: 40–60 manually curated seed examples covering all MAL construct families.</div>
-        <div class="stat-pill warn">Not started</div>
+        <div class="m-value">6 / 50</div>
+        <div class="m-desc">Target: 40–60 manually curated seed examples covering all MAL construct families. 6 seeds authored covering all 6 task types.</div>
+        <div class="stat-pill warn">In Progress</div>
       </div>
       <div class="metric-card tracker">
         <div class="m-label">Jinja2 Templates Built</div>
-        <div class="m-value">In Progress</div>
-        <div class="m-desc">Each gold seed should become at least one structured Jinja2 template with safe substitution zones.</div>
-        <div class="stat-pill warn">Pipeline design complete — building</div>
+        <div class="m-value">4 Built</div>
+        <div class="m-desc">entity.j2, workflow.j2, policy.j2, evolution.j2 — all grammar-compliant. generate.py and telecom domain pack complete.</div>
+        <div class="stat-pill">Stage 2 Complete</div>
       </div>
       <div class="metric-card tracker">
-        <div class="m-label">Candidates Validated</div>
-        <div class="m-value">0</div>
-        <div class="m-desc">Candidates that have passed syntax, schema, policy, graph, and duplicate checks.</div>
-        <div class="stat-pill warn">Not started</div>
+        <div class="m-label">Candidates Generated</div>
+        <div class="m-value">35</div>
+        <div class="m-desc">Jinja2 candidates generated from 6 seeds. Awaiting downstream validation by the MAL micro-validator service.</div>
+        <div class="stat-pill">Stage 2 Done</div>
       </div>
       <div class="metric-card tracker">
         <div class="m-label">Records in Registry</div>
@@ -974,9 +997,9 @@ flowchart LR
         <div class="timeline-body">
           <ul>
             <li>Freeze MAL-only scope for the first data wave.</li>
-            <li>Build and curate the gold seed library.</li>
-            <li><strong>Jinja2 pipeline design complete</strong> — generate.py and template authoring now in progress.</li>
-            <li>Create Jinja2 templates and Python payload generators.</li>
+            <li>Build and curate the gold seed library — 6 seeds authored across all task types.</li>
+            <li><strong>Jinja2 pipeline built</strong> — generate.py, 4 templates (entity, workflow, policy, evolution), telecom domain pack, 35 candidates generated.</li>
+            <li>Route candidates to MAL micro-validator for syntax, schema, and policy checks.</li>
             <li>Define dataset registry schema and lifecycle statuses.</li>
             <li>Automate parser, validator, and graph-compile checks.</li>
           </ul>
@@ -1152,13 +1175,13 @@ flowchart LR
         <div class="sv2-num">1</div>
         <div class="sv2-title">Gold Seeds</div>
         <div class="sv2-desc">Manually authored canonical MAL intent-output pairs</div>
-        <span class="sv2-tag">Input source</span>
+        <span class="sv2-tag">6 Seeds Ready</span>
       </div>
       <div class="sv2 sv2-active">
         <div class="sv2-num">2</div>
         <div class="sv2-title">Jinja2 Expansion</div>
         <div class="sv2-desc">Template-driven variant generation with domain vocabulary substitution</div>
-        <span class="sv2-tag">★ In progress</span>
+        <span class="sv2-tag">Stage 2 Done</span>
       </div>
       <div class="sv2 sv2-dim">
         <div class="sv2-num">3</div>
@@ -1185,39 +1208,49 @@ flowchart LR
     <div class="flow-row">
       <div class="flow-nd">
         <div class="flow-box">
-          <div class="fb-icon">📄</div>
+          <div class="fb-icon">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
+          </div>
           <div class="fb-lbl">seeds.json</div>
           <div class="fb-sub">Gold seed records<br/>intent + MAL pairs</div>
         </div>
       </div>
-      <div class="flow-arr">→<span>reads</span></div>
+      <div class="flow-arr"><svg viewBox="0 0 20 14"><line x1="0" y1="7" x2="16" y2="7"/><polyline points="10 2 16 7 10 12"/></svg><span>reads</span></div>
       <div class="flow-nd">
         <div class="flow-box fb-proc">
-          <div class="fb-icon">⚙️</div>
+          <div class="fb-icon">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </div>
           <div class="fb-lbl">generate.py</div>
           <div class="fb-sub">Reads type field<br/>routes to template<br/>renders variants</div>
         </div>
       </div>
-      <div class="flow-arr">↔<span>uses</span></div>
+      <div class="flow-arr"><svg viewBox="0 0 20 14"><line x1="2" y1="7" x2="18" y2="7"/><polyline points="12 2 18 7 12 12"/><polyline points="8 2 2 7 8 12"/></svg><span>uses</span></div>
       <div class="flow-nd">
         <div class="flow-box">
-          <div class="fb-icon">🗂️</div>
+          <div class="fb-icon">
+            <svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
+          </div>
           <div class="fb-lbl">templates/</div>
           <div class="fb-sub">Jinja2 .j2 files<br/>one per construct</div>
         </div>
       </div>
-      <div class="flow-arr">↔<span>vocab</span></div>
+      <div class="flow-arr"><svg viewBox="0 0 20 14"><line x1="2" y1="7" x2="18" y2="7"/><polyline points="12 2 18 7 12 12"/><polyline points="8 2 2 7 8 12"/></svg><span>vocab</span></div>
       <div class="flow-nd">
         <div class="flow-box">
-          <div class="fb-icon">📦</div>
+          <div class="fb-icon">
+            <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+          </div>
           <div class="fb-lbl">telecom.json</div>
           <div class="fb-sub">Entities, roles,<br/>enums, triggers</div>
         </div>
       </div>
-      <div class="flow-arr">→<span>writes</span></div>
+      <div class="flow-arr"><svg viewBox="0 0 20 14"><line x1="0" y1="7" x2="16" y2="7"/><polyline points="10 2 16 7 10 12"/></svg><span>writes</span></div>
       <div class="flow-nd">
         <div class="flow-box">
-          <div class="fb-icon">✅</div>
+          <div class="fb-icon">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 15 11 17 15 12"/></svg>
+          </div>
           <div class="fb-lbl">candidates.jsonl</div>
           <div class="fb-sub">5–10 variants<br/>per seed record</div>
         </div>
@@ -1265,7 +1298,9 @@ flowchart LR
     <p>Each template uses substitution slots filled from the domain pack. All templates follow the formal grammar specification exactly.</p>
     <div class="tmpl-slot-grid">
       <div class="tsc">
-        <div class="tsc-icon">🏛️</div>
+        <div class="tsc-icon">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg>
+        </div>
         <div class="tsc-name">Entity</div>
         <div class="tsc-file">entity.j2</div>
         <div class="tsc-slots">
@@ -1277,7 +1312,9 @@ flowchart LR
         </div>
       </div>
       <div class="tsc">
-        <div class="tsc-icon">🔄</div>
+        <div class="tsc-icon">
+          <svg viewBox="0 0 24 24"><polyline points="5 12 3 12 12 3 21 12 19 12"/><polyline points="5 12 5 20 19 20 19 12"/><line x1="12" y1="14" x2="12" y2="20"/></svg>
+        </div>
         <div class="tsc-name">Workflow</div>
         <div class="tsc-file">workflow.j2</div>
         <div class="tsc-slots">
@@ -1288,7 +1325,9 @@ flowchart LR
         </div>
       </div>
       <div class="tsc">
-        <div class="tsc-icon">📋</div>
+        <div class="tsc-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z"/><polyline points="9 12 11 14 15 10"/></svg>
+        </div>
         <div class="tsc-name">Policy</div>
         <div class="tsc-file">policy.j2</div>
         <div class="tsc-slots">
@@ -1299,7 +1338,9 @@ flowchart LR
         </div>
       </div>
       <div class="tsc">
-        <div class="tsc-icon">🔁</div>
+        <div class="tsc-icon">
+          <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>
+        </div>
         <div class="tsc-name">Evolution</div>
         <div class="tsc-file">evolution.j2</div>
         <div class="tsc-slots">
@@ -1316,7 +1357,7 @@ flowchart LR
     <div class="variant-demo">
       <div class="vd-label">Input — 1 gold seed record</div>
       <div class="vd-seed">intent: "Build a subscriber onboarding system for a telecom company"<br/>constructs: ["entity", "workflow"] &nbsp;·&nbsp; type: "Create" &nbsp;·&nbsp; domain: "telecom"</div>
-      <div class="vd-arrow">↓</div>
+      <div class="vd-arrow"><svg viewBox="0 0 22 28"><line x1="11" y1="2" x2="11" y2="22"/><polyline points="4 16 11 23 18 16"/></svg></div>
       <div class="vd-sublabel">Jinja2 templates × Telecom domain vocabulary</div>
       <div class="vd-label">Output — 5 generated variant candidates</div>
       <div class="vd-row">
@@ -2392,6 +2433,11 @@ route directly to record_decision.</div>
           <td>Major update — added TOC with anchor navigation, color legend banner, pipeline progress tracker, layered capability design (L1–L4), known vs. unknown cards, constrained prompt template, domain pack example, rejection feedback loop diagram, construct coverage grid, two new example pairs (Modify and Disambiguate), Synthetic Data Methods Compared section, acceptance criteria checklist, decision log, and version history.</td>
         </tr>
         <tr>
+          <td><strong>v2.2</strong></td>
+          <td>Apr 2026</td>
+          <td>Stage 2 pipeline built and deployed — 6 gold seeds authored (one per task type), 4 Jinja2 templates (entity.j2, workflow.j2, policy.j2, evolution.j2), telecom domain pack, and generate.py producing 35 candidate records. Status dashboard updated to reflect current counts. All emoji icons in the pipeline visual replaced with inline SVGs for professional, platform-independent rendering. Cover status updated to Stage 2 Built.</td>
+        </tr>
+        <tr>
           <td><strong>v2.1</strong></td>
           <td>Apr 2026</td>
           <td>Pipeline implementation update — replaced Section 7 phase strip with full visual pipeline overview (stage strip, data flow diagram, 6 task type cards, 4 Jinja2 template cards, variant expansion demo, input/output schemas). Confirmed seed JSON schema, type field classification (6 task categories), grammar doc as MAL authority, evolution format, and validation ownership. Updated status dashboard tracker and added 5 new confirmed decisions to decision log.</td>
@@ -2404,7 +2450,7 @@ route directly to record_decision.</div>
       Grounded in the ALM repository architecture, the <code>MAL_Synthetic_Data_Strategy_Report_fixed.docx</code>,
       and the current understanding that Jinja2 and Python-based expansion is the first concrete implementation step.
       &nbsp;&middot;&nbsp;
-      Document version: 2.1 &nbsp;&middot;&nbsp; Last updated: April 2026
+      Document version: 2.2 &nbsp;&middot;&nbsp; Last updated: April 2026
     </div>
   </div>
 </div>
