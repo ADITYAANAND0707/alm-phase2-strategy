@@ -1,0 +1,12 @@
+# Office documents — keep out of public repo
+*.docx
+*.pptx
+*.pptx.url
+*.txt
+
+# System files
+Thumbs.db
+.DS_Store
+
+# Cloned repos — not needed in this repo
+Application-Development-Model/
