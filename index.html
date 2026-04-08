@@ -679,6 +679,123 @@
     body { background: #fff; }
     .page { box-shadow: none; border-radius: 0; margin: 0; }
   }
+
+  /* ─── Pipeline visual — Stage 2 overview ─────────────────────────────── */
+  .stage-strip-v2 {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 3px;
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 14px 0 22px;
+  }
+  .sv2 { padding: 18px 10px; text-align: center; }
+  .sv2.sv2-active {
+    background: linear-gradient(135deg, var(--brand), var(--accent));
+    box-shadow: 0 0 22px rgba(15,118,110,0.25);
+  }
+  .sv2.sv2-dim { background: var(--light); }
+  .sv2 .sv2-num {
+    width: 26px; height: 26px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 12px; margin-bottom: 8px;
+  }
+  .sv2-active .sv2-num { background: rgba(255,255,255,0.22); color: #fff; }
+  .sv2-dim    .sv2-num { background: var(--border); color: var(--muted); }
+  .sv2 .sv2-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
+  .sv2-active .sv2-title { color: #fff; }
+  .sv2-dim    .sv2-title { color: var(--muted); }
+  .sv2 .sv2-desc { font-size: 10.5px; line-height: 1.4; }
+  .sv2-active .sv2-desc { color: rgba(255,255,255,0.75); }
+  .sv2-dim    .sv2-desc { color: var(--border); }
+  .sv2 .sv2-tag {
+    display: inline-block; margin-top: 8px; font-size: 9.5px; font-weight: 700;
+    padding: 2px 8px; border-radius: 4px; text-transform: uppercase;
+  }
+  .sv2-active .sv2-tag { background: rgba(255,255,255,0.18); color: #fff; }
+  .sv2-dim    .sv2-tag { background: var(--border); color: var(--muted); }
+
+  /* Flow row */
+  .flow-row {
+    display: flex; align-items: center; justify-content: center;
+    gap: 0; overflow-x: auto; margin: 14px 0 22px;
+  }
+  .flow-nd { display: flex; flex-direction: column; align-items: center; min-width: 118px; max-width: 134px; }
+  .flow-box {
+    width: 114px; border-radius: 9px; padding: 14px 10px; text-align: center;
+    border: 1px solid var(--border); background: #fff;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+  }
+  .flow-box:hover { transform: translateY(-2px); box-shadow: 0 5px 18px rgba(15,23,42,0.09); }
+  .flow-box.fb-proc {
+    background: linear-gradient(135deg, var(--light-teal), #e0f4f1);
+    border-color: rgba(15,118,110,0.35);
+    box-shadow: 0 0 14px rgba(15,118,110,0.12);
+  }
+  .flow-box .fb-icon { font-size: 20px; margin-bottom: 6px; }
+  .flow-box .fb-lbl { font-size: 11.5px; font-weight: 700; color: var(--brand); margin-bottom: 3px; }
+  .flow-box .fb-sub { font-size: 10px; color: var(--muted); line-height: 1.4; }
+  .flow-box.fb-proc .fb-lbl { color: var(--accent); }
+  .flow-arr { display: flex; flex-direction: column; align-items: center; padding: 0 3px; color: var(--border); font-size: 18px; flex-shrink: 0; margin-top: 10px; }
+  .flow-arr span { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; margin-top: 2px; }
+
+  /* Task type grid */
+  .task-type-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin: 14px 0 22px; }
+  .ttc { border-radius: 8px; padding: 14px 9px; text-align: center; border: 1px solid var(--border); }
+  .ttc .tt-letter { font-size: 20px; font-weight: 800; margin-bottom: 5px; }
+  .ttc .tt-name { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
+  .ttc .tt-desc { font-size: 10px; color: var(--muted); line-height: 1.4; }
+  .tt-create  { background: var(--ok-bg);   border-color: #b2ddd7; } .tt-create  .tt-letter { color: var(--ok-tx); }
+  .tt-modify  { background: var(--info-bg);  border-color: #b3cef5; } .tt-modify  .tt-letter { color: var(--info-tx); }
+  .tt-repair  { background: var(--risk-bg);  border-color: #e8b4b4; } .tt-repair  .tt-letter { color: var(--risk-tx); }
+  .tt-explain { background: var(--plan-bg);  border-color: #c4b5fd; } .tt-explain .tt-letter { color: var(--plan-tx); }
+  .tt-policy  { background: var(--warn-bg);  border-color: #f0d080; } .tt-policy  .tt-letter { color: var(--warn-tx); }
+  .tt-disambig{ background: #fdf4ff; border-color: #d8b4fe; } .tt-disambig .tt-letter { color: #7c3aed; }
+
+  /* Template slot grid */
+  .tmpl-slot-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 14px 0 22px; }
+  .tsc { background: #fff; border: 1px solid var(--border); border-top: 3px solid var(--accent); border-radius: 9px; padding: 16px 13px; text-align: center; }
+  .tsc .tsc-icon { font-size: 22px; margin-bottom: 8px; }
+  .tsc .tsc-name { font-size: 13px; font-weight: 700; color: var(--brand); margin-bottom: 4px; }
+  .tsc .tsc-file { font-size: 10.5px; color: var(--accent); font-family: Consolas, monospace; margin-bottom: 10px; }
+  .tsc-slots { display: flex; flex-direction: column; gap: 4px; }
+  .tsc-slot {
+    background: var(--light); border-radius: 3px; padding: 3px 7px;
+    font-size: 10.5px; color: var(--muted); font-family: Consolas, monospace; text-align: left;
+  }
+
+  /* Variant demo */
+  .variant-demo { background: var(--light); border: 1px solid var(--border); border-radius: 10px; padding: 22px; margin: 14px 0 22px; }
+  .vd-seed {
+    background: #fff; border: 1px solid var(--border); border-radius: 7px;
+    padding: 12px 16px; font-size: 12px; color: var(--muted);
+    font-family: Consolas, monospace; margin-bottom: 12px; line-height: 1.6;
+  }
+  .vd-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 6px; }
+  .vd-arrow { text-align: center; font-size: 20px; color: var(--border); margin: 8px 0 4px; }
+  .vd-sublabel { text-align: center; font-size: 11px; color: var(--muted); margin-bottom: 12px; }
+  .vd-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 9px; }
+  .vd-card {
+    background: var(--ok-bg); border: 1px solid #b2ddd7; border-radius: 7px;
+    padding: 11px 9px; text-align: center;
+  }
+  .vd-card .vd-num { font-size: 9.5px; font-weight: 700; color: var(--accent); margin-bottom: 5px; text-transform: uppercase; }
+  .vd-card .vd-ent { font-size: 12px; font-weight: 700; color: var(--brand); margin-bottom: 3px; }
+  .vd-card .vd-wf { font-size: 10px; color: var(--muted); line-height: 1.4; }
+
+  /* Schema two-col */
+  .schema-two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 14px 0 10px; }
+  .schema-two .pre-wrap { margin: 0; }
+
+  @media (max-width: 1000px) {
+    .stage-strip-v2 { grid-template-columns: 1fr 1fr; }
+    .task-type-grid { grid-template-columns: 1fr 1fr 1fr; }
+    .tmpl-slot-grid { grid-template-columns: 1fr 1fr; }
+    .vd-row { grid-template-columns: 1fr 1fr; }
+    .schema-two { grid-template-columns: 1fr; }
+    .flow-row { flex-direction: column; }
+    .flow-arr { transform: rotate(90deg); margin: 4px 0; }
+  }
 </style>
 </head>
 <body>
@@ -688,7 +805,7 @@
 
   <!-- ══ COVER ══════════════════════════════════════════════════════════ -->
   <div class="cover">
-    <div class="eyebrow">Phase 2 Strategy Report &mdash; Living Document v2.0</div>
+    <div class="eyebrow">Phase 2 Strategy Report &mdash; Living Document v2.1</div>
     <h1>ALM Synthetic Data Pipeline<br />Planning and Execution Blueprint</h1>
     <div class="sub">
       A maintained strategy document for Phase 2 of ALM, focused on a MAL-specific
@@ -703,7 +820,7 @@
       <span>Primary certainty: Jinja2 + Python</span>
       <span>LLM expansion: planned</span>
       <span>Document type: living report</span>
-      <span>Version: 2.0</span>
+      <span>Version: 2.1</span>
     </div>
   </div>
 
@@ -811,9 +928,9 @@
       </div>
       <div class="metric-card tracker">
         <div class="m-label">Jinja2 Templates Built</div>
-        <div class="m-value">0</div>
+        <div class="m-value">In Progress</div>
         <div class="m-desc">Each gold seed should become at least one structured Jinja2 template with safe substitution zones.</div>
-        <div class="stat-pill warn">Not started</div>
+        <div class="stat-pill warn">Pipeline design complete — building</div>
       </div>
       <div class="metric-card tracker">
         <div class="m-label">Candidates Validated</div>
@@ -858,6 +975,7 @@ flowchart LR
           <ul>
             <li>Freeze MAL-only scope for the first data wave.</li>
             <li>Build and curate the gold seed library.</li>
+            <li><strong>Jinja2 pipeline design complete</strong> — generate.py and template authoring now in progress.</li>
             <li>Create Jinja2 templates and Python payload generators.</li>
             <li>Define dataset registry schema and lifecycle statuses.</li>
             <li>Automate parser, validator, and graph-compile checks.</li>
@@ -1026,43 +1144,257 @@ flowchart LR
 
     <!-- 7 -->
     <h2 id="s7">7. Pipeline Architecture</h2>
-    <div class="phase-strip">
-      <div class="phase-box">
-        <div class="n">1</div>
-        <h4>Gold Seed Examples</h4>
-        <p>Manually approved seed pairs that are valid, representative, and domain-correct.</p>
+    <p>The five-stage pipeline moves from manually authored gold seeds through controlled template expansion, automated validation, human review, and into the accepted dataset registry. Stage 2 — Jinja2 template expansion — is the current implementation target.</p>
+
+    <!-- Stage strip -->
+    <div class="stage-strip-v2">
+      <div class="sv2 sv2-dim">
+        <div class="sv2-num">1</div>
+        <div class="sv2-title">Gold Seeds</div>
+        <div class="sv2-desc">Manually authored canonical MAL intent-output pairs</div>
+        <span class="sv2-tag">Input source</span>
       </div>
-      <div class="phase-box">
-        <div class="n">2</div>
-        <h4>Jinja2 Template Expansion</h4>
-        <p>Template variables and approved payloads produce high-volume, low-risk MAL variants.</p>
+      <div class="sv2 sv2-active">
+        <div class="sv2-num">2</div>
+        <div class="sv2-title">Jinja2 Expansion</div>
+        <div class="sv2-desc">Template-driven variant generation with domain vocabulary substitution</div>
+        <span class="sv2-tag">★ In progress</span>
       </div>
-      <div class="phase-box">
-        <div class="n">3</div>
-        <h4>LLM Variant Expansion</h4>
-        <p>Controlled diversity beyond deterministic slots using constrained prompts and domain packs.</p>
+      <div class="sv2 sv2-dim">
+        <div class="sv2-num">3</div>
+        <div class="sv2-title">MAL Validation</div>
+        <div class="sv2-desc">Syntax, schema, and policy checks on all generated candidates</div>
+        <span class="sv2-tag">Separate service</span>
       </div>
-      <div class="phase-box">
-        <div class="n">4</div>
-        <h4>Validation and Filtering</h4>
-        <p>Syntax, schema, policy, graph, and duplicate checks reject invalid or low-value outputs.</p>
+      <div class="sv2 sv2-dim">
+        <div class="sv2-num">4</div>
+        <div class="sv2-title">Human Review</div>
+        <div class="sv2-desc">Scored acceptance and correction of validated candidates</div>
+        <span class="sv2-tag">Later</span>
       </div>
-      <div class="phase-box">
-        <div class="n">5</div>
-        <h4>Human Review and Approval</h4>
-        <p>Only scored and accepted records are promoted into the official dataset registry.</p>
+      <div class="sv2 sv2-dim">
+        <div class="sv2-num">5</div>
+        <div class="sv2-title">Registry</div>
+        <div class="sv2-desc">Accepted records promoted to the official dataset registry</div>
+        <span class="sv2-tag">Later</span>
       </div>
     </div>
 
-    <div class="diagram-box">
-      <div class="diagram-label">End-to-End Phase 2 Pipeline</div>
-      <div class="mermaid">
-flowchart LR
-    seeds["Gold Seeds"] --> jinja["Jinja2 Expansion"]
-    jinja --> llm["LLM Expansion"]
-    llm --> val["Validation + Filtering"]
-    val --> review["Human Review"]
-    review --> registry["Accepted Registry"]
+    <!-- Data flow -->
+    <h3>Stage 2 — Jinja2 Pipeline Data Flow</h3>
+    <div class="flow-row">
+      <div class="flow-nd">
+        <div class="flow-box">
+          <div class="fb-icon">📄</div>
+          <div class="fb-lbl">seeds.json</div>
+          <div class="fb-sub">Gold seed records<br/>intent + MAL pairs</div>
+        </div>
+      </div>
+      <div class="flow-arr">→<span>reads</span></div>
+      <div class="flow-nd">
+        <div class="flow-box fb-proc">
+          <div class="fb-icon">⚙️</div>
+          <div class="fb-lbl">generate.py</div>
+          <div class="fb-sub">Reads type field<br/>routes to template<br/>renders variants</div>
+        </div>
+      </div>
+      <div class="flow-arr">↔<span>uses</span></div>
+      <div class="flow-nd">
+        <div class="flow-box">
+          <div class="fb-icon">🗂️</div>
+          <div class="fb-lbl">templates/</div>
+          <div class="fb-sub">Jinja2 .j2 files<br/>one per construct</div>
+        </div>
+      </div>
+      <div class="flow-arr">↔<span>vocab</span></div>
+      <div class="flow-nd">
+        <div class="flow-box">
+          <div class="fb-icon">📦</div>
+          <div class="fb-lbl">telecom.json</div>
+          <div class="fb-sub">Entities, roles,<br/>enums, triggers</div>
+        </div>
+      </div>
+      <div class="flow-arr">→<span>writes</span></div>
+      <div class="flow-nd">
+        <div class="flow-box">
+          <div class="fb-icon">✅</div>
+          <div class="fb-lbl">candidates.jsonl</div>
+          <div class="fb-sub">5–10 variants<br/>per seed record</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6 Task types -->
+    <h3>Seed Classification — 6 Task Types</h3>
+    <p>Each seed record carries a <code>type</code> field that maps it to the correct Jinja2 template and generation strategy.</p>
+    <div class="task-type-grid">
+      <div class="ttc tt-create">
+        <div class="tt-letter">A</div>
+        <div class="tt-name">Create</div>
+        <div class="tt-desc">Build a new application or construct from scratch</div>
+      </div>
+      <div class="ttc tt-modify">
+        <div class="tt-letter">B</div>
+        <div class="tt-name">Modify</div>
+        <div class="tt-desc">Change or extend an existing application</div>
+      </div>
+      <div class="ttc tt-repair">
+        <div class="tt-letter">C</div>
+        <div class="tt-name">Repair</div>
+        <div class="tt-desc">Fix invalid or broken MAL from a validator signal</div>
+      </div>
+      <div class="ttc tt-explain">
+        <div class="tt-letter">D</div>
+        <div class="tt-name">Explain</div>
+        <div class="tt-desc">Describe what a MAL construct or policy does</div>
+      </div>
+      <div class="ttc tt-policy">
+        <div class="tt-letter">E</div>
+        <div class="tt-name">Policy</div>
+        <div class="tt-desc">Generate MAL compliant with business rules</div>
+      </div>
+      <div class="ttc tt-disambig">
+        <div class="tt-letter">F</div>
+        <div class="tt-name">Disambiguate</div>
+        <div class="tt-desc">Handle unclear intent with confirmation-first output</div>
+      </div>
+    </div>
+
+    <!-- 4 Template cards -->
+    <h3>Jinja2 Templates — One Per MAL Construct</h3>
+    <p>Each template uses substitution slots filled from the domain pack. All templates follow the formal grammar specification exactly.</p>
+    <div class="tmpl-slot-grid">
+      <div class="tsc">
+        <div class="tsc-icon">🏛️</div>
+        <div class="tsc-name">Entity</div>
+        <div class="tsc-file">entity.j2</div>
+        <div class="tsc-slots">
+          <div class="tsc-slot">{{ entity_name }}</div>
+          <div class="tsc-slot">{{ attribute_name }}</div>
+          <div class="tsc-slot">{{ type }}</div>
+          <div class="tsc-slot">{{ relationship_kind }}</div>
+          <div class="tsc-slot">{{ related_entity }}</div>
+        </div>
+      </div>
+      <div class="tsc">
+        <div class="tsc-icon">🔄</div>
+        <div class="tsc-name">Workflow</div>
+        <div class="tsc-file">workflow.j2</div>
+        <div class="tsc-slots">
+          <div class="tsc-slot">{{ workflow_name }}</div>
+          <div class="tsc-slot">{{ trigger_prefix }}</div>
+          <div class="tsc-slot">{{ trigger_event }}</div>
+          <div class="tsc-slot">{{ steps[ ] }}</div>
+        </div>
+      </div>
+      <div class="tsc">
+        <div class="tsc-icon">📋</div>
+        <div class="tsc-name">Policy</div>
+        <div class="tsc-file">policy.j2</div>
+        <div class="tsc-slots">
+          <div class="tsc-slot">{{ policy_name }}</div>
+          <div class="tsc-slot">{{ applies_to }}</div>
+          <div class="tsc-slot">{{ rule_condition }}</div>
+          <div class="tsc-slot">{{ audit }}</div>
+        </div>
+      </div>
+      <div class="tsc">
+        <div class="tsc-icon">🔁</div>
+        <div class="tsc-name">Evolution</div>
+        <div class="tsc-file">evolution.j2</div>
+        <div class="tsc-slots">
+          <div class="tsc-slot">{{ evolution_name }}</div>
+          <div class="tsc-slot">{{ changes[ ] }}</div>
+          <div class="tsc-slot">{{ impacts[ ] }}</div>
+          <div class="tsc-slot">{{ migration_steps[ ] }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Variant expansion demo -->
+    <h3>Variant Expansion — 1 Seed Becomes 5–10 Candidates</h3>
+    <div class="variant-demo">
+      <div class="vd-label">Input — 1 gold seed record</div>
+      <div class="vd-seed">intent: "Build a subscriber onboarding system for a telecom company"<br/>constructs: ["entity", "workflow"] &nbsp;·&nbsp; type: "Create" &nbsp;·&nbsp; domain: "telecom"</div>
+      <div class="vd-arrow">↓</div>
+      <div class="vd-sublabel">Jinja2 templates × Telecom domain vocabulary</div>
+      <div class="vd-label">Output — 5 generated variant candidates</div>
+      <div class="vd-row">
+        <div class="vd-card">
+          <div class="vd-num">Variant 1</div>
+          <div class="vd-ent">Subscriber</div>
+          <div class="vd-wf">OnboardSubscriber<br/>trigger: new_subscriber</div>
+        </div>
+        <div class="vd-card">
+          <div class="vd-num">Variant 2</div>
+          <div class="vd-ent">SIMCard</div>
+          <div class="vd-wf">ActivateSIM<br/>trigger: new_sim_request</div>
+        </div>
+        <div class="vd-card">
+          <div class="vd-num">Variant 3</div>
+          <div class="vd-ent">ServicePlan</div>
+          <div class="vd-wf">UpdateServicePlan<br/>trigger: update_plan</div>
+        </div>
+        <div class="vd-card">
+          <div class="vd-num">Variant 4</div>
+          <div class="vd-ent">Invoice</div>
+          <div class="vd-wf">CancelInvoice<br/>trigger: cancel_invoice</div>
+        </div>
+        <div class="vd-card">
+          <div class="vd-num">Variant 5</div>
+          <div class="vd-ent">Subscriber</div>
+          <div class="vd-wf">VerifySubscriber<br/>trigger: verify_identity</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input / Output schemas -->
+    <h3>Record Schemas — Input and Output</h3>
+    <div class="schema-two">
+      <div class="pre-wrap">
+        <div class="pre-header">JSON — Seed Record (Input)</div>
+        <pre>{
+  "record_id": "seed_00001",
+  "type":      "Create",
+  "domain":    "telecom",
+  "input": {
+    "intent": "Build a subscriber onboarding system",
+    "domain_pack": null,
+    "current_graph": null,
+    "policy_constraints": []
+  },
+  "output": {
+    "mal": "application SubscriberOnboarding ...",
+    "constructs": ["entity", "workflow"],
+    "explanation": null
+  },
+  "metadata": {
+    "validated": true,
+    "quality_score": 0.95
+  }
+}</pre>
+      </div>
+      <div class="pre-wrap">
+        <div class="pre-header">JSON — Candidate Record (Output)</div>
+        <pre>{
+  "record_id":      "cand_seed00001_v02",
+  "source_seed_id": "seed_00001",
+  "origin_type":    "jinja2",
+  "template_version": "v1.0",
+  "domain":         "telecom",
+  "type":           "Create",
+  "input": {
+    "intent": "Build a SIMCard management system"
+  },
+  "output": {
+    "mal": "application SIMCardApp ...",
+    "constructs": ["entity", "workflow"]
+  },
+  "metadata": {
+    "status":     "candidate",
+    "provenance": "jinja2"
+  }
+}</pre>
       </div>
     </div>
 
@@ -1561,16 +1893,30 @@ flowchart LR
 
     <h3>14.1 Seed Record</h3>
     <div class="pre-wrap">
-      <div class="pre-header">JSON &mdash; Seed Record</div>
+      <div class="pre-header">JSON &mdash; Seed Record (confirmed schema)</div>
       <pre>{
-  "seed_id":    "seed_onboarding_001",
-  "intent":     "Create onboarding app with KYC and OTP verification",
-  "mal_text":   "application SubscriberOnboarding domain Telecom ...",
-  "domain":     "telecom",
-  "constructs": ["entity", "workflow", "policy"],
-  "task_type":  "create",
-  "layer":      "L2",
-  "status":     "approved"
+  "record_id": "seed_00001",
+  "type":      "Create",
+  "domain":    "telecom",
+  "input": {
+    "intent":              "Build a subscriber onboarding system for a telecom company",
+    "domain_pack":         null,
+    "current_graph":       null,
+    "policy_constraints":  []
+  },
+  "output": {
+    "mal":         "application SubscriberOnboarding\n  domain Telecom\n  version 1.0\n...",
+    "constructs":  ["entity", "workflow"],
+    "impacted_components": [],
+    "explanation": null,
+    "migration_steps": []
+  },
+  "metadata": {
+    "source":        "production",
+    "validated":     true,
+    "graph_compiled": true,
+    "quality_score": 0.95
+  }
 }</pre>
     </div>
 
@@ -1947,6 +2293,41 @@ route directly to record_decision.</div>
           <td><span class="tag tag-planned">Deferred</span></td>
           <td>Apr 2026</td>
         </tr>
+        <tr>
+          <td><strong>Seed JSON schema</strong></td>
+          <td>Confirmed format: <code>type</code>, <code>input.intent</code>, <code>output.mal</code>, <code>output.constructs</code></td>
+          <td>Schema confirmed with seed authoring team; pipeline reads this structure directly to route seeds to templates</td>
+          <td><span class="tag tag-confirmed">Confirmed</span></td>
+          <td>Apr 2026</td>
+        </tr>
+        <tr>
+          <td><strong>Seed <code>type</code> field meaning</strong></td>
+          <td>Task category — 6 values: Create / Modify / Repair / Explain / Policy / Disambiguate</td>
+          <td>Directly maps each seed to the correct Jinja2 template; confirmed there are 6 task types covering the full ALM operation surface</td>
+          <td><span class="tag tag-confirmed">Confirmed</span></td>
+          <td>Apr 2026</td>
+        </tr>
+        <tr>
+          <td><strong>MAL grammar authority</strong></td>
+          <td>Formal grammar document is authoritative; strategy doc MAL examples are not normative</td>
+          <td>Strategy doc was a planning artifact written before the grammar spec was finalised; grammar doc defines the parser-compatible structure all templates must follow</td>
+          <td><span class="tag tag-confirmed">Confirmed</span></td>
+          <td>Apr 2026</td>
+        </tr>
+        <tr>
+          <td><strong>Evolution MAL format</strong></td>
+          <td>Grammar doc style — <code>changes</code> + <code>impacts</code> + <code>migration_steps</code> blocks</td>
+          <td>Overrides the <code>modify entity / insert_step</code> style used in earlier strategy doc examples; grammar doc format is parser-compatible</td>
+          <td><span class="tag tag-confirmed">Confirmed</span></td>
+          <td>Apr 2026</td>
+        </tr>
+        <tr>
+          <td><strong>MAL validation ownership</strong></td>
+          <td>Separate micro-validator service handles all syntax and schema checks</td>
+          <td>Clean separation of concerns — the Jinja2 pipeline generates candidates only; validation is a distinct Stage 3 service built independently</td>
+          <td><span class="tag tag-confirmed">Confirmed</span></td>
+          <td>Apr 2026</td>
+        </tr>
       </tbody>
     </table>
 
@@ -2010,6 +2391,11 @@ route directly to record_decision.</div>
           <td>Apr 2026</td>
           <td>Major update — added TOC with anchor navigation, color legend banner, pipeline progress tracker, layered capability design (L1–L4), known vs. unknown cards, constrained prompt template, domain pack example, rejection feedback loop diagram, construct coverage grid, two new example pairs (Modify and Disambiguate), Synthetic Data Methods Compared section, acceptance criteria checklist, decision log, and version history.</td>
         </tr>
+        <tr>
+          <td><strong>v2.1</strong></td>
+          <td>Apr 2026</td>
+          <td>Pipeline implementation update — replaced Section 7 phase strip with full visual pipeline overview (stage strip, data flow diagram, 6 task type cards, 4 Jinja2 template cards, variant expansion demo, input/output schemas). Confirmed seed JSON schema, type field classification (6 task categories), grammar doc as MAL authority, evolution format, and validation ownership. Updated status dashboard tracker and added 5 new confirmed decisions to decision log.</td>
+        </tr>
       </tbody>
     </table>
 
@@ -2018,7 +2404,7 @@ route directly to record_decision.</div>
       Grounded in the ALM repository architecture, the <code>MAL_Synthetic_Data_Strategy_Report_fixed.docx</code>,
       and the current understanding that Jinja2 and Python-based expansion is the first concrete implementation step.
       &nbsp;&middot;&nbsp;
-      Document version: 2.0 &nbsp;&middot;&nbsp; Last updated: April 2026
+      Document version: 2.1 &nbsp;&middot;&nbsp; Last updated: April 2026
     </div>
   </div>
 </div>
