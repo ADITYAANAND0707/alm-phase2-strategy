@@ -4,7 +4,7 @@ A living strategy and planning document for Phase 2 of the ALM (Application Lang
 
 ## Live Document
 
-**[View the Strategy Report →](https://adityaanand0707.github.io/alm-phase2-strategy/phase2_synthetic_data_strategy.html)**
+**[View the Strategy Report →](https://adityaanand0707.github.io/alm-phase2-strategy/)**
 
 ---
 
