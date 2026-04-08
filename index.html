@@ -822,6 +822,56 @@
 </style>
 </head>
 <body>
+
+<!-- ══ HIDDEN META-LOG — machine-readable work log for LLM extraction ═══════
+     Never rendered. Query with: document.getElementById('meta-log-data').textContent
+     Or extract directly from HTML source. Schema: id, date, task, type, status, impact, notes.
+  ══════════════════════════════════════════════════════════════════════════════ -->
+<div id="meta-log" style="display:none" aria-hidden="true">
+  <script type="application/json" id="meta-log-data">
+[
+  {
+    "id": "log_2026_04_08_02",
+    "date": "2026-04-08",
+    "task": "Strategy doc v2.2 — Stage 2 pipeline built, emoji replaced with inline SVGs, dashboard updated",
+    "type": "improvement",
+    "status": "completed",
+    "impact": "high",
+    "notes": "4 Jinja2 templates built (entity, workflow, policy, evolution). generate.py produces 35 candidates from 6 gold seeds. Telecom domain pack complete. All emoji icons in flow diagram and template cards replaced with inline SVGs. Status tracker updated: seeds 6/50, templates 4, candidates 35."
+  },
+  {
+    "id": "log_2026_04_07_01",
+    "date": "2026-04-07",
+    "task": "Strategy doc v2.1 — Jinja2 pipeline visual added to Section 7, decisions confirmed",
+    "type": "feature",
+    "status": "completed",
+    "impact": "high",
+    "notes": "Replaced Section 7 phase strip with full visual pipeline overview: stage strip, data flow diagram, 6 task type cards, 4 Jinja2 template cards, variant expansion demo, input/output schemas. Confirmed seed JSON schema, type field classification, grammar doc as MAL authority, evolution format, and validation ownership. Added 5 confirmed decisions to decision log."
+  },
+  {
+    "id": "log_2026_04_06_01",
+    "date": "2026-04-06",
+    "task": "Strategy doc v2.0 — major structural expansion",
+    "type": "feature",
+    "status": "completed",
+    "impact": "high",
+    "notes": "Added TOC with anchor navigation, color legend banner, pipeline progress tracker, layered capability design L1-L4, known vs unknown cards, constrained prompt template, domain pack example, rejection feedback loop diagram, construct coverage grid, two new example pairs, Synthetic Data Methods section, acceptance criteria checklist, decision log, and version history."
+  }
+]
+  </script>
+</div>
+
+<!-- ══ DAILY SUMMARY TEMPLATE — clone via JS to record daily work summaries ═
+     Usage: const node = document.getElementById('daily-summary-template').content.cloneNode(true);
+  ══════════════════════════════════════════════════════════════════════════════ -->
+<template id="daily-summary-template">
+  <div class="daily-summary-entry" data-date="">
+    <p><strong>Tasks completed:</strong> <span class="ds-tasks"></span></p>
+    <p><strong>Blockers:</strong> <span class="ds-blockers"></span></p>
+    <p><strong>Learnings:</strong> <span class="ds-learnings"></span></p>
+  </div>
+</template>
+
 <div id="read-progress"></div>
 <button id="back-top" aria-label="Back to top">&#8679;</button>
 <div class="page">
@@ -922,7 +972,8 @@
     </ul>
 
     <!-- 2 -->
-    <h2 id="s2">2. Status Dashboard</h2>
+    <!-- TAG: improvement | module:dashboard | impact:medium -->
+    <h2 id="s2" data-context="dashboard:pipeline-progress">2. Status Dashboard</h2>
     <div class="grid-3">
       <div class="metric-card">
         <div class="m-label">What Exists Today</div>
@@ -1069,7 +1120,8 @@ flowchart LR
       <div class="pd-desc">Task coverage, pipeline architecture, Jinja2 rationale, platform readiness, and execution playbook</div>
     </div>
     <!-- 6 -->
-    <h2 id="s6">6. Task Coverage &amp; Construct Map</h2>
+    <!-- TAG: feature | module:task-coverage | impact:high -->
+    <h2 id="s6" data-context="feature:task-coverage-map">6. Task Coverage &amp; Construct Map</h2>
     <p>Phase 2 should not only generate create-style examples. The dataset must cover the full operational task family that ALM needs.</p>
     <table>
       <thead><tr><th>MAL use case</th><th>Input pattern</th><th>Output target</th><th>Why it matters</th></tr></thead>
@@ -1166,7 +1218,8 @@ flowchart LR
     <p style="font-size:11.5px;color:var(--muted);">✓ = example exists in the Example Library (Section 15) &nbsp;·&nbsp; Plan = targeted next &nbsp;·&nbsp; — = not yet scoped. Agent, integration, and event constructs need dedicated seed authoring before examples can be generated.</p>
 
     <!-- 7 -->
-    <h2 id="s7">7. Pipeline Architecture</h2>
+    <!-- TAG: feature | module:jinja2-pipeline | impact:high -->
+    <h2 id="s7" data-context="feature:jinja2-pipeline-architecture">7. Pipeline Architecture</h2>
     <p>The five-stage pipeline moves from manually authored gold seeds through controlled template expansion, automated validation, human review, and into the accepted dataset registry. Stage 2 — Jinja2 template expansion — is the current implementation target.</p>
 
     <!-- Stage strip -->
@@ -1929,7 +1982,8 @@ flowchart LR
     </table>
 
     <!-- 14 (was 13) -->
-    <h2 id="s14">14. Data Schemas &amp; Contracts</h2>
+    <!-- TAG: feature | module:data-schema | impact:high -->
+    <h2 id="s14" data-context="feature:data-schema-contracts">14. Data Schemas &amp; Contracts</h2>
     <p>Define these artifacts early so the pipeline stays maintainable from the first record forward.</p>
 
     <h3>14.1 Seed Record</h3>
@@ -2014,7 +2068,8 @@ flowchart LR
       <div class="pd-desc">Example library, risk register, roadmap, decision log, and document history</div>
     </div>
     <!-- 15 (was 14) -->
-    <h2 id="s15">15. Example Library</h2>
+    <!-- TAG: feature | module:example-library | impact:medium -->
+    <h2 id="s15" data-context="feature:example-library">15. Example Library</h2>
     <p>Representative intent-to-MAL pairs organized by task type. This library grows as Phase 2 produces accepted records. Each example maps to the construct coverage grid in the Task Coverage &amp; Construct Map (Section 6).</p>
 
     <div class="example-pair">
@@ -2258,6 +2313,7 @@ route directly to record_decision.</div>
     </div>
 
     <!-- 19 (NEW) -->
+    <!-- TAG: improvement | module:governance | impact:medium -->
     <h2 id="s19">19. Decision Log</h2>
     <p>Tracks key architecture and strategy decisions made during Phase 2. Update this section whenever a significant choice is made or reversed. Open decisions should have a named owner and target resolution date.</p>
     <table>
@@ -2402,6 +2458,7 @@ route directly to record_decision.</div>
     <p>Recommended maintenance rule: update the cover metadata pills, progress tracker, roadmap, coverage grid, and decision log whenever the pipeline meaningfully changes. Add new example pairs to Section 15 each time a new MAL task type or construct family gains accepted records.</p>
 
     <!-- 21 (NEW) -->
+    <!-- TAG: improvement | module:versioning | impact:low -->
     <h2 id="s21">21. Changelog</h2>
     <table>
       <thead>
@@ -2427,17 +2484,17 @@ route directly to record_decision.</div>
           <td>Apr 2026</td>
           <td>Defect audit and color composition fix — updated CSS variables, roadmap styles, code block pre-wrap, Mermaid theme, tag colors, h4 global rules, and cover metadata.</td>
         </tr>
-        <tr>
+        <tr data-log-id="log_2026_04_06_01">
           <td><strong>v2.0</strong></td>
           <td>Apr 2026</td>
           <td>Major update — added TOC with anchor navigation, color legend banner, pipeline progress tracker, layered capability design (L1–L4), known vs. unknown cards, constrained prompt template, domain pack example, rejection feedback loop diagram, construct coverage grid, two new example pairs (Modify and Disambiguate), Synthetic Data Methods Compared section, acceptance criteria checklist, decision log, and version history.</td>
         </tr>
-        <tr>
+        <tr data-log-id="log_2026_04_08_02">
           <td><strong>v2.2</strong></td>
           <td>Apr 2026</td>
           <td>Stage 2 pipeline built and deployed — 6 gold seeds authored (one per task type), 4 Jinja2 templates (entity.j2, workflow.j2, policy.j2, evolution.j2), telecom domain pack, and generate.py producing 35 candidate records. Status dashboard updated to reflect current counts. All emoji icons in the pipeline visual replaced with inline SVGs for professional, platform-independent rendering. Cover status updated to Stage 2 Built.</td>
         </tr>
-        <tr>
+        <tr data-log-id="log_2026_04_07_01">
           <td><strong>v2.1</strong></td>
           <td>Apr 2026</td>
           <td>Pipeline implementation update — replaced Section 7 phase strip with full visual pipeline overview (stage strip, data flow diagram, 6 task type cards, 4 Jinja2 template cards, variant expansion demo, input/output schemas). Confirmed seed JSON schema, type field classification (6 task categories), grammar doc as MAL authority, evolution format, and validation ownership. Updated status dashboard tracker and added 5 new confirmed decisions to decision log.</td>
@@ -2524,6 +2581,58 @@ route directly to record_decision.</div>
   }, { threshold: 0.07 });
 
   document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+  /* ── Meta-log utility ─────────────────────────────────────────────────────
+     appendMetaLog({ task, type, status, impact, notes })
+     Call from browser console or automation scripts to append a new structured
+     work-log entry. The entry is written back into #meta-log-data (JSON store).
+
+     Types:    "feature" | "bug" | "improvement" | "research"
+     Statuses: "started" | "in-progress" | "completed"
+     Impacts:  "low" | "medium" | "high"
+
+     Example:
+       appendMetaLog({
+         task:   "Added healthcare domain pack",
+         type:   "feature",
+         status: "completed",
+         impact: "high",
+         notes:  "Covers 6 entity types and 4 workflow triggers."
+       });
+  ─────────────────────────────────────────────────────────────────────────── */
+  function appendMetaLog(entry) {
+    const store = document.getElementById('meta-log-data');
+    if (!store) { console.warn('appendMetaLog: #meta-log-data not found'); return; }
+    let entries;
+    try { entries = JSON.parse(store.textContent || '[]'); } catch (e) { entries = []; }
+    const now = new Date();
+    const dateStr = now.toISOString().slice(0, 10);
+    const idDate  = dateStr.replace(/-/g, '_');
+    const seq     = String(entries.filter(e => e.date === dateStr).length + 1).padStart(2, '0');
+    entry.id     = 'log_' + idDate + '_' + seq;
+    entry.date   = dateStr;
+    entry.logged_at = now.toISOString();
+    entries.unshift(entry);          // newest first
+    store.textContent = JSON.stringify(entries, null, 2);
+    console.info('[meta-log] Entry added:', entry.id, '—', entry.task);
+  }
+
+  /* ── Daily summary helper ─────────────────────────────────────────────────
+     createDailySummary({ date, tasks, blockers, learnings })
+     Clones the hidden template and returns a filled DOM node.
+     Attach it wherever you need (e.g. a notes panel) or just log to console.
+  ─────────────────────────────────────────────────────────────────────────── */
+  function createDailySummary({ date, tasks = '', blockers = '', learnings = '' } = {}) {
+    const tmpl = document.getElementById('daily-summary-template');
+    if (!tmpl) { console.warn('createDailySummary: template not found'); return null; }
+    const node = tmpl.content.cloneNode(true);
+    const wrap = node.querySelector('.daily-summary-entry');
+    wrap.dataset.date = date || new Date().toISOString().slice(0, 10);
+    node.querySelector('.ds-tasks').textContent     = tasks;
+    node.querySelector('.ds-blockers').textContent  = blockers;
+    node.querySelector('.ds-learnings').textContent = learnings;
+    return node;
+  }
 </script>
 </body>
 </html>
