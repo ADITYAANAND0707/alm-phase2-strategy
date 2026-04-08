@@ -47,6 +47,31 @@ This is a **living technical report**. It is designed to be updated as Phase 2 p
 
 ---
 
+## Team Collaboration — Update via AI Prompting
+
+Anyone on the team can clone the repo and update the document by prompting Cursor (or any AI editor).
+No manual HTML editing needed.
+
+**Clone the repo:**
+```bash
+git clone https://github.com/ADITYAANAND0707/alm-phase2-strategy.git
+cd alm-phase2-strategy
+```
+
+**Then open it in Cursor and prompt:**
+> "Add a new Create example pair to Section 15 for a Healthcare patient registration app."
+> "Update the Status Dashboard — Seeds Defined is now 15/50."
+> "Log a new decision in Section 19: we chose GPT-4o for LLM expansion. Status: Confirmed."
+
+The AI has full context from:
+- **`AGENTS.md`** — Project context, HTML/CSS conventions, MAL grammar, section map, changelog rules
+- **`.cursor/rules/alm-phase2.md`** — Auto-loaded Cursor rules (no setup needed)
+- **`prompts/EXAMPLES.md`** — Copy-paste ready prompt templates for every common update
+
+See `CONTRIBUTING.md` for the full workflow.
+
+---
+
 ## Tech Stack
 
 - **MAL** — Metafore Application Language (domain-specific language for enterprise app modeling)
