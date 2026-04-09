@@ -9,11 +9,11 @@ if (typeof mermaid !== 'undefined') {
     startOnLoad: false,
     theme: 'base',
     themeVariables: {
-      primaryColor:       '#ede8ff',
-      primaryTextColor:   '#1b0b47',
-      primaryBorderColor: '#6416ea',
-      lineColor:          '#6416ea',
-      secondaryColor:     '#f5f3fc',
+      primaryColor:       '#e8f4f2',
+      primaryTextColor:   '#12314a',
+      primaryBorderColor: '#0f766e',
+      lineColor:          '#0f766e',
+      secondaryColor:     '#f4f8fb',
       tertiaryColor:      '#ffffff',
       fontSize:           '12.5px'
     },
@@ -60,8 +60,6 @@ function postLoad() {
   initReveal();
   initTocObserver();
   initToggles();
-  highlightCode();
-  initH3Toggles();
 }
 
 /* ── Reading progress bar ─────────────────────────────────────────────────── */
@@ -182,101 +180,6 @@ function createDailySummary({ date, tasks = '', blockers = '', learnings = '' } 
   node.querySelector('.ds-blockers').textContent = blockers;
   node.querySelector('.ds-learnings').textContent = learnings;
   return node;
-}
-
-/* ── Syntax highlighting ──────────────────────────────────────────────────────
-   Single-pass tokenisers for JSON payloads and MAL programs.
-   Runs after sections load; safely HTML-escapes content first.
-   ─────────────────────────────────────────────────────────────────────────── */
-function escHTML(s) {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
-function highlightJSON(raw) {
-  return escHTML(raw).replace(
-    /"([^"]+)"(\s*:)|(\s*:\s*)("(?:[^"\\]|\\.)*")|(\s*:\s*)(null|true|false)|(\s*:\s*)(-?\d+(?:\.\d+)?)/g,
-    (m, key, colon, sep1, strVal, sep2, kwVal, sep3, numVal) => {
-      if (key  !== undefined) return `<span class="tok-key">"${key}"</span>${colon}`;
-      if (strVal !== undefined) return `${sep1}<span class="tok-str">${strVal}</span>`;
-      if (kwVal  !== undefined) return `${sep2}<span class="tok-null">${kwVal}</span>`;
-      if (numVal !== undefined) return `${sep3}<span class="tok-num">${numVal}</span>`;
-      return m;
-    }
-  );
-}
-
-function highlightMAL(raw) {
-  const KW   = 'application|entity|workflow|policy|evolution|screen|agent|integration|event|domain|version|attributes|relationships|trigger|steps|rules|audit|route|components|changes|impacts|migration_steps|applies_to';
-  const TYPE = 'UUID|STRING|DATETIME|DECIMAL|INTEGER|BIGINT|DATE|BOOLEAN|TEXT';
-  const RE   = new RegExp(
-    `(ENUM\\([^)]*\\))|\\b(${KW})\\b|\\b(${TYPE})\\b|\\b(required)\\b|\\b(belongs_to|has_one|has_many)\\b`,
-    'g'
-  );
-  return escHTML(raw).replace(RE, (m, enumEx, kw, type, mod, rel) => {
-    if (enumEx) return `<span class="tok-enum">${enumEx}</span>`;
-    if (kw)     return `<span class="tok-kw">${kw}</span>`;
-    if (type)   return `<span class="tok-type">${type}</span>`;
-    if (mod)    return `<span class="tok-mod">${mod}</span>`;
-    if (rel)    return `<span class="tok-rel">${rel}</span>`;
-    return m;
-  });
-}
-
-function highlightCode() {
-  /* .pre-wrap blocks: detect JSON vs MAL from the header text */
-  document.querySelectorAll('.pre-wrap').forEach(wrap => {
-    const header = wrap.querySelector('.pre-header');
-    const pre    = wrap.querySelector('pre');
-    if (!pre || !header) return;
-    if (pre.dataset.highlighted) return;
-    pre.dataset.highlighted = '1';
-
-    const isJSON = /JSON|JSONL/i.test(header.textContent);
-    pre.innerHTML = isJSON ? highlightJSON(pre.textContent) : highlightMAL(pre.textContent);
-  });
-
-  /* .ep-code blocks (example library): always MAL */
-  document.querySelectorAll('.ep-code').forEach(el => {
-    if (el.dataset.highlighted) return;
-    el.dataset.highlighted = '1';
-    el.innerHTML = highlightMAL(el.textContent);
-  });
-}
-
-/* ── h3 section toggles ───────────────────────────────────────────────────────
-   Each h3 gets a "− hide / + show" badge. Clicking collapses/expands all
-   sibling elements between that h3 and the next heading.
-   ─────────────────────────────────────────────────────────────────────────── */
-function initH3Toggles() {
-  document.querySelectorAll('h3').forEach(h3 => {
-    if (h3.dataset.toggleBound) return;
-    h3.dataset.toggleBound = '1';
-
-    /* Badge */
-    const badge = document.createElement('span');
-    badge.className = 'h3-badge';
-    badge.textContent = '− hide';
-    h3.appendChild(badge);
-
-    /* Collect DOM siblings until next h2 / h3 / part-div */
-    function siblings() {
-      const els = [];
-      let el = h3.nextElementSibling;
-      while (el && !el.matches('h2, h3, .part-div')) {
-        els.push(el);
-        el = el.nextElementSibling;
-      }
-      return els;
-    }
-
-    let collapsed = false;
-    h3.addEventListener('click', () => {
-      collapsed = !collapsed;
-      h3.classList.toggle('h3-collapsed', collapsed);
-      badge.textContent = collapsed ? '+ show' : '− hide';
-      siblings().forEach(el => { el.style.display = collapsed ? 'none' : ''; });
-    });
-  });
 }
 
 /* ── Kick off ─────────────────────────────────────────────────────────────── */

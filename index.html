@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ALM Phase 2 &mdash; Synthetic Data Strategy v4.0</title>
+<title>ALM Phase 2 &mdash; Synthetic Data Strategy v3.0</title>
 <meta name="description" content="Phase 2 strategy and planning document for the ALM synthetic data pipeline — covering MAL seed authoring, Jinja2 expansion, LLM variant generation, validation, and dataset registry." />
 <meta name="author" content="Metafore AI — ALM Team" />
 <meta property="og:title" content="ALM Phase 2 — Synthetic Data Strategy" />
@@ -22,15 +22,6 @@
 <div id="meta-log" style="display:none" aria-hidden="true">
   <script type="application/json" id="meta-log-data">
 [
-  {
-    "id": "log_2026_04_08_04",
-    "date": "2026-04-08",
-    "task": "Strategy doc v4.0 — repo integration, 56-seed canonical source, 336 candidates, record_id naming, micro-validator graceful fallback, frontend dashboard, updated schemas, decision log entries, changelog.",
-    "type": "improvement",
-    "status": "completed",
-    "impact": "high",
-    "notes": "Merged Aditya's Jinja2 work into DIVYAMETAFORE25/ALM-Data-Gen via PR #1. generate.py now reads from data/seed_scenarios/*.jsonl (56 seeds, Divya's canonical source) with fallback to pipeline/seeds/seeds.json. Output path moved to data/jinja2_expansion/. record_id format updated to seed_NNNNN_jNN_construct_entity_slug. Micro-validator integrated with graceful null fallback. Frontend React/Vite/TypeScript dashboard active (mock mode): TemplatesPage, ValidationPage, AppShell stage badges, localStorage state persistence."
-  },
   {
     "id": "log_2026_04_08_03",
     "date": "2026-04-08",
@@ -87,7 +78,7 @@
 
   <!-- ══ COVER ══════════════════════════════════════════════════════════════ -->
   <div class="cover">
-    <div class="eyebrow">Phase 2 Strategy Report &mdash; Living Document v4.0</div>
+    <div class="eyebrow">Phase 2 Strategy Report &mdash; Living Document v3.0</div>
     <h1>ALM Synthetic Data Pipeline<br />Planning and Execution Blueprint</h1>
     <div class="sub">
       A maintained strategy document for Phase 2 of ALM, focused on a MAL-specific
@@ -98,12 +89,11 @@
       <span>Project: ALM / MAL</span>
       <span>Phase: 2</span>
       <span>Scope: MAL only</span>
-      <span>Status: Stage 2 Integrated</span>
-      <span>Seeds: 56 canonical (telecom)</span>
-      <span>Frontend: Active (mock mode)</span>
+      <span>Status: Stage 2 Built</span>
+      <span>Primary certainty: Jinja2 + Python</span>
       <span>LLM expansion: planned</span>
       <span>Document type: living report</span>
-      <span>Version: 4.0</span>
+      <span>Version: 3.0</span>
     </div>
   </div>
 
@@ -111,7 +101,7 @@
   <div class="quick-brief">
     <div class="qb-label">Quick Brief &mdash; What is this and where are we?</div>
     <div class="qb-what">
-      We are building an <strong>offline data factory for MAL</strong> &mdash; the domain language used by the ALM platform. The factory takes manually written seed examples, expands them into hundreds of validated variants using Jinja2 templates, then uses LLMs to add diversity, and finally routes everything through human review into an accepted dataset registry. The registry feeds model prompting, evaluation benchmarks, and eventually fine-tuning. <strong>Stage 2 (Jinja2 expansion) is built and integrated</strong> into the shared team repo with 56 canonical seeds, 336 candidates, and a live frontend dashboard. See <a href="#s7b" style="color:var(--accent);">Section 7b</a> for the full user flow &mdash; every page, every button, and what each step produces. Stage 3 (validation routing) is next.
+      We are building an <strong>offline data factory for MAL</strong> &mdash; the domain language used by the ALM platform. The factory takes manually written seed examples, expands them into hundreds of validated variants using Jinja2 templates, then uses LLMs to add diversity, and finally routes everything through human review into an accepted dataset registry. The registry feeds model prompting, evaluation benchmarks, and eventually fine-tuning. <strong>Stage 2 (Jinja2 expansion) is done.</strong> Stage 3 (validation routing) is next.
     </div>
 
     <!-- 5-stage pipeline progress -->
@@ -145,9 +135,9 @@
     <!-- stat strip -->
     <div class="qb-stats">
       <div class="qb-stat">
-        <div class="qs-num">56</div>
+        <div class="qs-num">6</div>
         <div class="qs-label">Gold Seeds</div>
-        <div class="qs-sub">canonical telecom seeds active</div>
+        <div class="qs-sub">of 50 target</div>
       </div>
       <div class="qb-stat">
         <div class="qs-num">4</div>
@@ -155,9 +145,9 @@
         <div class="qs-sub">entity, workflow, policy, evolution</div>
       </div>
       <div class="qb-stat">
-        <div class="qs-num">336</div>
+        <div class="qs-num">35</div>
         <div class="qs-label">Candidates Generated</div>
-        <div class="qs-sub">56 seeds &times; 6 variants each</div>
+        <div class="qs-sub">awaiting validation</div>
       </div>
       <div class="qb-stat">
         <div class="qs-num">0</div>
@@ -173,11 +163,10 @@
         <table class="qb-table">
           <thead><tr><th>What is needed</th><th>Status</th></tr></thead>
           <tbody>
-            <tr><td>Gold seed library (40&ndash;60 seeds)</td><td>Done &mdash; 56 canonical seeds active</td></tr>
+            <tr><td>Gold seed library (40&ndash;60 seeds)</td><td>In progress &mdash; 6 done</td></tr>
             <tr><td>Jinja2 templates for all construct families</td><td>Done &mdash; 4 templates</td></tr>
             <tr><td>Domain pack (telecom)</td><td>Done</td></tr>
-            <tr><td>MAL micro-validator service</td><td>Integrated &mdash; graceful null fallback when ALM.parser absent</td></tr>
-            <tr><td>Frontend dashboard (React/Vite/TypeScript)</td><td>Active in mock mode &mdash; Templates + Validation console</td></tr>
+            <tr><td>MAL micro-validator service</td><td>Separate service &mdash; not yet integrated</td></tr>
             <tr><td>Dataset registry schema + lifecycle states</td><td>Defined in Section 14 &mdash; not yet built</td></tr>
             <tr><td>Near-duplicate detection</td><td>Not started</td></tr>
           </tbody>
@@ -229,7 +218,6 @@
           <div class="toc-group-head">Part II &mdash; Pipeline Design</div>
           <a class="toc-pill" href="#s6"><span class="toc-num">6.</span>Task Coverage &amp; Construct Map</a>
           <a class="toc-pill" href="#s7"><span class="toc-num">7.</span>Pipeline Architecture</a>
-          <a class="toc-pill" href="#s7b"><span class="toc-num">7b.</span>Frontend Interface &amp; User Flow</a>
           <a class="toc-pill" href="#s8"><span class="toc-num">8.</span>Jinja2-First Rationale</a>
           <a class="toc-pill" href="#s9"><span class="toc-num">9.</span>Platform Readiness Assessment</a>
           <a class="toc-pill" href="#s10"><span class="toc-num">10.</span>Execution Playbook</a>

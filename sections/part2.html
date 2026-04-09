@@ -83,8 +83,8 @@
   <div class="sv2 sv2-active">
     <div class="sv2-num">2</div>
     <div class="sv2-title">Jinja2 Expansion</div>
-    <div class="sv2-desc">Template-driven variant generation with domain vocabulary substitution &mdash; integrated into shared repo, 56 seeds, 336 candidates</div>
-    <span class="sv2-tag">Stage 2 Integrated</span>
+    <div class="sv2-desc">Template-driven variant generation with domain vocabulary substitution</div>
+    <span class="sv2-tag">Stage 2 Done</span>
   </div>
   <div class="sv2 sv2-dim">
     <div class="sv2-num">3</div>
@@ -111,8 +111,8 @@
   <div class="flow-nd">
     <div class="flow-box">
       <div class="fb-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg></div>
-      <div class="fb-lbl">seed_scenarios/*.jsonl</div>
-      <div class="fb-sub">56 canonical seeds<br/>(primary source)<br/><em style="font-size:10px">fallback: pipeline/seeds/seeds.json</em></div>
+      <div class="fb-lbl">seeds.json</div>
+      <div class="fb-sub">Gold seed records<br/>intent + MAL pairs</div>
     </div>
   </div>
   <div class="flow-arr"><svg viewBox="0 0 20 14"><line x1="0" y1="7" x2="16" y2="7"/><polyline points="10 2 16 7 10 12"/></svg><span>reads</span></div>
@@ -143,8 +143,8 @@
   <div class="flow-nd">
     <div class="flow-box">
       <div class="fb-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 15 11 17 15 12"/></svg></div>
-      <div class="fb-lbl">data/jinja2_expansion/</div>
-      <div class="fb-sub">336 candidates<br/>6 variants per seed<br/>canonical TrainingRecord</div>
+      <div class="fb-lbl">candidates.jsonl</div>
+      <div class="fb-sub">5&ndash;10 variants<br/>per seed record</div>
     </div>
   </div>
 </div>
@@ -198,7 +198,7 @@
   </div>
 </div>
 
-<h3>Variant Expansion &mdash; 1 Seed Becomes 6 Candidates (56 seeds &times; 6 = 336 total)</h3>
+<h3>Variant Expansion &mdash; 1 Seed Becomes 5&ndash;10 Candidates</h3>
 <div class="variant-demo">
   <div class="vd-label">Input &mdash; 1 gold seed record</div>
   <div class="vd-seed">intent: "Build a subscriber onboarding system for a telecom company"<br/>constructs: ["entity", "workflow"] &nbsp;&middot;&nbsp; type: "Create" &nbsp;&middot;&nbsp; domain: "telecom"</div>
@@ -206,27 +206,19 @@
   <div class="vd-sublabel">Jinja2 templates &times; Telecom domain vocabulary</div>
   <div class="vd-label">Output &mdash; 5 generated variant candidates</div>
   <div class="vd-row">
-    <div class="vd-card"><div class="vd-num">j01</div><div class="vd-ent">entity_subscriber</div><div class="vd-wf"><code>seed_00001_j01_entity_subscriber</code></div></div>
-    <div class="vd-card"><div class="vd-num">j02</div><div class="vd-ent">entity_simcard</div><div class="vd-wf"><code>seed_00001_j02_entity_simcard</code></div></div>
-    <div class="vd-card"><div class="vd-num">j03</div><div class="vd-ent">workflow_invoice</div><div class="vd-wf"><code>seed_00001_j03_workflow_invoice</code></div></div>
-    <div class="vd-card"><div class="vd-num">j04</div><div class="vd-ent">policy_subscriber_1</div><div class="vd-wf"><code>seed_00001_j04_policy_subscriber_1</code></div></div>
-    <div class="vd-card"><div class="vd-num">j05</div><div class="vd-ent">evolution_subscriber</div><div class="vd-wf"><code>seed_00001_j05_evolution_subscriber</code></div></div>
-    <div class="vd-card"><div class="vd-num">j06</div><div class="vd-ent">entity_serviceplan</div><div class="vd-wf"><code>seed_00001_j06_entity_serviceplan</code></div></div>
+    <div class="vd-card"><div class="vd-num">Variant 1</div><div class="vd-ent">Subscriber</div><div class="vd-wf">OnboardSubscriber<br/>trigger: new_subscriber</div></div>
+    <div class="vd-card"><div class="vd-num">Variant 2</div><div class="vd-ent">SIMCard</div><div class="vd-wf">ActivateSIM<br/>trigger: new_sim_request</div></div>
+    <div class="vd-card"><div class="vd-num">Variant 3</div><div class="vd-ent">ServicePlan</div><div class="vd-wf">UpdateServicePlan<br/>trigger: update_plan</div></div>
+    <div class="vd-card"><div class="vd-num">Variant 4</div><div class="vd-ent">Invoice</div><div class="vd-wf">CancelInvoice<br/>trigger: cancel_invoice</div></div>
+    <div class="vd-card"><div class="vd-num">Variant 5</div><div class="vd-ent">Subscriber</div><div class="vd-wf">VerifySubscriber<br/>trigger: verify_identity</div></div>
   </div>
 </div>
 
 <h3>Record Schemas &mdash; Input and Output</h3>
-<div class="compare-wrap">
-  <div class="compare-header">
-    <div class="ch-left">Seed Record &mdash; Input (gold source)</div>
-    <div class="ch-arrow">&#8594;</div>
-    <div class="ch-right">Candidate Record &mdash; Output (Jinja2 expanded)</div>
-  </div>
-  <div class="compare-body">
-    <div class="compare-panel">
-      <div class="pre-wrap">
-        <div class="pre-header">JSON &mdash; Seed Record (Input)</div>
-        <pre>{
+<div class="schema-two">
+  <div class="pre-wrap">
+    <div class="pre-header">JSON &mdash; Seed Record (Input)</div>
+    <pre>{
   "record_id": "seed_00001",
   "type":      "Create",
   "domain":    "telecom",
@@ -242,210 +234,34 @@
     "explanation": null
   },
   "metadata": {
-    "validated":      true,
-    "quality_score":  0.95
+    "validated": true,
+    "quality_score": 0.95
   }
 }</pre>
-      </div>
-    </div>
-    <div class="compare-panel">
-      <div class="pre-wrap">
-        <div class="pre-header">JSONL &mdash; Candidate Record (canonical TrainingRecord)</div>
-        <pre>{
-  "record_id": "seed_00001_j02_entity_simcard",
-  "type":      "Create",
-  "domain":    "telecom",
+  </div>
+  <div class="pre-wrap">
+    <div class="pre-header">JSON &mdash; Candidate Record (Output)</div>
+    <pre>{
+  "record_id":      "cand_seed00001_v02",
+  "source_seed_id": "seed_00001",
+  "origin_type":    "jinja2",
+  "template_version": "v1.0",
+  "domain":         "telecom",
+  "type":           "Create",
   "input": {
-    "intent": "Build a SIMCard management system",
-    "domain_pack": null,
-    "current_graph": null,
-    "policy_constraints": []
+    "intent": "Build a SIMCard management system"
   },
   "output": {
-    "mal": "application SIMCardApp\n  domain Telecom version 1.0\n...",
-    "constructs": ["entity"],
-    "explanation": null
+    "mal": "application SIMCardApp ...",
+    "constructs": ["entity", "workflow"]
   },
   "metadata": {
-    "source":         "jinja2_expansion",
-    "validated":      null,
-    "graph_compiled": false,
-    "quality_score":  null,
-    "stage":          "jinja2",
-    "source_seed":    "seed_00001",
-    "generated_at":   "2026-04-08T18:44:27Z"
+    "status":     "candidate",
+    "provenance": "jinja2"
   }
 }</pre>
-      </div>
-    </div>
   </div>
 </div>
-
-<!-- ══ USER FLOW — inserted v4.1 ═══════════════════════════════════════════ -->
-<h2 id="s7b">7b. Frontend Interface &amp; User Flow</h2>
-<p>The dashboard at <code>http://localhost:5174</code> is the primary interface for the whole pipeline. Below is what every page does, how a user moves through the app, and what each interaction actually triggers.</p>
-
-<!-- All 9 pages table -->
-<h3>All 9 Pages &mdash; What Each One Does</h3>
-<table>
-  <thead>
-    <tr><th>Route</th><th>Page</th><th>Stage</th><th>User action</th><th>Result</th></tr>
-  </thead>
-  <tbody>
-    <tr><td><code>/</code></td><td>Dashboard</td><td>live</td><td>Open the app</td><td>Pipeline KPI strip, recent runs list, registry summary counts</td></tr>
-    <tr><td><code>/runs</code></td><td>Pipeline runs</td><td>live</td><td>Click Pipeline runs in sidebar</td><td>Table of past run jobs with status, timestamps, record counts</td></tr>
-    <tr><td><code>/runs/:id</code></td><td>Run detail</td><td>live</td><td>Click a run row</td><td>Full log for that run and its output records</td></tr>
-    <tr><td><code>/seeds</code></td><td>Gold seeds</td><td><span class="tag tag-confirmed">Stage 1 live</span></td><td>Click Generate seed</td><td>Sends intent to ALM backend (or mock), stores result in <code>localStorage</code>, shows MAL output</td></tr>
-    <tr><td><code>/templates</code></td><td>Templates</td><td><span class="tag tag-direction">Stage 2 active</span></td><td>Configure and click Run</td><td>Generates 336 Jinja2 candidates in browser; shows stat strip, expandable rows, MAL viewer</td></tr>
-    <tr><td><code>/llm</code></td><td>LLM expansion</td><td><span class="tag tag-planned">Stage 3 planned</span></td><td>&mdash;</td><td>Placeholder — not yet built</td></tr>
-    <tr><td><code>/validation</code></td><td>Validation</td><td><span class="tag tag-confirmed">live</span></td><td>Paste MAL or load from Seeds/Templates</td><td>Syntax + schema check via ALM validator; pass/fail shown inline</td></tr>
-    <tr><td><code>/registry</code></td><td>Dataset registry</td><td>live</td><td>Browse</td><td>Accepted records with filters</td></tr>
-    <tr><td><code>/records</code></td><td>Record explorer</td><td>live</td><td>Browse</td><td>Raw TrainingRecord viewer with JSON expand</td></tr>
-    <tr><td><code>/demo</code></td><td>Demo mode</td><td>live</td><td>Click through steps</td><td>Guided pipeline walkthrough — Steps 1 (seeds) and 2 (templates) are active</td></tr>
-  </tbody>
-</table>
-
-<!-- User journey mermaid -->
-<h3>User Journey &mdash; Typical 5-Minute Walkthrough</h3>
-<div class="diagram-box">
-  <div class="diagram-label">End-to-end user flow through the frontend (mock mode)</div>
-  <div class="mermaid">
-flowchart TD
-    openApp["Open http://localhost:5174"]
-    openApp --> dashboard["Dashboard — KPIs and recent runs"]
-    dashboard --> navSeeds["Click Gold seeds in sidebar"]
-    dashboard --> navTemplates["Click Templates in sidebar"]
-
-    navSeeds --> seedsBrowse["Browse 56 canonical seeds"]
-    seedsBrowse --> seedGenerate["Click Generate → POST ALM backend or mock"]
-    seedGenerate --> seedResult["MAL output shown with constructs"]
-    seedResult --> seedValidate["Click Validate → Validation console auto-loads MAL"]
-
-    navTemplates --> tmplConfig["Set seed source, domain pack, variants per seed"]
-    tmplConfig --> tmplRun["Click Run Jinja2 expansion"]
-    tmplRun --> tmplStats["Stat strip: 336 total, 56 seeds x 6 each"]
-    tmplStats --> tmplRows["Expandable rows — record_id, type, intent, constructs"]
-    tmplRows --> tmplMAL["Expand row → MAL viewer shows generated code"]
-    tmplMAL --> tmplValidate["Click Validate this MAL → Validation console"]
-    tmplMAL --> tmplExport["Click Export JSONL → downloads candidates.jsonl"]
-
-    seedValidate --> valConsole["Validation console /validation"]
-    tmplValidate --> valConsole
-    valConsole --> valCheck["ALM parser syntax + schema check"]
-    valCheck --> valPass["Pass — MAL is valid"]
-    valCheck --> valFail["Fail — inline error with line number"]
-  </div>
-</div>
-
-<!-- Templates page detail -->
-<h3>Templates Page &mdash; Stage 2 UI Step by Step</h3>
-<p>This is where Jinja2 expansion happens in the browser. The page is fully functional in mock mode &mdash; no backend required.</p>
-<div class="timeline-strip">
-  <div class="timeline-box">
-    <div class="timeline-head" style="background:var(--now-col);">Step 1 &mdash; Configure</div>
-    <div class="timeline-body">
-      <ul>
-        <li><strong>Seed source:</strong> "56 canonical seeds" (reads <code>data/seed_scenarios/</code>) or "6 original seeds" (<code>pipeline/seeds/seeds.json</code>)</li>
-        <li><strong>Domain pack:</strong> Telecom (only option today — more planned)</li>
-        <li><strong>Variants per seed:</strong> 5, 6, or 10 &mdash; default is 6</li>
-        <li>Live math updates: <em>56 seeds &times; 6 = 336 total</em></li>
-      </ul>
-    </div>
-  </div>
-  <div class="timeline-box">
-    <div class="timeline-head" style="background:var(--next-col);">Step 2 &mdash; Run</div>
-    <div class="timeline-body">
-      <ul>
-        <li>Click <strong>Run Jinja2 expansion</strong></li>
-        <li>Spinner shown (~600–1500 ms simulated delay)</li>
-        <li>Results appear in stat strip: total candidates, seeds &times; variants, validation status</li>
-        <li>State saved to <code>localStorage</code> immediately so tab switches don't clear results</li>
-      </ul>
-    </div>
-  </div>
-  <div class="timeline-box">
-    <div class="timeline-head" style="background:var(--later-col);">Step 3 &mdash; Inspect &amp; Export</div>
-    <div class="timeline-body">
-      <ul>
-        <li>Expand any row: <code>record_id</code>, <code>type</code>, <code>domain</code>, <code>intent</code>, constructs badges</li>
-        <li>MAL viewer shows the full generated MAL program</li>
-        <li>Click <strong>Validate this MAL</strong> to open Validation console with MAL pre-loaded</li>
-        <li>Click <strong>Export JSONL</strong> to download all candidates as a <code>.jsonl</code> file</li>
-      </ul>
-    </div>
-  </div>
-</div>
-
-<!-- Record_id decode box -->
-<div class="note">
-  <div class="note-line"><strong>How to read a record_id</strong> &mdash; <code>seed_00001_j02_entity_simcard</code></div>
-  <div class="note-line"><code>seed_00001</code> &rarr; source gold seed &nbsp;&nbsp; <code>j02</code> &rarr; variant 2 from that seed &nbsp;&nbsp; <code>entity_simcard</code> &rarr; construct type + entity name used by the template</div>
-  <div class="note-line">This format lets you trace any candidate directly back to its exact source without opening the JSONL file.</div>
-</div>
-
-<!-- Validation console -->
-<h3>Validation Console &mdash; Three Ways to Load MAL</h3>
-<div class="grid-3">
-  <div class="metric-card">
-    <div class="m-label">Method 1 &mdash; Paste directly</div>
-    <div class="m-value">Manual</div>
-    <div class="m-desc">Type or paste any MAL into the editor and click <strong>Validate</strong>. Good for testing quick edits or MAL from external sources.</div>
-  </div>
-  <div class="metric-card">
-    <div class="m-label">Method 2 &mdash; From Gold Seeds</div>
-    <div class="m-value">Auto-load</div>
-    <div class="m-desc">Click <strong>From gold seeds</strong> in the Validation toolbar. Pulls the last generated seed MAL from <code>localStorage</code> key <code>alm-data-gen:last-generated-mal</code>.</div>
-  </div>
-  <div class="metric-card">
-    <div class="m-label">Method 3 &mdash; From Jinja2</div>
-    <div class="m-value">Variant picker</div>
-    <div class="m-desc">Click <strong>From Jinja2 expansion</strong> in the toolbar. A dropdown lets you pick any of the last-run variants by <code>record_id</code>. Pulls from <code>alm-data-gen:last-jinja2-variants</code>.</div>
-  </div>
-</div>
-
-<!-- State persistence -->
-<h3>State Persistence &mdash; What Survives Tab Changes</h3>
-<table>
-  <thead><tr><th>localStorage Key</th><th>What it stores</th><th>Used by</th></tr></thead>
-  <tbody>
-    <tr><td><code>alm-data-gen:last-jinja2-variants</code></td><td>Up to 50 generated variant records (record_id, MAL, constructs)</td><td>Templates page restore on mount; Validation console picker</td></tr>
-    <tr><td><code>alm-data-gen:last-jinja2-meta</code></td><td>Run config (seedSource, domainPack, variantsPerSeed, totalCount, runAt)</td><td>Templates page restores form state on revisit</td></tr>
-    <tr><td><code>alm-data-gen:last-generated-mal</code></td><td>Most recently generated seed MAL string</td><td>Validation console "From gold seeds" button</td></tr>
-    <tr><td><code>alm-data-gen:gold-seed-runs-v2</code></td><td>Full gold seed run history (id, timestamp, output records)</td><td>Seeds page run history and re-run feature</td></tr>
-    <tr><td><code>alm-dg-theme</code></td><td>Light or dark mode preference</td><td>ThemeToggle across all pages</td></tr>
-    <tr><td><code>alm-dg-welcome-dismissed</code></td><td>Whether the Quick Start sidebar banner was dismissed</td><td>AppShell sidebar banner</td></tr>
-  </tbody>
-</table>
-
-<!-- Mock vs real -->
-<h3>Mock Mode vs Real Backend</h3>
-<div class="grid-2">
-  <div class="card">
-    <div class="ctag navy">Mock Mode — Current Default</div>
-    <h4>VITE_USE_MOCK_API=true</h4>
-    <ul>
-      <li>Set in <code>frontend/.env</code></li>
-      <li>No backend or Docker needed</li>
-      <li>All API calls return pre-built mock data from <code>mockData.ts</code></li>
-      <li>Templates page uses in-browser Jinja2 mock logic</li>
-      <li>Good for UI demos, development, and sharing with non-technical team members</li>
-    </ul>
-    <div class="stat-pill">Use this if you don't have Application-Development-Model running</div>
-  </div>
-  <div class="card">
-    <div class="ctag gold">Real Mode</div>
-    <h4>VITE_USE_MOCK_API=false</h4>
-    <ul>
-      <li>Set <code>VITE_API_BASE_URL=http://127.0.0.1:8000</code> in <code>frontend/.env</code></li>
-      <li>Requires Docker: <code>docker compose up -d</code> in Application-Development-Model repo</li>
-      <li>Gold seeds page calls <code>POST /api/v1/generations/from-text</code></li>
-      <li>Validation calls <code>POST /api/v1/validations</code> with real ALM parser</li>
-      <li>CORS: backend must allow origin <code>http://localhost:5174</code></li>
-    </ul>
-    <div class="stat-pill warn">Requires Divya's Application-Development-Model repo access</div>
-  </div>
-</div>
-<!-- ══ end user flow ═══════════════════════════════════════════════════════ -->
 
 <!-- 8 -->
 <h2 id="s8">8. Jinja2-First Rationale</h2>

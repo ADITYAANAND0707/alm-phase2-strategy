@@ -215,11 +215,10 @@ route directly to record_decision.</div>
       <div class="rmtitle">Phase 2 Foundation</div>
     </div>
     <div class="rm-body">
-      <div class="rm-item"><div class="rm-title">&#10003; Define Gold Seeds</div><div class="rm-desc">56 canonical telecom seeds active in <code>data/seed_scenarios/telecom_v1.jsonl</code>. Aditya&rsquo;s 6 original seeds kept as fallback source.</div></div>
-      <div class="rm-item"><div class="rm-title">&#10003; Design Jinja2 Templates</div><div class="rm-desc">4 grammar-compliant templates built: entity.j2, workflow.j2, policy.j2, evolution.j2 with telecom domain pack.</div></div>
-      <div class="rm-item"><div class="rm-title">&#10003; Create Payload Generator</div><div class="rm-desc">generate.py produces 336 candidates (56 seeds &times; 6 variants). Output to <code>data/jinja2_expansion/</code>. record_id format: <code>seed_NNNNN_jNN_construct_entity</code>.</div></div>
-      <div class="rm-item"><div class="rm-title">&#10003; Integrate into Shared Repo</div><div class="rm-desc">Merged into DIVYAMETAFORE25/ALM-Data-Gen via PR&nbsp;#1. Frontend dashboard (React/Vite) active in mock mode.</div></div>
-      <div class="rm-item"><div class="rm-title">Define Registry Contract</div><div class="rm-desc">Set a simple but strict schema for accepted synthetic records and metadata. Lifecycle states defined in Section 14 &mdash; not yet built.</div></div>
+      <div class="rm-item"><div class="rm-title">Define Gold Seeds</div><div class="rm-desc">Build a curated seed set covering all MAL task types and construct families across all four capability layers.</div></div>
+      <div class="rm-item"><div class="rm-title">Design Jinja2 Templates</div><div class="rm-desc">Convert seeds into structured templates with safe substitution zones.</div></div>
+      <div class="rm-item"><div class="rm-title">Create Payload Generator</div><div class="rm-desc">Use Python to generate approved payload combinations and emit deterministic variants.</div></div>
+      <div class="rm-item"><div class="rm-title">Define Registry Contract</div><div class="rm-desc">Set a simple but strict schema for accepted synthetic records and metadata.</div></div>
     </div>
   </div>
   <div class="rm-col">
@@ -355,41 +354,6 @@ route directly to record_decision.</div>
       <td><span class="tag tag-confirmed">Confirmed</span></td>
       <td>Apr 2026</td>
     </tr>
-    <tr>
-      <td><strong>record_id naming convention</strong></td>
-      <td><code>{seed_id}_j{NN}_{construct}_{entity_slug}</code> &mdash; e.g. <code>seed_00001_j02_entity_simcard</code></td>
-      <td>Encodes seed provenance, variant number, construct type, and entity in the ID itself &mdash; makes each record instantly identifiable without expanding the payload</td>
-      <td><span class="tag tag-confirmed">Confirmed</span></td>
-      <td>Apr 2026</td>
-    </tr>
-    <tr>
-      <td><strong>Seed source priority</strong></td>
-      <td><code>data/seed_scenarios/*.jsonl</code> (primary); <code>pipeline/seeds/seeds.json</code> (fallback)</td>
-      <td>Divya&rsquo;s canonical 56-seed source is authoritative; Aditya&rsquo;s 6 seeds remain available for isolated testing via <code>--seeds-dir</code> or default fallback</td>
-      <td><span class="tag tag-confirmed">Confirmed</span></td>
-      <td>Apr 2026</td>
-    </tr>
-    <tr>
-      <td><strong>Micro-validator integration approach</strong></td>
-      <td>Call <code>src/seed_generation/micro_validator.py</code> on every candidate; return <code>validated: null</code> when <code>ALM.parser</code> is not on PYTHONPATH</td>
-      <td>Graceful fallback means the pipeline runs standalone without the full backend; real scores appear automatically once PYTHONPATH is set</td>
-      <td><span class="tag tag-confirmed">Confirmed</span></td>
-      <td>Apr 2026</td>
-    </tr>
-    <tr>
-      <td><strong>Repo integration</strong></td>
-      <td>All Jinja2 work merged into <code>DIVYAMETAFORE25/ALM-Data-Gen</code> main branch via PR&nbsp;#1 from <code>aditya-work</code></td>
-      <td>Single shared repo for the whole team; no duplication of seed files or pipeline scripts across branches</td>
-      <td><span class="tag tag-confirmed">Confirmed</span></td>
-      <td>Apr 2026</td>
-    </tr>
-    <tr>
-      <td><strong>Frontend dashboard</strong></td>
-      <td>React/Vite/TypeScript &mdash; TemplatesPage (Stage 2 UI), ValidationPage (MAL console), AppShell stage badges, localStorage state persistence</td>
-      <td>Provides a UI for the whole pipeline; mock mode (<code>VITE_USE_MOCK_API=true</code>) runs standalone without backend; generated MAL survives tab changes via localStorage</td>
-      <td><span class="tag tag-confirmed">Confirmed</span></td>
-      <td>Apr 2026</td>
-    </tr>
   </tbody>
 </table>
 
@@ -456,10 +420,6 @@ route directly to record_decision.</div>
     <tr>
       <td><strong>v3.0</strong></td><td>Apr 2026</td>
       <td>Document refactored &mdash; split into shell + external CSS/JS + dynamic HTML sections for maintainability. Added Quick Brief section, lighter visual theme, KPI progress bars, coverage heatmap, click-to-expand cards, rewritten Executive Summary in plain language.</td>
-    </tr>
-    <tr data-log-id="log_2026_04_08_04">
-      <td><strong>v4.0</strong></td><td>Apr 2026</td>
-      <td>Repo integration and frontend dashboard &mdash; Jinja2 pipeline merged into DIVYAMETAFORE25/ALM-Data-Gen (PR&nbsp;#1). Gold seeds updated to 56 canonical seeds (<code>data/seed_scenarios/telecom_v1.jsonl</code>). Candidate count updated to 336 (56&nbsp;&times;&nbsp;6). record_id naming updated to <code>seed_NNNNN_jNN_construct_entity</code> format. Micro-validator integrated with graceful null fallback. Output path updated to <code>data/jinja2_expansion/</code>. TrainingRecord metadata fields documented (<code>source</code>, <code>stage</code>, <code>source_seed</code>, <code>generated_at</code>). Five new decision log entries added. Frontend dashboard (React/Vite/TypeScript) active in mock mode &mdash; TemplatesPage, ValidationPage, localStorage state persistence. Roadmap Now column updated to reflect completed items.</td>
     </tr>
   </tbody>
 </table>
