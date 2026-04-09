@@ -44,35 +44,25 @@
 <h2 id="s14" data-context="feature:data-schema-contracts"><span class="h2-icon"><i data-lucide="file-json" class="lc-md"></i></span>14. Data Schemas &amp; Contracts</h2>
 <p>Define these artifacts early so the pipeline stays maintainable from the first record forward.</p>
 
-<h3>14.1 &ndash; 14.3 Schemas Side-by-Side</h3>
-<p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Three artifacts that live at different stages of the pipeline. The <code>record_id</code> format flows through all three: the seed defines the base, the Jinja2 payload produces the variant, and the registry record preserves the full provenance.</p>
-<div class="compare-wrap">
-  <div class="compare-header" style="grid-template-columns:1fr 30px 1fr 30px 1fr;">
-    <div class="ch-left">14.1 Seed Record &mdash; gold source</div>
-    <div class="ch-arrow">&#8594;</div>
-    <div class="ch-right" style="color:var(--accent);">14.2 Jinja2 Payload &mdash; generate.py context</div>
-    <div class="ch-arrow">&#8594;</div>
-    <div class="ch-right">14.3 Registry Record &mdash; accepted</div>
-  </div>
-  <div class="compare-body" style="grid-template-columns:1fr 1fr 1fr;">
-    <div class="compare-panel">
-      <div class="pre-wrap">
-        <div class="pre-header">JSON &mdash; Seed Record</div>
-        <pre>{
+<h3>14.1 Seed Record</h3>
+<div class="pre-wrap">
+  <div class="pre-header">JSON &mdash; Seed Record (confirmed schema)</div>
+  <pre>{
   "record_id": "seed_00001",
   "type":      "Create",
   "domain":    "telecom",
   "input": {
-    "intent": "Build a subscriber
-      onboarding system",
-    "domain_pack":        null,
-    "current_graph":      null,
-    "policy_constraints": []
+    "intent":              "Build a subscriber onboarding system for a telecom company",
+    "domain_pack":         null,
+    "current_graph":       null,
+    "policy_constraints":  []
   },
   "output": {
-    "mal":        "application ...",
-    "constructs": ["entity","workflow"],
-    "explanation": null
+    "mal":         "application SubscriberOnboarding\n  domain Telecom\n  version 1.0\n...",
+    "constructs":  ["entity", "workflow"],
+    "impacted_components": [],
+    "explanation": null,
+    "migration_steps": []
   },
   "metadata": {
     "source":        "production",
@@ -81,55 +71,41 @@
     "quality_score": 0.95
   }
 }</pre>
-      </div>
-    </div>
-    <div class="compare-panel">
-      <div class="pre-wrap">
-        <div class="pre-header">JSON &mdash; Jinja2 Payload</div>
-        <pre>{
-  "application_name":
-    "OnboardCustomer",
-  "entity_name":
-    "Subscriber",
+</div>
+
+<h3>14.2 Template Payload</h3>
+<div class="pre-wrap">
+  <div class="pre-header">JSON &mdash; Jinja2 Payload</div>
+  <pre>{
+  "application_name": "OnboardCustomer",
+  "entity_name":      "Subscriber",
   "attributes": [
-    { "name": "address",
-      "type": "STRING" },
-    { "name": "phone",
-      "type": "STRING" }
+    { "name": "address", "type": "STRING" },
+    { "name": "phone",   "type": "STRING" }
   ],
-  "workflow_steps": [
-    "validate_kyc",
-    "verify_otp",
-    "activate_subscriber"
-  ],
-  "policy_name": "KYCPolicy"
+  "workflow_steps": ["validate_kyc", "verify_otp", "activate_subscriber"],
+  "policy_name":    "KYCPolicy"
 }</pre>
-      </div>
-    </div>
-    <div class="compare-panel">
-      <div class="pre-wrap">
-        <div class="pre-header">JSON &mdash; Registry Record</div>
-        <pre>{
-  "record_id":
-    "seed_00001_j01
-     _entity_subscriber",
-  "origin_type":  "jinja2",
-  "source_seed":  "seed_00001",
-  "validation_status": "passed",
-  "review_status": "accepted",
-  "review_score":  4.7,
-  "domain":        "telecom",
-  "task_type":     "create",
-  "layer":         "L2",
-  "stage":         "jinja2",
-  "generated_at":
-    "2026-04-08T18:44:27Z",
-  "mal_text":
-    "application SubscriberApp ..."
+</div>
+
+<h3>14.3 Accepted Registry Record</h3>
+<div class="pre-wrap">
+  <div class="pre-header">JSON &mdash; Registry Record</div>
+  <pre>{
+  "record_id":        "accepted_000421",
+  "origin_type":      "jinja2",
+  "source_seed_id":   "seed_onboarding_001",
+  "template_version": "v1.0",
+  "prompt_version":   null,
+  "model_version":    null,
+  "validation_status":"passed",
+  "review_status":    "accepted",
+  "review_score":     4.7,
+  "domain":           "telecom",
+  "task_type":        "create",
+  "layer":            "L2",
+  "mal_text":         "application OnboardCustomer domain Telecom ..."
 }</pre>
-      </div>
-    </div>
-  </div>
 </div>
 
 <h3>14.4 Registry Lifecycle</h3>
