@@ -9,11 +9,11 @@ if (typeof mermaid !== 'undefined') {
     startOnLoad: false,
     theme: 'base',
     themeVariables: {
-      primaryColor:       '#e8f4f2',
-      primaryTextColor:   '#12314a',
-      primaryBorderColor: '#0f766e',
-      lineColor:          '#0f766e',
-      secondaryColor:     '#f4f8fb',
+      primaryColor:       '#ede8ff',
+      primaryTextColor:   '#1b0b47',
+      primaryBorderColor: '#6416ea',
+      lineColor:          '#6416ea',
+      secondaryColor:     '#f5f3fc',
       tertiaryColor:      '#ffffff',
       fontSize:           '12.5px'
     },
