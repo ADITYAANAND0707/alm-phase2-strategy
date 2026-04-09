@@ -12,6 +12,7 @@
 <meta name="theme-color" content="#12314a" />
 <link rel="stylesheet" href="style.css" />
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 </head>
 <body>
 
@@ -98,10 +99,11 @@
       <span>Project: ALM / MAL</span>
       <span>Phase: 2</span>
       <span>Scope: MAL only</span>
-      <span>Status: Stage 2 Integrated</span>
+      <span>Status: All 5 Stages Live</span>
       <span>Seeds: 56 canonical (telecom)</span>
-      <span>Frontend: Active (mock mode)</span>
-      <span>LLM expansion: planned</span>
+      <span>Variants: 336 (Jinja2) + LLM records</span>
+      <span>AI Synthesis: Live (GPT-4o)</span>
+      <span>Quality Gate: 5-stage live</span>
       <span>Document type: living report</span>
       <span>Version: 4.0</span>
     </div>
@@ -111,34 +113,34 @@
   <div class="quick-brief">
     <div class="qb-label">Quick Brief &mdash; What is this and where are we?</div>
     <div class="qb-what">
-      We are building an <strong>offline data factory for MAL</strong> &mdash; the domain language used by the ALM platform. The factory takes manually written seed examples, expands them into hundreds of validated variants using Jinja2 templates, then uses LLMs to add diversity, and finally routes everything through human review into an accepted dataset registry. The registry feeds model prompting, evaluation benchmarks, and eventually fine-tuning. <strong>Stage 2 (Jinja2 expansion) is built and integrated</strong> into the shared team repo with 56 canonical seeds, 336 candidates, and a live frontend dashboard. See <a href="#s7b" style="color:var(--accent);">Section 7b</a> for the full user flow &mdash; every page, every button, and what each step produces. Stage 3 (validation routing) is next.
+      We are building an <strong>offline data factory for MAL</strong> &mdash; the domain language used by the ALM platform. The factory takes 56 manually written gold seed examples, expands them into 336 balanced variants using Jinja2 templates, then uses GPT-4o to synthesize rich training records, routes everything through a 5-stage quality gate, and stores validated results in a browsable training registry. <strong>All 5 pipeline stages are now live</strong> with a full React/Vite/TypeScript frontend dashboard. See <a href="#s7b" style="color:var(--accent);">Section 7b</a> for the full user flow &mdash; every page, every button, and what each step produces. See <a href="#s7d" style="color:var(--accent);">Section 7d</a> for the complete page-by-page walkthrough.
     </div>
 
     <!-- 5-stage pipeline progress -->
     <div class="pipeline-progress">
       <div class="pp-step active">
         <div class="pp-node done"></div>
-        <div class="pp-title">Gold Seeds</div>
+        <div class="pp-title">Seed Library</div>
       </div>
       <div class="pp-line done"></div>
       <div class="pp-step active">
         <div class="pp-node done"></div>
-        <div class="pp-title">Jinja2 Expansion</div>
+        <div class="pp-title">Deterministic Expansion</div>
       </div>
-      <div class="pp-line"></div>
-      <div class="pp-step">
-        <div class="pp-node">3</div>
-        <div class="pp-title">MAL Validation</div>
+      <div class="pp-line done"></div>
+      <div class="pp-step active">
+        <div class="pp-node done"></div>
+        <div class="pp-title">AI Synthesis</div>
       </div>
-      <div class="pp-line"></div>
-      <div class="pp-step">
-        <div class="pp-node">4</div>
-        <div class="pp-title">Human Review</div>
+      <div class="pp-line done"></div>
+      <div class="pp-step active">
+        <div class="pp-node done"></div>
+        <div class="pp-title">Quality Gate</div>
       </div>
-      <div class="pp-line"></div>
-      <div class="pp-step">
-        <div class="pp-node">5</div>
-        <div class="pp-title">Registry</div>
+      <div class="pp-line done"></div>
+      <div class="pp-step active">
+        <div class="pp-node done"></div>
+        <div class="pp-title">Training Registry</div>
       </div>
     </div>
 
@@ -150,19 +152,19 @@
         <div class="qs-sub">canonical telecom seeds active</div>
       </div>
       <div class="qb-stat">
-        <div class="qs-num">4</div>
-        <div class="qs-label">Jinja2 Templates</div>
-        <div class="qs-sub">entity, workflow, policy, evolution</div>
-      </div>
-      <div class="qb-stat">
         <div class="qs-num">336</div>
-        <div class="qs-label">Candidates Generated</div>
-        <div class="qs-sub">56 seeds &times; 6 variants each</div>
+        <div class="qs-label">Jinja2 Variants</div>
+        <div class="qs-sub">56 seeds &times; 6 task types each</div>
       </div>
       <div class="qb-stat">
-        <div class="qs-num">0</div>
-        <div class="qs-label">Accepted Records</div>
-        <div class="qs-sub">registry not yet active</div>
+        <div class="qs-num">Live</div>
+        <div class="qs-label">AI Synthesis</div>
+        <div class="qs-sub">GPT-4o with token &amp; latency tracking</div>
+      </div>
+      <div class="qb-stat">
+        <div class="qs-num">5</div>
+        <div class="qs-label">Validation Stages</div>
+        <div class="qs-sub">syntax → schema → policy → dep → compile</div>
       </div>
     </div>
 
@@ -174,12 +176,13 @@
           <thead><tr><th>What is needed</th><th>Status</th></tr></thead>
           <tbody>
             <tr><td>Gold seed library (40&ndash;60 seeds)</td><td>Done &mdash; 56 canonical seeds active</td></tr>
-            <tr><td>Jinja2 templates for all construct families</td><td>Done &mdash; 4 templates</td></tr>
+            <tr><td>Jinja2 templates for all construct families</td><td>Done &mdash; 4 templates, 336 variants</td></tr>
             <tr><td>Domain pack (telecom)</td><td>Done</td></tr>
-            <tr><td>MAL micro-validator service</td><td>Integrated &mdash; graceful null fallback when ALM.parser absent</td></tr>
-            <tr><td>Frontend dashboard (React/Vite/TypeScript)</td><td>Active in mock mode &mdash; Templates + Validation console</td></tr>
-            <tr><td>Dataset registry schema + lifecycle states</td><td>Defined in Section 14 &mdash; not yet built</td></tr>
-            <tr><td>Near-duplicate detection</td><td>Not started</td></tr>
+            <tr><td>LLM synthesis (AI Synthesis)</td><td>Live &mdash; GPT-4o with token + latency tracking</td></tr>
+            <tr><td>5-stage MAL Quality Gate</td><td>Live &mdash; syntax, schema, policy, dependency, compile_check</td></tr>
+            <tr><td>Frontend dashboard (React/Vite/TypeScript)</td><td>Live &mdash; 10 routes, all stages active, demo-ready</td></tr>
+            <tr><td>Training Registry</td><td>Live &mdash; filterable, exportable, with Demo Report download</td></tr>
+            <tr><td>Near-duplicate detection</td><td>Not started &mdash; backlog item</td></tr>
           </tbody>
         </table>
       </div>
@@ -193,7 +196,7 @@
             <tr><td>PostgreSQL</td><td>Dataset registry and accepted record storage</td></tr>
             <tr><td>Apache AGE</td><td>Graph-compile checks on generated MAL</td></tr>
             <tr><td>Qdrant</td><td>Similarity search for duplicate detection</td></tr>
-            <tr><td>LLM (TBD)</td><td>Stage 3 variant expansion &mdash; model not yet chosen</td></tr>
+            <tr><td>OpenAI GPT-4o</td><td>Stage 3 AI Synthesis &mdash; live with prompt management and token tracking</td></tr>
           </tbody>
         </table>
       </div>
@@ -209,6 +212,9 @@
           <div class="toc-group-head">Part I &mdash; Context &amp; Direction</div>
           <a class="toc-pill" href="#s1"><span class="toc-num">1.</span>Executive Summary</a>
           <a class="toc-pill" href="#s2"><span class="toc-num">2.</span>Status Dashboard</a>
+          <a class="toc-pill" href="#s2b"><span class="toc-num">2b.</span>Demo Playbook</a>
+          <a class="toc-pill" href="#s2c"><span class="toc-num">2c.</span>Real KPI Metrics</a>
+          <a class="toc-pill" href="#s2d"><span class="toc-num">2d.</span>Team Progress Tracker</a>
           <a class="toc-pill" href="#s3"><span class="toc-num">3.</span>Immediate Action Map</a>
           <a class="toc-pill" href="#s4"><span class="toc-num">4.</span>Scope Definition</a>
           <a class="toc-pill" href="#s5"><span class="toc-num">5.</span>Baseline &amp; Gap Analysis</a>
@@ -222,6 +228,7 @@
           <div class="toc-group-head">Part IV &mdash; Engineering Standards</div>
           <a class="toc-pill" href="#s13"><span class="toc-num">13.</span>Governance &amp; Engineering Standards</a>
           <a class="toc-pill" href="#s14"><span class="toc-num">14.</span>Data Schemas &amp; Contracts</a>
+          <a class="toc-pill" href="#s13b"><span class="toc-num">13b.</span>API Quick Reference</a>
         </div>
       </div>
       <div class="toc-col">
@@ -230,6 +237,8 @@
           <a class="toc-pill" href="#s6"><span class="toc-num">6.</span>Task Coverage &amp; Construct Map</a>
           <a class="toc-pill" href="#s7"><span class="toc-num">7.</span>Pipeline Architecture</a>
           <a class="toc-pill" href="#s7b"><span class="toc-num">7b.</span>Frontend Interface &amp; User Flow</a>
+          <a class="toc-pill" href="#s7c"><span class="toc-num">7c.</span>Quick Onboarding Guide</a>
+          <a class="toc-pill" href="#s7d"><span class="toc-num">7d.</span>Page-by-Page UI Walkthrough</a>
           <a class="toc-pill" href="#s8"><span class="toc-num">8.</span>Jinja2-First Rationale</a>
           <a class="toc-pill" href="#s9"><span class="toc-num">9.</span>Platform Readiness Assessment</a>
           <a class="toc-pill" href="#s10"><span class="toc-num">10.</span>Execution Playbook</a>
@@ -242,7 +251,15 @@
           <a class="toc-pill" href="#s18"><span class="toc-num">18.</span>Roadmap</a>
           <a class="toc-pill" href="#s19"><span class="toc-num">19.</span>Decision Log</a>
           <a class="toc-pill" href="#s20"><span class="toc-num">20.</span>Document Maintenance</a>
+          <a class="toc-pill" href="#s22"><span class="toc-num">22.</span>Glossary</a>
           <a class="toc-pill" href="#s21"><span class="toc-num">21.</span>Changelog</a>
+        </div>
+        <div>
+          <div class="toc-group-head">Part VI &mdash; Future Vision (Future Plans)</div>
+          <a class="toc-pill" href="#s23"><span class="toc-num">23.</span>Universal Data Factory Vision</a>
+          <a class="toc-pill" href="#s24"><span class="toc-num">24.</span>Target Use Cases Beyond MAL</a>
+          <a class="toc-pill" href="#s25"><span class="toc-num">25.</span>Generalization Architecture Roadmap</a>
+          <a class="toc-pill" href="#s26"><span class="toc-num">26.</span>Research Alignment</a>
         </div>
       </div>
     </div>

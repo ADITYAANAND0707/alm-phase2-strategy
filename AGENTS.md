@@ -20,47 +20,92 @@ Gold Seeds → Jinja2 Template Expansion → LLM Variant Expansion → Validatio
 
 ---
 
-## The File to Edit
+## Document Architecture — Split Partials
 
-**Always edit: `index.html`**
+**Do NOT edit `index.html` for content changes.** `index.html` is the shell only — it loads content dynamically from `sections/` via `app.js`.
 
-This is the document. It is the same file that GitHub Pages deploys to:
-`https://adityaanand0707.github.io/alm-phase2-strategy/`
-
-`phase2_synthetic_data_strategy.html` is a named backup — keep it in sync after editing `index.html`.
-
-To sync after editing:
-```powershell
-Copy-Item index.html phase2_synthetic_data_strategy.html -Force
+Content lives in these files:
 ```
+index.html           ← Shell only: cover, Quick Brief, TOC, legend banner
+style.css            ← All CSS and design tokens
+app.js               ← Section loader, toggle logic, Mermaid init
+sections/part1.html  ← Sections 1, 2, 2b, 2c, 2d, 3, 4, 5 (Context & Direction)
+sections/part2.html  ← Sections 6, 7, 7b, 7c, 7d, 8, 9, 10 (Pipeline Design)
+sections/part3.html  ← Sections 11, 12 (Strategy & Methods)
+sections/part4.html  ← Sections 13, 14, 13b (Engineering Standards)
+sections/part5.html  ← Sections 15–22 + Part VI 23–26 (Reference & Future Vision)
+```
+
+**Edit the correct part file for the section you want to update.**
+
+`phase2_synthetic_data_strategy.html` is a legacy monolithic backup — not maintained. Ignore it.
 
 ---
 
 ## Document Structure — Section Map
 
+**Part I — Context & Direction (sections/part1.html)**
+
 | Section | ID | Title | Update When |
 |---|---|---|---|
 | 1 | `#s1` | Executive Summary | Scope or strategy fundamentally changes |
 | 2 | `#s2` | Status Dashboard | Every sprint — update the 4 tracker cards |
+| 2b | `#s2b` | Demo Playbook | Demo script steps change |
+| 2c | `#s2c` | Real KPI Metrics | New metrics collected from runs |
+| 2d | `#s2d` | Team Progress Tracker | Sprint completed or owner changes |
 | 3 | `#s3` | Immediate Action Map | Priorities shift between Now/Next/Later |
 | 4 | `#s4` | Scope Definition | MAL grammar scope changes |
 | 5 | `#s5` | Baseline & Gap Analysis | New capabilities added to ALM platform |
-| 6 | `#s6` | Task Coverage & Construct Map | New examples added to Example Library |
+
+**Part II — Pipeline Design (sections/part2.html)**
+
+| Section | ID | Title | Update When |
+|---|---|---|---|
+| 6 | `#s6` | Task Coverage & Construct Map | New examples promoted to registry |
 | 7 | `#s7` | Pipeline Architecture | Pipeline stages added or changed |
+| 7b | `#s7b` | Frontend Interface & User Flow | New pages or flows added |
+| 7c | `#s7c` | Quick Onboarding Guide | Setup steps change |
+| 7d | `#s7d` | Page-by-Page UI Walkthrough | UI pages added or redesigned |
 | 8 | `#s8` | Jinja2-First Rationale | Static — change rarely |
-| 9 | `#s9` | Platform Readiness Assessment | New components added or readiness changes |
-| 10 | `#s10` | Execution Playbook | New stage details, decisions, or workflows added |
+| 9 | `#s9` | Platform Readiness Assessment | New components added |
+| 10 | `#s10` | Execution Playbook | New stage details or workflows |
+
+**Part III — Strategy & Methods (sections/part3.html)**
+
+| Section | ID | Title | Update When |
+|---|---|---|---|
 | 11 | `#s11` | Model Adaptation Strategy | Model approach changes |
-| 12 | `#s12` | Research Methods Reference | New relevant research methods discovered |
-| 13 | `#s13` | Governance & Engineering Standards | New governance practices added |
+| 12 | `#s12` | Research Methods Reference | New research discovered |
+
+**Part IV — Engineering Standards (sections/part4.html)**
+
+| Section | ID | Title | Update When |
+|---|---|---|---|
+| 13 | `#s13` | Governance & Engineering Standards | New governance practices |
 | 14 | `#s14` | Data Schemas & Contracts | Schema fields added or changed |
-| 15 | `#s15` | Example Library | New accepted MAL pairs — add here |
-| 16 | `#s16` | Risk Register | New risks identified or existing risks resolved |
+| 13b | `#s13b` | API Quick Reference | New endpoints added |
+
+**Part V — Reference & Governance (sections/part5.html)**
+
+| Section | ID | Title | Update When |
+|---|---|---|---|
+| 15 | `#s15` | Example Library | New accepted MAL pairs |
+| 16 | `#s16` | Risk Register | New risks identified or resolved |
 | 17 | `#s17` | Recommendation | Core strategy recommendation changes |
 | 18 | `#s18` | Roadmap | Milestones completed or re-prioritized |
-| 19 | `#s19` | Decision Log | Any key decision made, changed, or resolved |
+| 19 | `#s19` | Decision Log | Any key decision made or reversed |
 | 20 | `#s20` | Document Maintenance | Update maintenance guidance |
+| 22 | `#s22` | Glossary | New terms introduced |
 | 21 | `#s21` | Changelog | Every time the document is updated |
+
+**Part VI — Future Vision (sections/part5.html, after Changelog)**
+
+| Section | ID | Title | Update When |
+|---|---|---|---|
+| 23 | `#s23` | Universal Data Factory Vision | Vision expands |
+| 24 | `#s24` | Target Use Cases Beyond MAL | New target domains identified |
+| 25 | `#s25` | Generalization Architecture Roadmap | Roadmap phases progress |
+| 26 | `#s26` | Research Alignment | New relevant papers found |
 
 ---
 
@@ -263,8 +308,9 @@ Also update the version pill in the cover `<div class="meta">` and the footnote 
 
 ## What NOT to Change
 
-- The 5 Part dividers and their descriptions (stable structure)
-- The CSS design tokens in `:root { }` (color system is fixed)
-- The Mermaid theme configuration in the `<script>` block
+- The Part dividers and their descriptions (6 parts, stable structure)
+- The CSS design tokens in `:root { }` — teal palette, do not revert to purple
+- The Mermaid theme configuration in `app.js`
 - The `scroll-behavior`, `#read-progress`, `#back-top` JS (UI features)
+- The section ID anchor format — `id="sN"` or `id="sNx"` — TOC and Quick Brief links depend on them
 - The `.gitignore` rules for `.docx` and `.txt` files

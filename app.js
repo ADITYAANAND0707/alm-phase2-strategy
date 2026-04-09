@@ -9,11 +9,11 @@ if (typeof mermaid !== 'undefined') {
     startOnLoad: false,
     theme: 'base',
     themeVariables: {
-      primaryColor:       '#ede8ff',
-      primaryTextColor:   '#1b0b47',
-      primaryBorderColor: '#6416ea',
-      lineColor:          '#6416ea',
-      secondaryColor:     '#f5f3fc',
+      primaryColor:       '#ccfbf1',   /* teal-100 */
+      primaryTextColor:   '#134e4a',   /* teal-900 */
+      primaryBorderColor: '#0d9488',   /* teal-600 */
+      lineColor:          '#0f766e',   /* teal-700 */
+      secondaryColor:     '#f0fdfa',   /* teal-50  */
       tertiaryColor:      '#ffffff',
       fontSize:           '12.5px'
     },
@@ -55,6 +55,11 @@ function postLoad() {
   /* Re-run mermaid on newly inserted diagrams */
   if (typeof mermaid !== 'undefined') {
     mermaid.init(undefined, '.mermaid');
+  }
+
+  /* Render Lucide icons injected by HTML sections */
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
   }
 
   initReveal();

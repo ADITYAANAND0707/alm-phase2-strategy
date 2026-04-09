@@ -5,86 +5,92 @@
 </div>
 
 <!-- 11 -->
-<h2 id="s11">11. Model Adaptation Strategy</h2>
-<p>The strategy recommends efficient fine-tuning on the accepted MAL dataset as the first serious model-adaptation step &mdash; not full-parameter retraining. The accepted registry is the prerequisite, not the experiment target.</p>
-<table>
-  <thead><tr><th>Dimension</th><th>Full-parameter fine-tuning</th><th>Efficient fine-tuning</th></tr></thead>
-  <tbody>
-    <tr><td>What it updates</td><td>All model weights</td><td>Small trainable subset &mdash; adapters or LoRA-style methods</td></tr>
-    <tr><td>Strength</td><td>Highest adaptation capacity</td><td>Faster, cheaper, easier to iterate</td></tr>
-    <tr><td>Weakness</td><td>Expensive and riskier with evolving data</td><td>Lower adaptation ceiling than full retraining</td></tr>
-    <tr><td>Best fit for current Phase 2</td><td>Not first</td><td>Recommended first step</td></tr>
-  </tbody>
-</table>
+<h2 id="s11"><span class="h2-icon"><i data-lucide="brain" class="lc-md"></i></span>11. Model Adaptation Strategy</h2>
+<p>Efficient fine-tuning on the accepted MAL dataset is the recommended first adaptation step &mdash; not full-parameter retraining. The registry is the prerequisite.</p>
+
+<div class="grid-2">
+  <div class="card" style="border-top-color:var(--rose);opacity:0.9;">
+    <div class="ctag warn">Not First &mdash; Full-parameter Fine-tuning</div>
+    <h4>All Weights Updated</h4>
+    <ul>
+      <li>Updates every parameter in the base model</li>
+      <li>Highest adaptation capacity ceiling</li>
+      <li><strong>Expensive</strong> — GPU memory, time, infrastructure cost</li>
+      <li><strong>Riskier</strong> with evolving datasets — full re-runs required on data changes</li>
+      <li>Suitable when dataset is stable, large, and final</li>
+    </ul>
+    <div class="stat-pill warn">Not the first step for Phase 2</div>
+  </div>
+  <div class="card" style="border-top-color:var(--accent);">
+    <div class="ctag">Recommended &mdash; Efficient Fine-tuning (LoRA)</div>
+    <h4>Small Trainable Subset</h4>
+    <ul>
+      <li>Adapters or LoRA-style methods &mdash; adds small trainable matrices</li>
+      <li>Base model weights stay frozen &mdash; only adapters update</li>
+      <li><strong>Faster</strong> to iterate as dataset grows sprint by sprint</li>
+      <li><strong>Cheaper</strong> — runs on single GPU, fits current team scale</li>
+      <li>Lower adaptation ceiling than full retraining &mdash; acceptable trade-off</li>
+    </ul>
+    <div class="stat-pill">Start here once registry has measurable quality</div>
+  </div>
+</div>
 <div class="note">
-  <div class="note-line"><span class="tag tag-direction">Planning direction</span>Efficient fine-tuning should only begin once the accepted dataset has measurable quality. The accepted registry is the prerequisite &mdash; not the experiment target.</div>
+  <div class="note-line"><span class="tag tag-direction">Planning direction</span>Start efficient fine-tuning only once the accepted dataset has measurable quality. The accepted registry is the prerequisite &mdash; not the experiment target.</div>
 </div>
 
 <!-- 12 -->
-<h2 id="s12">12. Research Methods Reference</h2>
-<p>These research methods informed the Phase 2 pipeline design. <strong>Core</strong> methods directly shape how data is generated and filtered. <strong>Supporting</strong> methods provide evidence and precedent for scaling and quality decisions.</p>
-<table class="methods-table">
-  <thead>
-    <tr>
-      <th>Method / Reference</th>
-      <th>Main Idea</th>
-      <th>Best Use for MAL</th>
-      <th>Difficulty</th>
-      <th>Role</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr class="core">
-      <td><strong>Self-Instruct</strong></td>
-      <td>Seed to generate to filter bootstrapping loop</td>
-      <td>Base MAL synthetic pipeline &mdash; seeds drive generation, validation filters output</td>
-      <td>Medium</td>
-      <td><span class="tag tag-confirmed">Core</span></td>
-    </tr>
-    <tr class="core">
-      <td><strong>Evol-Instruct / WizardLM</strong></td>
-      <td>Grow instruction complexity through progressive rewriting</td>
-      <td>Harder modify, policy-edge, and repair examples from simpler seeds</td>
-      <td>Medium</td>
-      <td><span class="tag tag-confirmed">Core</span></td>
-    </tr>
-    <tr class="core">
-      <td><strong>Orca</strong></td>
-      <td>Explanation-rich synthetic supervision using chain-of-thought traces</td>
-      <td>Explain and repair pairs &mdash; richer MAL task behavior data</td>
-      <td>Medium</td>
-      <td><span class="tag tag-confirmed">Core</span></td>
-    </tr>
-    <tr class="core">
-      <td><strong>AgentInstruct</strong></td>
-      <td>Agentic prompt/response creation from raw document sources</td>
-      <td>Scaled MAL data-factory workflows &mdash; future high-volume generation</td>
-      <td>High</td>
-      <td><span class="tag tag-confirmed">Core reference</span></td>
-    </tr>
-    <tr class="support">
-      <td><strong>Phi-4</strong></td>
-      <td>Data-quality-centric training &mdash; curated synthetic data beats more raw data</td>
-      <td>Evidence for the curated-data-first strategy in Phase 2</td>
-      <td>Low</td>
-      <td><span class="tag tag-planned">Supporting</span></td>
-    </tr>
-    <tr class="support">
-      <td><strong>SmolLM workflow</strong></td>
-      <td>Practical small-model fine-tuning using synthetic data pipelines</td>
-      <td>MAL-specific efficient fine-tuning experiments (LoRA-scale)</td>
-      <td>Low</td>
-      <td><span class="tag tag-planned">Supporting</span></td>
-    </tr>
-    <tr class="support">
-      <td><strong>Scale Labs / Hybrid</strong></td>
-      <td>Combining human expert data with model-generated data at scale</td>
-      <td>Scaling signal for when Phase 2 outgrows manual seeding</td>
-      <td>Medium</td>
-      <td><span class="tag tag-planned">Supporting</span></td>
-    </tr>
-  </tbody>
-</table>
+<h2 id="s12"><span class="h2-icon"><i data-lucide="microscope" class="lc-md"></i></span>12. Research Methods Reference</h2>
+<p>Methods that directly informed the Phase 2 pipeline design. <strong>Core</strong> methods shape how data is generated and filtered. <strong>Supporting</strong> methods provide scaling and quality evidence.</p>
+
+<div class="methods-group-hdr"><i data-lucide="zap" class="lc-sm"></i> Core Methods &mdash; directly shape the pipeline</div>
+<div class="method-cards-grid">
+  <div class="mc core-mc">
+    <div class="mc-name">Self-Instruct</div>
+    <div class="mc-idea">Seed &rarr; generate &rarr; filter bootstrapping loop for instruction data</div>
+    <div class="mc-use">Base MAL synthetic pipeline &mdash; seeds drive generation, Quality Gate filters output</div>
+    <span class="mc-tag core">Core &middot; Medium difficulty</span>
+  </div>
+  <div class="mc core-mc">
+    <div class="mc-name">Evol-Instruct / WizardLM</div>
+    <div class="mc-idea">Grow instruction complexity through progressive in-context rewriting</div>
+    <div class="mc-use">Harder modify, policy-edge, and repair MAL examples evolved from simpler seeds</div>
+    <span class="mc-tag core">Core &middot; Medium difficulty</span>
+  </div>
+  <div class="mc core-mc">
+    <div class="mc-name">Orca</div>
+    <div class="mc-idea">Explanation-rich synthetic supervision using chain-of-thought traces</div>
+    <div class="mc-use">Explain and repair task pairs &mdash; richer, reasoning-grounded MAL task behavior data</div>
+    <span class="mc-tag core">Core &middot; Medium difficulty</span>
+  </div>
+  <div class="mc core-mc">
+    <div class="mc-name">AgentInstruct</div>
+    <div class="mc-idea">Agentic prompt/response generation from raw document sources at scale</div>
+    <div class="mc-use">Scaled MAL data-factory workflows &mdash; future high-volume automated generation</div>
+    <span class="mc-tag core">Core reference &middot; High difficulty</span>
+  </div>
+</div>
+
+<div class="methods-group-hdr support"><i data-lucide="book" class="lc-sm"></i> Supporting Methods &mdash; scaling &amp; quality evidence</div>
+<div class="method-cards-grid mcg-3">
+  <div class="mc">
+    <div class="mc-name">Phi-4</div>
+    <div class="mc-idea">Data-quality-centric training &mdash; curated synthetic data beats more raw data</div>
+    <div class="mc-use">Evidence for the curated-data-first strategy that anchors Phase 2</div>
+    <span class="mc-tag support">Supporting &middot; Low complexity</span>
+  </div>
+  <div class="mc">
+    <div class="mc-name">SmolLM Workflow</div>
+    <div class="mc-idea">Practical small-model fine-tuning using synthetic data pipelines</div>
+    <div class="mc-use">MAL-specific efficient fine-tuning experiments (LoRA-scale, single GPU)</div>
+    <span class="mc-tag support">Supporting &middot; Low complexity</span>
+  </div>
+  <div class="mc">
+    <div class="mc-name">Scale Labs / Hybrid</div>
+    <div class="mc-idea">Combining human expert data with model-generated data at scale</div>
+    <div class="mc-use">Scaling signal for when Phase 2 outgrows manual seeding and annotation</div>
+    <span class="mc-tag support">Supporting &middot; Medium complexity</span>
+  </div>
+</div>
 <div class="note">
-  <div class="note-line"><span class="tag tag-direction">Planning direction</span>Core references (Self-Instruct, Evol-Instruct, Orca) should drive the design of the seed-to-registry pipeline. Supporting references inform scaling and quality decisions but should not dilute the MAL-specific focus.</div>
+  <div class="note-line"><span class="tag tag-direction">Planning direction</span>Core references (Self-Instruct, Evol-Instruct, Orca) drive the seed-to-registry pipeline design. Supporting references inform scaling decisions but should not dilute the MAL-specific focus.</div>
 </div>

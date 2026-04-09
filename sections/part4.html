@@ -5,22 +5,43 @@
 </div>
 
 <!-- 13 -->
-<h2 id="s13">13. Governance &amp; Engineering Standards</h2>
-<table>
-  <thead><tr><th>Method</th><th>Why It Matters</th><th>Recommendation</th></tr></thead>
-  <tbody>
-    <tr><td>Dataset governance</td><td>Prevents silent drift in accepted training data</td><td>Version the dataset, registry, templates, prompts, and model choices separately</td></tr>
-    <tr><td>Decision log</td><td>Helps the team remember why approaches were chosen</td><td>Track confirmed choices, deferred choices, and rationale in the Decision Log (Section 19)</td></tr>
-    <tr><td>Acceptance criteria</td><td>Prevents subjective approvals and inconsistent review quality</td><td>Use the checklist in the Execution Playbook (Section 10.5) &mdash; update as new quality issues emerge</td></tr>
-    <tr><td>Provenance tracking</td><td>Allows every training record to be traced back to seed, template, prompt, and reviewer</td><td>Store origin metadata on every accepted record</td></tr>
-    <tr><td>Failure analysis</td><td>Improves later stages faster than only counting accepted records</td><td>Keep a reject log with reason codes and sample examples</td></tr>
-    <tr><td>Promotion workflow</td><td>Separates draft candidates from trusted registry data</td><td>Use draft, validated, reviewed, accepted, and archived states</td></tr>
-  </tbody>
-</table>
+<h2 id="s13"><span class="h2-icon"><i data-lucide="shield" class="lc-md"></i></span>13. Governance &amp; Engineering Standards</h2>
+<div class="grid-3" style="margin-bottom:16px;">
+  <div class="card">
+    <div class="ctag"><i data-lucide="git-branch" class="lc-sm"></i> Dataset Governance</div>
+    <h4>Prevent Silent Drift</h4>
+    <p style="font-size:12px;line-height:1.55;">Version the dataset, registry, templates, prompts, and model choices <strong>separately</strong>. Any change to a template or prompt creates a new version of the associated records.</p>
+  </div>
+  <div class="card">
+    <div class="ctag"><i data-lucide="file-text" class="lc-sm"></i> Decision Log</div>
+    <h4>Remember the Why</h4>
+    <p style="font-size:12px;line-height:1.55;">Track confirmed choices, deferred choices, and rationale in the Decision Log <a href="#s19">(Section 19)</a>. Future team members need to understand why approaches were chosen, not just what they are.</p>
+  </div>
+  <div class="card">
+    <div class="ctag"><i data-lucide="check-square" class="lc-sm"></i> Acceptance Criteria</div>
+    <h4>No Subjective Approvals</h4>
+    <p style="font-size:12px;line-height:1.55;">Use the checklist in Execution Playbook <a href="#s10">(Section 10.5)</a>. Every record that enters the registry must pass the same written criteria &mdash; update the checklist as new quality issues emerge.</p>
+  </div>
+  <div class="card">
+    <div class="ctag"><i data-lucide="link" class="lc-sm"></i> Provenance Tracking</div>
+    <h4>Full Traceability</h4>
+    <p style="font-size:12px;line-height:1.55;">Every accepted record stores its origin: which seed, which template, which prompt version, and which reviewer approved it. This metadata enables targeted correction when quality issues surface.</p>
+  </div>
+  <div class="card">
+    <div class="ctag"><i data-lucide="alert-triangle" class="lc-sm"></i> Failure Analysis</div>
+    <h4>Learn From Rejects</h4>
+    <p style="font-size:12px;line-height:1.55;">Keep a reject log with reason codes and sample examples. Failure patterns improve later stages faster than only counting accepted records — they reveal template or prompt weaknesses directly.</p>
+  </div>
+  <div class="card">
+    <div class="ctag"><i data-lucide="arrow-right-circle" class="lc-sm"></i> Promotion Workflow</div>
+    <h4>Separate Draft from Trusted</h4>
+    <p style="font-size:12px;line-height:1.55;">Lifecycle states: <code>draft</code> &rarr; <code>validated</code> &rarr; <code>reviewed</code> &rarr; <code>accepted</code> &rarr; <code>archived</code>. Only <code>accepted</code> records are used for fine-tuning and evaluation.</p>
+  </div>
+</div>
 
 <!-- 14 -->
 <!-- TAG: feature | module:data-schema | impact:high -->
-<h2 id="s14" data-context="feature:data-schema-contracts">14. Data Schemas &amp; Contracts</h2>
+<h2 id="s14" data-context="feature:data-schema-contracts"><span class="h2-icon"><i data-lucide="file-json" class="lc-md"></i></span>14. Data Schemas &amp; Contracts</h2>
 <p>Define these artifacts early so the pipeline stays maintainable from the first record forward.</p>
 
 <h3>14.1 &ndash; 14.3 Schemas Side-by-Side</h3>
@@ -122,3 +143,25 @@
     <tr><td><code>archived</code></td><td>Kept for history but not active for current usage</td><td>When records are replaced or superseded</td></tr>
   </tbody>
 </table>
+
+<!-- 13b -->
+<h2 id="s13b"><span class="h2-icon"><i data-lucide="code-2" class="lc-md"></i></span>13b. API Quick Reference</h2>
+<p>One-line reference for every live backend endpoint. Full interactive docs at <code>http://localhost:8010/docs</code> (Swagger UI).</p>
+<table>
+  <thead><tr><th style="width:64px;">Method</th><th>Endpoint</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td><span class="api-badge ab-get">GET</span></td><td><code>/health</code></td><td>Backend health check &mdash; returns 200 when the service is running</td></tr>
+    <tr><td><span class="api-badge ab-get">GET</span></td><td><code>/docs</code></td><td>FastAPI Swagger UI &mdash; interactive API explorer</td></tr>
+    <tr><td><span class="api-badge ab-post">POST</span></td><td><code>/api/v1/seeds/sync-library</code></td><td>Sync seed scenarios from disk (<code>data/seed_scenarios/*.jsonl</code>) into the database</td></tr>
+    <tr><td><span class="api-badge ab-post">POST</span></td><td><code>/api/v1/seeds/ingest-custom</code></td><td>Add a one-off custom scenario directly (bypasses disk files)</td></tr>
+    <tr><td><span class="api-badge ab-post">POST</span></td><td><code>/api/v1/jinja2/expand</code></td><td>Run Jinja2 expansion for a specific scenario &mdash; returns 6 task-type variants</td></tr>
+    <tr><td><span class="api-badge ab-post">POST</span></td><td><code>/api/v1/llm/expand</code></td><td>Build prompt and optionally call LLM for one seed scenario</td></tr>
+    <tr><td><span class="api-badge ab-post">POST</span></td><td><code>/api/v1/llm/execute-latest-preview</code></td><td>Execute the most recently saved dry-run (Prompt Saved) batch</td></tr>
+    <tr><td><span class="api-badge ab-post">POST</span></td><td><code>/api/v1/llm/batches/{id}/execute</code></td><td>Execute a specific stored preview batch by ID</td></tr>
+    <tr><td><span class="api-badge ab-get">GET</span></td><td><code>/api/v1/llm/expansions</code></td><td>List all LLM expansion batches with status, token counts, and latency</td></tr>
+    <tr><td><span class="api-badge ab-post">POST</span></td><td><code>/api/v1/llm/generate-from-database</code></td><td>Full catalog generation &mdash; runs LLM across all stored seeds in one batch</td></tr>
+    <tr><td><span class="api-badge ab-post">POST</span></td><td><code>/api/v1/validate</code></td><td>Run the 5-stage MAL quality gate (syntax &rarr; schema &rarr; policy &rarr; dependency &rarr; compile_check)</td></tr>
+    <tr><td><span class="api-badge ab-get">GET</span></td><td><code>/api/v1/registry</code></td><td>List all validated training records &mdash; supports filter by task type and domain</td></tr>
+  </tbody>
+</table>
+<p style="font-size:11.5px;color:var(--muted);">All endpoints return JSON. Error responses follow FastAPI&rsquo;s standard 422/500 format. Token and latency fields appear on LLM batch responses.</p>
