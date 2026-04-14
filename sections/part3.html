@@ -1,96 +1,266 @@
+<!-- ══ PART III — RESEARCH DIRECTION ═══════════════════════════════════════ -->
 <div class="part-div">
-  <div class="pd-num">Part III</div>
-  <div class="pd-title">Strategy &amp; Methods</div>
-  <div class="pd-desc">Model adaptation approach and research methods that inform the pipeline design</div>
+  <div>
+    <div class="part-label">Part III</div>
+    <div class="part-title">Research Direction</div>
+    <div class="part-desc">RE-476: Jinja2 replacement &nbsp;|&nbsp; RE-477: Production-grade LLM architecture</div>
+  </div>
 </div>
 
-<!-- 11 -->
-<h2 id="s11"><span class="h2-icon"><i data-lucide="brain" class="lc-md"></i></span>11. Model Adaptation Strategy</h2>
-<p>Efficient fine-tuning on the accepted MAL dataset is the recommended first adaptation step &mdash; not full-parameter retraining. The registry is the prerequisite.</p>
+<!-- TL;DR -->
+<div class="tldr"><strong>TL;DR</strong> Two open research questions: what smarter system should replace Jinja2 at Stage 2, and how should the LLM stage evolve from a prototype to production-grade. Both are actively being researched under ticket RE-474.</div>
 
+<!-- ═══ S11 — JINJA2 REPLACEMENT RESEARCH ════════════════════════════════ -->
+<h2 id="s11"><span class="snum">11.</span> Stage 2 Upgrade — Moving Beyond Templates <span class="tag tag-wip" style="font-size:11px;vertical-align:middle">RE-476 — In Research</span></h2>
+
+<div class="callout warn" style="margin-bottom:14px">
+  <div class="callout-icon">⚠️</div>
+  <p><strong>The problem in one sentence:</strong> Jinja2 templates are rigid — adding a new MAL construct or domain means manually writing a new template file, which doesn't scale and bakes domain logic into code.</p>
+</div>
+<div class="oi">
+  <div class="oi-icon">🎯</div>
+  <div class="oi-body">
+    <strong>Goal:</strong> Replace fixed Jinja2 templates with a generation engine that is <em>domain-agnostic in code</em> (engine never changes per domain) but <em>domain-aware in behavior</em> (when Grammar + Domain Pack + Guidelines are plugged in, output is structurally correct, semantically meaningful, and contextually smart for that domain).
+  </div>
+</div>
+
+<h3>The Plugin Contract — What Any Solution Must Support</h3>
+<div class="callout info">
+  <div class="callout-icon">🔗</div>
+  <p><strong>Already defined in <a href="#s1">Part I — Design Principle</a>.</strong> The plugin contract (Grammar + Domain Pack + Guidelines) is the non-negotiable scope constraint for this research. Any candidate approach must satisfy all three artefacts — engine code never changes per domain, only the data files do.</p>
+</div>
+
+<div class="callout brand">
+  <div class="callout-icon">⚙️</div>
+  <p><strong>Research constraint:</strong> Every candidate approach in this section is evaluated against the same question — can Grammar, Domain Pack, and Guidelines each be expressed as a loadable data artefact that the engine consumes without code changes?</p>
+</div>
+
+<h3>Candidate Approaches</h3>
+
+<div class="research-card rc-476">
+  <div class="rc-label">Approach 1</div>
+  <div class="rc-title">Grammar-Based Generation (PCFG / Earley Sampler)</div>
+  <div class="rc-body">
+    <p>Use a probabilistic context-free grammar (PCFG) or an Earley parser to generate random valid MAL strings directly from the grammar definition. Domain vocabulary is injected into terminal productions. No LLM cost at Stage 2.</p>
+    <div class="grid-2" style="margin-top:12px">
+      <div>
+        <strong style="color:var(--ok);font-size:12px">Strengths</strong>
+        <ul style="margin-top:6px">
+          <li>Fully deterministic or controlled-random</li>
+          <li>Zero LLM cost</li>
+          <li>Grammar enforcement is exact — only valid structures produced</li>
+          <li>Coverage limited only by grammar breadth</li>
+        </ul>
+      </div>
+      <div>
+        <strong style="color:var(--danger);font-size:12px">Weaknesses</strong>
+        <ul style="margin-top:6px">
+          <li>Requires authoring a formal grammar (EBNF/PCFG) for each target language</li>
+          <li>Output can be syntactically valid but semantically nonsensical without good domain vocabulary injection</li>
+          <li>Guidelines are hard to encode into grammar rules</li>
+        </ul>
+      </div>
+    </div>
+    <p style="margin-top:10px;font-size:12px"><strong>Plugin contract:</strong> Grammar = EBNF/PCFG file. Domain Pack = terminal symbol vocabulary. Guidelines = production weights (probabilistic grammar).</p>
+    <p style="font-size:12px"><strong>Reference:</strong> NLTK's <code>generate</code> module, Lark parser, Python <code>pegen</code>. Used in fuzzing tools (AFL grammar mode) and structured test data generation.</p>
+  </div>
+</div>
+
+<div class="research-card rc-476">
+  <div class="rc-label">Approach 2</div>
+  <div class="rc-title">Constrained LLM Generation — Outlines / DSPY</div>
+  <div class="rc-body">
+    <p>Use a constrained decoding library to force an LLM to generate output that conforms to a grammar or schema at the token level. The LLM provides semantic richness; the constraint enforces structural validity.</p>
+    <div class="grid-2" style="margin-top:12px">
+      <div>
+        <strong style="color:var(--ok);font-size:12px">Outlines (dottxt-ai/outlines)</strong>
+        <ul style="margin-top:6px">
+          <li>Grammar-constrained decoding via EBNF — generated tokens must form valid grammar</li>
+          <li>Supports Regex, JSON Schema, EBNF grammar constraints</li>
+          <li>Works with local models (llama.cpp, transformers) — no API cost</li>
+          <li>Grammar acts as a hard filter on token probabilities</li>
+        </ul>
+      </div>
+      <div>
+        <strong style="color:var(--ok);font-size:12px">DSPY (Stanford)</strong>
+        <ul style="margin-top:6px">
+          <li>Declarative LLM program — define <em>what</em> output looks like, not <em>how</em> to prompt</li>
+          <li>Typed signatures enforce output structure</li>
+          <li>Optimizable — can tune prompts automatically using examples</li>
+          <li>Works with any LLM API (GPT-4o compatible)</li>
+        </ul>
+      </div>
+    </div>
+    <p style="margin-top:10px;font-size:12px"><strong>Plugin contract:</strong> Grammar = EBNF grammar file (Outlines) or typed signature (DSPY). Domain Pack = few-shot examples or context injection. Guidelines = DSPY module constraints or Outlines regex guards.</p>
+    <p style="font-size:12px"><strong>Key question for research:</strong> Can Outlines enforce the MAL PEG grammar at generation time? Can DSPY be domain-agnostic while domain-aware through typed signatures loaded from config?</p>
+  </div>
+</div>
+
+<div class="research-card rc-476">
+  <div class="rc-label">Approach 3</div>
+  <div class="rc-title">Hybrid — Grammar Sampler + LLM Semantic Fill</div>
+  <div class="rc-body">
+    <p>A two-step approach: (1) a grammar sampler generates the structural skeleton of a MAL record, (2) an LLM fills semantic content into the skeleton using domain vocabulary and guidelines. Combines grammar-exact structure with LLM-quality semantics.</p>
+    <p style="margin-top:10px;font-size:12px"><strong>Plugin contract:</strong> Grammar = structure-skeleton generator. Domain Pack = LLM vocabulary context. Guidelines = LLM prompt instructions for semantic fill.</p>
+    <p style="font-size:12px"><strong>Advantage:</strong> Best of both worlds — guaranteed structural validity + semantic richness. <strong>Cost:</strong> Requires LLM call per record at Stage 2 (unlike pure grammar sampling or Jinja2).</p>
+  </div>
+</div>
+
+<h3>Comparison Summary</h3>
+<div class="tbl-wrap">
+  <table class="std">
+    <thead>
+      <tr><th>Approach</th><th>Grammar enforcement</th><th>Domain-aware behavior</th><th>Guidelines support</th><th>LLM cost at Stage 2</th><th>Plugin contract simplicity</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Jinja2 (current)</td>
+        <td>Implicit (template shape)</td>
+        <td>Via vocabulary injection</td>
+        <td>Baked into templates (implicit)</td>
+        <td>Zero</td>
+        <td>Medium (3–4 template files)</td>
+      </tr>
+      <tr>
+        <td>PCFG / Earley</td>
+        <td>Exact (grammar definition)</td>
+        <td>Terminal symbol vocab</td>
+        <td>Production weights</td>
+        <td>Zero</td>
+        <td>High (EBNF + vocab)</td>
+      </tr>
+      <tr>
+        <td>Outlines (constrained LLM)</td>
+        <td>Exact (EBNF at token level)</td>
+        <td>LLM semantic understanding</td>
+        <td>Prompt-based</td>
+        <td>Low (local model) or medium (API)</td>
+        <td>Medium (EBNF + prompt)</td>
+      </tr>
+      <tr>
+        <td>DSPY</td>
+        <td>Typed signature (soft)</td>
+        <td>Strong (LLM + signature)</td>
+        <td>Module constraints</td>
+        <td>Medium (API calls)</td>
+        <td>Low (signature + examples)</td>
+      </tr>
+      <tr>
+        <td>Hybrid (skeleton + fill)</td>
+        <td>Exact (sampler) + LLM fill</td>
+        <td>Very strong</td>
+        <td>LLM prompt</td>
+        <td>Medium (one LLM call per record)</td>
+        <td>Medium</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══ S12 — PRODUCTION-GRADE LLM ARCHITECTURE ═══════════════════════════ -->
+<h2 id="s12"><span class="snum">12.</span> Making AI Synthesis Smarter — Research Agenda <span class="tag tag-wip" style="font-size:11px;vertical-align:middle">RE-477 — In Research</span></h2>
+
+<div class="callout warn" style="margin-bottom:14px">
+  <div class="callout-icon">⚠️</div>
+  <p><strong>The problem in one sentence:</strong> The current LLM stage runs once, uses a static prompt, and scores output with a single signal (string edit distance) — it cannot learn from its own quality results or adjust between runs.</p>
+</div>
+<div class="oi">
+  <div class="oi-icon">🏗️</div>
+  <div class="oi-body">
+    <strong>Goal:</strong> Evolve Stage 3 from a useful prototype (single-pass, static prompt, NLD-only quality) to a production-grade data generation service (quality-gated loops, multi-signal scoring, cost visibility, operator observability). "Production-grade" here does not mean infinite scale — it means <em>adaptive, observable, and reliably improving</em>.
+  </div>
+</div>
+
+<h3>Current System Maturity</h3>
 <div class="grid-2">
-  <div class="card" style="border-top-color:var(--rose);opacity:0.9;">
-    <div class="ctag warn">Not First &mdash; Full-parameter Fine-tuning</div>
-    <h4>All Weights Updated</h4>
-    <ul>
-      <li>Updates every parameter in the base model</li>
-      <li>Highest adaptation capacity ceiling</li>
-      <li><strong>Expensive</strong> — GPU memory, time, infrastructure cost</li>
-      <li><strong>Riskier</strong> with evolving datasets — full re-runs required on data changes</li>
-      <li>Suitable when dataset is stable, large, and final</li>
-    </ul>
-    <div class="stat-pill warn">Not the first step for Phase 2</div>
+  <div>
+    <div class="maturity-row"><span class="maturity-label">Pipeline correctness</span><div class="maturity-bar"><div class="maturity-fill" style="width:85%"></div></div><span class="maturity-val">8.5</span></div>
+    <div class="maturity-row"><span class="maturity-label">Traceability</span><div class="maturity-bar"><div class="maturity-fill" style="width:75%"></div></div><span class="maturity-val">7.5</span></div>
+    <div class="maturity-row"><span class="maturity-label">Grammar validation</span><div class="maturity-bar"><div class="maturity-fill" style="width:90%"></div></div><span class="maturity-val">9.0</span></div>
+    <div class="maturity-row"><span class="maturity-label">Intent-First synthesis</span><div class="maturity-bar"><div class="maturity-fill" style="width:60%"></div></div><span class="maturity-val">6.0</span></div>
   </div>
-  <div class="card" style="border-top-color:var(--accent);">
-    <div class="ctag">Recommended &mdash; Efficient Fine-tuning (LoRA)</div>
-    <h4>Small Trainable Subset</h4>
-    <ul>
-      <li>Adapters or LoRA-style methods &mdash; adds small trainable matrices</li>
-      <li>Base model weights stay frozen &mdash; only adapters update</li>
-      <li><strong>Faster</strong> to iterate as dataset grows sprint by sprint</li>
-      <li><strong>Cheaper</strong> — runs on single GPU, fits current team scale</li>
-      <li>Lower adaptation ceiling than full retraining &mdash; acceptable trade-off</li>
-    </ul>
-    <div class="stat-pill">Start here once registry has measurable quality</div>
+  <div>
+    <div class="maturity-row"><span class="maturity-label">Quality scoring depth</span><div class="maturity-bar"><div class="maturity-fill" style="width:25%"></div></div><span class="maturity-val">2.5</span></div>
+    <div class="maturity-row"><span class="maturity-label">Adaptive generation</span><div class="maturity-bar"><div class="maturity-fill" style="width:20%"></div></div><span class="maturity-val">2.0</span></div>
+    <div class="maturity-row"><span class="maturity-label">Cost / token visibility</span><div class="maturity-bar"><div class="maturity-fill" style="width:30%"></div></div><span class="maturity-val">3.0</span></div>
+    <div class="maturity-row"><span class="maturity-label">Operator observability</span><div class="maturity-bar"><div class="maturity-fill" style="width:15%"></div></div><span class="maturity-val">1.5</span></div>
   </div>
 </div>
-<div class="note">
-  <div class="note-line"><span class="tag tag-direction">Planning direction</span>Start efficient fine-tuning only once the accepted dataset has measurable quality. The accepted registry is the prerequisite &mdash; not the experiment target.</div>
+<p style="font-size:11.5px;color:var(--muted);margin-top:4px">Score out of 10. Click maturity bars to expand detail. (bars are illustrative — see gap table below)</p>
+
+<h3>Current Gaps — Prioritized</h3>
+<div class="tbl-wrap">
+  <table class="std">
+    <thead>
+      <tr><th>Gap</th><th>Severity</th><th>Current state</th><th>Target state</th><th>Files affected</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Static LLM prompt — no feedback loop</strong></td>
+        <td><span class="tag tag-danger">High</span></td>
+        <td>Each run is independent. Quality scores never influence next generation.</td>
+        <td>Iterative generation: if chunk scores below threshold, regenerate with adjusted temperature or seed</td>
+        <td><code>llm_prompt_build.py</code>, <code>llm_expand_runner.py</code></td>
+      </tr>
+      <tr>
+        <td><strong>Single quality signal (NLD only)</strong></td>
+        <td><span class="tag tag-danger">High</span></td>
+        <td>Normalised Levenshtein Distance — surface-level string diversity only</td>
+        <td>Multi-signal: NLD + semantic similarity + grammar coverage + utility proxy (perplexity)</td>
+        <td><code>diversity_metrics.py</code>, <code>diversity.py</code> route</td>
+      </tr>
+      <tr>
+        <td><strong>Token/cost data not surfaced in UI</strong></td>
+        <td><span class="tag tag-wip">Medium</span></td>
+        <td>Stored in <code>dg_llm_expansion_batches</code> but no UI widget</td>
+        <td>Per-run cost + token summary in LLM page; aggregate cost on dashboard</td>
+        <td><code>LlmPage.tsx</code>, <code>DashboardPage.tsx</code></td>
+      </tr>
+      <tr>
+        <td><strong>No alerting or run health</strong></td>
+        <td><span class="tag tag-wip">Medium</span></td>
+        <td>Failures invisible unless DB is manually queried</td>
+        <td>Pass rate + cost alerts; run health dashboard</td>
+        <td>New module needed</td>
+      </tr>
+      <tr>
+        <td><strong>Handcrafted seeds only</strong></td>
+        <td><span class="tag tag-wip">Medium</span></td>
+        <td>50 manually authored seeds — coverage grows slowly</td>
+        <td>Semi-automated seed generation from schema or ontology; human review not authoring</td>
+        <td><code>seed_library_loader.py</code>, new service</td>
+      </tr>
+      <tr>
+        <td><strong>/diversity, /runs routes not wired</strong></td>
+        <td><span class="tag tag-wip">Low-Medium</span></td>
+        <td>Pages built, routes missing in App.tsx</td>
+        <td>3 one-line additions to App.tsx</td>
+        <td><code>frontend/src/App.tsx</code></td>
+      </tr>
+    </tbody>
+  </table>
 </div>
 
-<!-- 12 -->
-<h2 id="s12"><span class="h2-icon"><i data-lucide="microscope" class="lc-md"></i></span>12. Research Methods Reference</h2>
-<p>Methods that directly informed the Phase 2 pipeline design. <strong>Core</strong> methods shape how data is generated and filtered. <strong>Supporting</strong> methods provide scaling and quality evidence.</p>
-
-<div class="methods-group-hdr"><i data-lucide="zap" class="lc-sm"></i> Core Methods &mdash; directly shape the pipeline</div>
-<div class="method-cards-grid">
-  <div class="mc core-mc">
-    <div class="mc-name">Self-Instruct</div>
-    <div class="mc-idea">Seed &rarr; generate &rarr; filter bootstrapping loop for instruction data</div>
-    <div class="mc-use">Base MAL synthetic pipeline &mdash; seeds drive generation, Quality Gate filters output</div>
-    <span class="mc-tag core">Core &middot; Medium difficulty</span>
+<h3>What Platform-Grade Requires</h3>
+<div class="grid-3">
+  <div class="card">
+    <div class="ctag">Quality Assurance</div>
+    <div class="card-title">Multi-Signal Scoring</div>
+    <p>Output scored on 3+ signals before entering corpus. NLD diversity + semantic validity (classifier or embedding distance) + grammar coverage (are edge cases represented?) + utility proxy (perplexity under reference model).</p>
   </div>
-  <div class="mc core-mc">
-    <div class="mc-name">Evol-Instruct / WizardLM</div>
-    <div class="mc-idea">Grow instruction complexity through progressive in-context rewriting</div>
-    <div class="mc-use">Harder modify, policy-edge, and repair MAL examples evolved from simpler seeds</div>
-    <span class="mc-tag core">Core &middot; Medium difficulty</span>
+  <div class="card">
+    <div class="ctag">Adaptivity</div>
+    <div class="card-title">Quality-Gated Loop</div>
+    <p>If a generated chunk scores below quality threshold, the loop adjusts (temperature, prompt framing, chunk size) and regenerates before accepting or discarding. System improves across runs without manual tuning.</p>
   </div>
-  <div class="mc core-mc">
-    <div class="mc-name">Orca</div>
-    <div class="mc-idea">Explanation-rich synthetic supervision using chain-of-thought traces</div>
-    <div class="mc-use">Explain and repair task pairs &mdash; richer, reasoning-grounded MAL task behavior data</div>
-    <span class="mc-tag core">Core &middot; Medium difficulty</span>
-  </div>
-  <div class="mc core-mc">
-    <div class="mc-name">AgentInstruct</div>
-    <div class="mc-idea">Agentic prompt/response generation from raw document sources at scale</div>
-    <div class="mc-use">Scaled MAL data-factory workflows &mdash; future high-volume automated generation</div>
-    <span class="mc-tag core">Core reference &middot; High difficulty</span>
+  <div class="card">
+    <div class="ctag">Observability</div>
+    <div class="card-title">Cost + Health Visibility</div>
+    <p>Per-run: tokens used, cost ($), pass rate, diversity score — surfaced in the UI. Alert if pass rate drops below threshold or cost per record spikes. Data already exists in <code>dg_llm_expansion_batches</code> — only the UI surface is missing.</p>
   </div>
 </div>
 
-<div class="methods-group-hdr support"><i data-lucide="book" class="lc-sm"></i> Supporting Methods &mdash; scaling &amp; quality evidence</div>
-<div class="method-cards-grid mcg-3">
-  <div class="mc">
-    <div class="mc-name">Phi-4</div>
-    <div class="mc-idea">Data-quality-centric training &mdash; curated synthetic data beats more raw data</div>
-    <div class="mc-use">Evidence for the curated-data-first strategy that anchors Phase 2</div>
-    <span class="mc-tag support">Supporting &middot; Low complexity</span>
-  </div>
-  <div class="mc">
-    <div class="mc-name">SmolLM Workflow</div>
-    <div class="mc-idea">Practical small-model fine-tuning using synthetic data pipelines</div>
-    <div class="mc-use">MAL-specific efficient fine-tuning experiments (LoRA-scale, single GPU)</div>
-    <span class="mc-tag support">Supporting &middot; Low complexity</span>
-  </div>
-  <div class="mc">
-    <div class="mc-name">Scale Labs / Hybrid</div>
-    <div class="mc-idea">Combining human expert data with model-generated data at scale</div>
-    <div class="mc-use">Scaling signal for when Phase 2 outgrows manual seeding and annotation</div>
-    <span class="mc-tag support">Supporting &middot; Medium complexity</span>
-  </div>
-</div>
-<div class="note">
-  <div class="note-line"><span class="tag tag-direction">Planning direction</span>Core references (Self-Instruct, Evol-Instruct, Orca) drive the seed-to-registry pipeline design. Supporting references inform scaling decisions but should not dilute the MAL-specific focus.</div>
+<div class="callout ok">
+  <div class="callout-icon">✅</div>
+  <p><strong>Lowest hanging fruit (no architecture change needed):</strong> Wire the 3 missing frontend routes + surface token/cost data already in the database. Together these close 2 gaps in under a day of frontend work.</p>
 </div>

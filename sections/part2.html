@@ -1,1080 +1,466 @@
+<!-- ══ PART II — PIPELINE DEEP DIVE ════════════════════════════════════════ -->
 <div class="part-div">
-  <div class="pd-num">Part II</div>
-  <div class="pd-title">Pipeline Design</div>
-  <div class="pd-desc">Task coverage, pipeline architecture, Jinja2 rationale, platform readiness, and execution playbook</div>
-</div>
-
-<!-- 6 -->
-<!-- TAG: feature | module:task-coverage | impact:high -->
-<h2 id="s6" data-context="feature:task-coverage-map"><span class="h2-icon"><i data-lucide="grid-3x3" class="lc-md"></i></span>6. Task Coverage &amp; Construct Map</h2>
-<p>Phase 2 must cover the full operational task family that ALM handles &mdash; not just create-style examples. Each task type maps to a different Jinja2 template and training objective.</p>
-<table>
-  <thead><tr><th>MAL use case</th><th>Input pattern</th><th>Output target</th><th>Why it matters</th></tr></thead>
-  <tbody>
-    <tr><td>Create</td><td>New application request</td><td>Full MAL program</td><td>Core ALM behavior</td></tr>
-    <tr><td>Modify / evolution</td><td>Change request plus existing context</td><td>Evolution block or revised MAL</td><td>Safe updates</td></tr>
-    <tr><td>Explain</td><td>MAL, graph, or validator context</td><td>Structured explanation or agent output</td><td>Supports explainability</td></tr>
-    <tr><td>Policy-constrained</td><td>Intent plus business or domain rules</td><td>Compliant MAL</td><td>Supports policy and domain checks</td></tr>
-    <tr><td>Correction / repair</td><td>Invalid MAL or failure signal</td><td>Corrected MAL</td><td>Closes the validator loop</td></tr>
-    <tr><td>Ambiguity / disambiguation</td><td>Unclear project or entity reference</td><td>Safer explicit flow or confirmation policy</td><td>Reduces modify risk</td></tr>
-  </tbody>
-</table>
-
-<h3>Construct Coverage Grid</h3>
-<p>Tracks which MAL construct families have accepted examples for each task type. Update this grid each time new records are promoted to the registry. For the full example library see <a href="#s15">Section 15</a>.</p>
-<p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Stage 2 (Jinja2 Expansion) produces all 6 task-type variants for every seed across 4 construct families: entity, workflow, policy, evolution. All 4 Jinja2 templates cover all 6 task types. Cells marked <strong>Jinja2</strong> have Jinja2-generated candidates. Cells marked <strong>AI</strong> also have GPT-4o records. Update this grid as records are promoted to the registry.</p>
-<table class="coverage-table">
-  <thead>
-    <tr>
-      <th>Construct</th><th>Create</th><th>Modify</th><th>Explain</th><th>Policy-Const.</th><th>Repair</th><th>Disambiguate</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td class="construct-name">entity</td>
-      <td class="has-ex">Jinja2+AI</td><td class="has-ex">Jinja2+AI</td><td class="has-ex">Jinja2+AI</td>
-      <td class="has-ex">Jinja2+AI</td><td class="has-ex">Jinja2+AI</td><td class="has-ex">Jinja2+AI</td>
-    </tr>
-    <tr>
-      <td class="construct-name">workflow</td>
-      <td class="has-ex">Jinja2+AI</td><td class="has-ex">Jinja2+AI</td><td class="has-ex">Jinja2+AI</td>
-      <td class="has-ex">Jinja2+AI</td><td class="has-ex">Jinja2+AI</td><td class="has-ex">Jinja2+AI</td>
-    </tr>
-    <tr>
-      <td class="construct-name">policy</td>
-      <td class="has-ex">Jinja2+AI</td><td class="has-ex">Jinja2+AI</td><td class="has-ex">Jinja2+AI</td>
-      <td class="has-ex">Jinja2+AI</td><td class="has-ex">Jinja2+AI</td><td class="has-ex">Jinja2+AI</td>
-    </tr>
-    <tr>
-      <td class="construct-name">evolution</td>
-      <td class="has-ex">Jinja2+AI</td><td class="has-ex">Jinja2+AI</td><td class="has-ex">Jinja2+AI</td>
-      <td class="has-ex">Jinja2+AI</td><td class="has-ex">Jinja2+AI</td><td class="has-ex">Jinja2+AI</td>
-    </tr>
-    <tr>
-      <td class="construct-name">agent</td>
-      <td class="planned">Planned</td><td class="planned">Planned</td><td class="planned">Planned</td>
-      <td class="planned">Planned</td><td class="planned">Planned</td><td class="planned">Planned</td>
-    </tr>
-    <tr>
-      <td class="construct-name">integration</td>
-      <td class="not-yet">&mdash;</td><td class="not-yet">&mdash;</td><td class="not-yet">&mdash;</td>
-      <td class="not-yet">&mdash;</td><td class="not-yet">&mdash;</td><td class="not-yet">&mdash;</td>
-    </tr>
-    <tr>
-      <td class="construct-name">event</td>
-      <td class="not-yet">&mdash;</td><td class="not-yet">&mdash;</td><td class="not-yet">&mdash;</td>
-      <td class="not-yet">&mdash;</td><td class="not-yet">&mdash;</td><td class="not-yet">&mdash;</td>
-    </tr>
-  </tbody>
-</table>
-<p style="font-size:11.5px;color:var(--muted);">Jinja2+AI = Jinja2 candidates generated (Stage 2) + AI Synthesis records generated (Stage 3) &nbsp;&middot;&nbsp; Planned = template exists, seeds being authored &nbsp;&middot;&nbsp; &mdash; = not yet scoped. Promote records from Quality Gate to update &#10003; counts.</p>
-
-<!-- 7 -->
-<!-- TAG: feature | module:jinja2-pipeline | impact:high -->
-<h2 id="s7" data-context="feature:jinja2-pipeline-architecture"><span class="h2-icon"><i data-lucide="layers" class="lc-md"></i></span>7. Pipeline Architecture</h2>
-<p>The five-stage pipeline moves from manually authored gold seeds through controlled template expansion, automated validation, human review, and into the accepted dataset registry. Stage 2 &mdash; Jinja2 template expansion &mdash; is now complete.</p>
-
-<div class="stage-strip-v2">
-  <div class="sv2 sv2-active">
-    <div class="sv2-num">1</div>
-    <div class="sv2-title">Seed Library</div>
-    <div class="sv2-desc">56 canonical telecom scenarios â€” manually authored gold examples, the ground-truth anchor for the entire pipeline</div>
-    <span class="sv2-tag">56 Seeds Live</span>
-  </div>
-  <div class="sv2 sv2-active">
-    <div class="sv2-num">2</div>
-    <div class="sv2-title">Deterministic Expansion</div>
-    <div class="sv2-desc">Jinja2 template expansion â€” 56 seeds &times; 6 task-type variants = 336 balanced candidates, integrated into shared repo</div>
-    <span class="sv2-tag">336 Variants Live</span>
-  </div>
-  <div class="sv2 sv2-active">
-    <div class="sv2-num">3</div>
-    <div class="sv2-title">AI Synthesis</div>
-    <div class="sv2-desc">GPT-4o generates rich MAL training records from seeds â€” with token tracking, latency metrics, and prompt management</div>
-    <span class="sv2-tag">Live (GPT-4o)</span>
-  </div>
-  <div class="sv2 sv2-active">
-    <div class="sv2-num">4</div>
-    <div class="sv2-title">Quality Gate</div>
-    <div class="sv2-desc">5-stage MAL validation: syntax â†’ schema â†’ policy â†’ dependency â†’ compile_check â€” all stages live</div>
-    <span class="sv2-tag">5-Stage Gate Live</span>
-  </div>
-  <div class="sv2 sv2-active">
-    <div class="sv2-num">5</div>
-    <div class="sv2-title">Training Registry</div>
-    <div class="sv2-desc">Validated records stored and browsable â€” filterable by task type and domain, with JSON export and Demo Report</div>
-    <span class="sv2-tag">Registry Live</span>
+  <div>
+    <div class="part-label">Part II</div>
+    <div class="part-title">Pipeline Deep Dive</div>
+    <div class="part-desc">All 4 stages, Intent-First LLM mode, frontend pages, and Stage 2 transition rationale</div>
   </div>
 </div>
 
-<h3>Stage 2 &mdash; Jinja2 Pipeline Data Flow</h3>
-<div class="flow-row">
-  <div class="flow-nd">
-    <div class="flow-box">
-      <div class="fb-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg></div>
-      <div class="fb-lbl">seed_scenarios/*.jsonl</div>
-      <div class="fb-sub">56 canonical seeds<br/>(primary source)<br/><em style="font-size:10px">fallback: pipeline/seeds/seeds.json</em></div>
-    </div>
-  </div>
-  <div class="flow-arr"><svg viewBox="0 0 20 14"><line x1="0" y1="7" x2="16" y2="7"/><polyline points="10 2 16 7 10 12"/></svg><span>reads</span></div>
-  <div class="flow-nd">
-    <div class="flow-box fb-proc">
-      <div class="fb-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
-      <div class="fb-lbl">generate.py</div>
-      <div class="fb-sub">Reads type field<br/>routes to template<br/>renders variants</div>
-    </div>
-  </div>
-  <div class="flow-arr"><svg viewBox="0 0 20 14"><line x1="2" y1="7" x2="18" y2="7"/><polyline points="12 2 18 7 12 12"/><polyline points="8 2 2 7 8 12"/></svg><span>uses</span></div>
-  <div class="flow-nd">
-    <div class="flow-box">
-      <div class="fb-icon"><svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg></div>
-      <div class="fb-lbl">templates/</div>
-      <div class="fb-sub">Jinja2 .j2 files<br/>one per construct</div>
-    </div>
-  </div>
-  <div class="flow-arr"><svg viewBox="0 0 20 14"><line x1="2" y1="7" x2="18" y2="7"/><polyline points="12 2 18 7 12 12"/><polyline points="8 2 2 7 8 12"/></svg><span>vocab</span></div>
-  <div class="flow-nd">
-    <div class="flow-box">
-      <div class="fb-icon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></div>
-      <div class="fb-lbl">telecom.json</div>
-      <div class="fb-sub">Entities, roles,<br/>enums, triggers</div>
-    </div>
-  </div>
-  <div class="flow-arr"><svg viewBox="0 0 20 14"><line x1="0" y1="7" x2="16" y2="7"/><polyline points="10 2 16 7 10 12"/></svg><span>writes</span></div>
-  <div class="flow-nd">
-    <div class="flow-box">
-      <div class="fb-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 15 11 17 15 12"/></svg></div>
-      <div class="fb-lbl">data/jinja2_expansion/</div>
-      <div class="fb-sub">336 candidates<br/>6 variants per seed<br/>canonical TrainingRecord</div>
-    </div>
-  </div>
-</div>
+<!-- TL;DR -->
+<div class="tldr"><strong>TL;DR</strong> Here is exactly how each pipeline stage works, which files run it, what the frontend looks like, and why Jinja2 is being reconsidered.</div>
 
-<h3>Seed Classification &mdash; 6 Task Types</h3>
-<p>Each seed record carries a <code>type</code> field that maps it to the correct Jinja2 template and generation strategy.</p>
-<div class="task-type-grid">
-  <div class="ttc tt-create"><div class="tt-letter">A</div><div class="tt-name">Create</div><div class="tt-desc">Build a new application or construct from scratch</div></div>
-  <div class="ttc tt-modify"><div class="tt-letter">B</div><div class="tt-name">Modify</div><div class="tt-desc">Change or extend an existing application</div></div>
-  <div class="ttc tt-repair"><div class="tt-letter">C</div><div class="tt-name">Repair</div><div class="tt-desc">Fix invalid or broken MAL from a validator signal</div></div>
-  <div class="ttc tt-explain"><div class="tt-letter">D</div><div class="tt-name">Explain</div><div class="tt-desc">Describe what a MAL construct or policy does</div></div>
-  <div class="ttc tt-policy"><div class="tt-letter">E</div><div class="tt-name">Policy</div><div class="tt-desc">Generate MAL compliant with business rules</div></div>
-  <div class="ttc tt-disambig"><div class="tt-letter">F</div><div class="tt-name">Disambiguate</div><div class="tt-desc">Handle unclear intent with confirmation-first output</div></div>
-</div>
+<!-- ═══ S6 — TASK COVERAGE & CONSTRUCT MAP ═══════════════════════════════ -->
+<h2 id="s6"><span class="snum">6.</span> Task Coverage &amp; Construct Map</h2>
 
-<h3>Jinja2 Templates &mdash; One Per MAL Construct</h3>
-<p>Each template uses substitution slots filled from the domain pack. All templates follow the formal grammar specification exactly.</p>
-<div class="tmpl-slot-grid">
-  <div class="tsc">
-    <div class="tsc-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg></div>
-    <div class="tsc-name">Entity</div><div class="tsc-file">entity.j2</div>
-    <div class="tsc-slots">
-      <div class="tsc-slot">{{ entity_name }}</div><div class="tsc-slot">{{ attribute_name }}</div>
-      <div class="tsc-slot">{{ type }}</div><div class="tsc-slot">{{ relationship_kind }}</div>
-      <div class="tsc-slot">{{ related_entity }}</div>
-    </div>
-  </div>
-  <div class="tsc">
-    <div class="tsc-icon"><svg viewBox="0 0 24 24"><polyline points="5 12 3 12 12 3 21 12 19 12"/><polyline points="5 12 5 20 19 20 19 12"/><line x1="12" y1="14" x2="12" y2="20"/></svg></div>
-    <div class="tsc-name">Workflow</div><div class="tsc-file">workflow.j2</div>
-    <div class="tsc-slots">
-      <div class="tsc-slot">{{ workflow_name }}</div><div class="tsc-slot">{{ trigger_prefix }}</div>
-      <div class="tsc-slot">{{ trigger_event }}</div><div class="tsc-slot">{{ steps[ ] }}</div>
-    </div>
-  </div>
-  <div class="tsc">
-    <div class="tsc-icon"><svg viewBox="0 0 24 24"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z"/><polyline points="9 12 11 14 15 10"/></svg></div>
-    <div class="tsc-name">Policy</div><div class="tsc-file">policy.j2</div>
-    <div class="tsc-slots">
-      <div class="tsc-slot">{{ policy_name }}</div><div class="tsc-slot">{{ applies_to }}</div>
-      <div class="tsc-slot">{{ rule_condition }}</div><div class="tsc-slot">{{ audit }}</div>
-    </div>
-  </div>
-  <div class="tsc">
-    <div class="tsc-icon"><svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg></div>
-    <div class="tsc-name">Evolution</div><div class="tsc-file">evolution.j2</div>
-    <div class="tsc-slots">
-      <div class="tsc-slot">{{ evolution_name }}</div><div class="tsc-slot">{{ changes[ ] }}</div>
-      <div class="tsc-slot">{{ impacts[ ] }}</div><div class="tsc-slot">{{ migration_steps[ ] }}</div>
-    </div>
-  </div>
-</div>
+<p>Every seed scenario belongs to one of six <strong>task types</strong>. Each task type represents a distinct way a developer uses MAL — creating a new entity, modifying an existing one, repairing broken logic, etc. The pipeline generates training records across all six types to ensure balanced corpus coverage.</p>
 
-<h3>Variant Expansion &mdash; 1 Seed Becomes 6 Candidates (56 seeds &times; 6 = 336 total)</h3>
-<div class="variant-demo">
-  <div class="vd-label">Input &mdash; 1 gold seed record</div>
-  <div class="vd-seed">intent: "Build a subscriber onboarding system for a telecom company"<br/>constructs: ["entity", "workflow"] &nbsp;&middot;&nbsp; type: "Create" &nbsp;&middot;&nbsp; domain: "telecom"</div>
-  <div class="vd-arrow"><svg viewBox="0 0 22 28"><line x1="11" y1="2" x2="11" y2="22"/><polyline points="4 16 11 23 18 16"/></svg></div>
-  <div class="vd-sublabel">Jinja2 templates &times; Telecom domain vocabulary</div>
-  <div class="vd-label">Output &mdash; 6 task-type variant candidates (one per task type A&ndash;F)</div>
-  <div class="vd-row">
-    <div class="vd-card"><div class="vd-num">j01</div><div class="vd-ent">entity_subscriber</div><div class="vd-wf"><code>seed_00001_j01_entity_subscriber</code></div></div>
-    <div class="vd-card"><div class="vd-num">j02</div><div class="vd-ent">entity_simcard</div><div class="vd-wf"><code>seed_00001_j02_entity_simcard</code></div></div>
-    <div class="vd-card"><div class="vd-num">j03</div><div class="vd-ent">workflow_invoice</div><div class="vd-wf"><code>seed_00001_j03_workflow_invoice</code></div></div>
-    <div class="vd-card"><div class="vd-num">j04</div><div class="vd-ent">policy_subscriber_1</div><div class="vd-wf"><code>seed_00001_j04_policy_subscriber_1</code></div></div>
-    <div class="vd-card"><div class="vd-num">j05</div><div class="vd-ent">evolution_subscriber</div><div class="vd-wf"><code>seed_00001_j05_evolution_subscriber</code></div></div>
-    <div class="vd-card"><div class="vd-num">j06</div><div class="vd-ent">entity_serviceplan</div><div class="vd-wf"><code>seed_00001_j06_entity_serviceplan</code></div></div>
-  </div>
-</div>
-
-<h3>Record Schemas &mdash; Input and Output</h3>
-<div class="compare-wrap">
-  <div class="compare-header">
-    <div class="ch-left">Seed Record &mdash; Input (gold source)</div>
-    <div class="ch-arrow">&#8594;</div>
-    <div class="ch-right">Candidate Record &mdash; Output (Jinja2 expanded)</div>
-  </div>
-  <div class="compare-body">
-    <div class="compare-panel">
-      <div class="pre-wrap">
-        <div class="pre-header">JSON &mdash; Seed Record (Input)</div>
-        <pre>{
-  "record_id": "seed_00001",
-  "type":      "Create",
-  "domain":    "telecom",
-  "input": {
-    "intent": "Build a subscriber onboarding system",
-    "domain_pack": null,
-    "current_graph": null,
-    "policy_constraints": []
-  },
-  "output": {
-    "mal": "application SubscriberOnboarding ...",
-    "constructs": ["entity", "workflow"],
-    "explanation": null
-  },
-  "metadata": {
-    "validated":      true,
-    "quality_score":  0.95
-  }
-}</pre>
-      </div>
-    </div>
-    <div class="compare-panel">
-      <div class="pre-wrap">
-        <div class="pre-header">JSONL &mdash; Candidate Record (canonical TrainingRecord)</div>
-        <pre>{
-  "record_id": "seed_00001_j02_entity_simcard",
-  "type":      "Create",
-  "domain":    "telecom",
-  "input": {
-    "intent": "Build a SIMCard management system",
-    "domain_pack": null,
-    "current_graph": null,
-    "policy_constraints": []
-  },
-  "output": {
-    "mal": "application SIMCardApp\n  domain Telecom version 1.0\n...",
-    "constructs": ["entity"],
-    "explanation": null
-  },
-  "metadata": {
-    "source":         "jinja2_expansion",
-    "validated":      null,
-    "graph_compiled": false,
-    "quality_score":  null,
-    "stage":          "jinja2",
-    "source_seed":    "seed_00001",
-    "generated_at":   "2026-04-08T18:44:27Z"
-  }
-}</pre>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- â•â• USER FLOW â€” inserted v4.1 â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
-<h2 id="s7b"><span class="h2-icon"><i data-lucide="layout" class="lc-md"></i></span>7b. Frontend Interface &amp; User Flow</h2>
-<p>The dashboard at <code>http://localhost:5173</code> is the primary interface for the whole pipeline. All 5 pipeline stages are live and backed by the FastAPI backend on port 8010. Below is what every page does, how a user moves through the app, and what each interaction actually triggers. For a page-by-page visual walkthrough, see <a href="#s7d">Section 7d</a>.</p>
-
-<!-- All 10 pages table -->
-<h3>All 10 Pages &mdash; What Each One Does</h3>
-<table>
-  <thead>
-    <tr><th>Route</th><th>Page Name</th><th>Stage</th><th>User Action</th><th>Result</th></tr>
-  </thead>
-  <tbody>
-    <tr><td><code>/</code></td><td>Overview (Dashboard)</td><td><span class="tag tag-confirmed">Live</span></td><td>Open the app</td><td>Animated pipeline story card (56 â†’ 336 â†’ N LLM â†’ M validated), stage health strip, registry charts</td></tr>
-    <tr><td><code>/seeds</code></td><td>Seed Library</td><td><span class="tag tag-confirmed">Stage 1 Live</span></td><td>Sync scenarios or run a seed</td><td>Lists all 56 canonical seeds; individual run or bulk run with progress bar; next step CTA to Deterministic Expansion</td></tr>
-    <tr><td><code>/templates</code></td><td>Deterministic Expansion</td><td><span class="tag tag-confirmed">Stage 2 Live</span></td><td>Configure and click Run Jinja2</td><td>336 balanced candidates (6 task types Ã— 56); stat strip; expandable MAL viewer per row; Load in Quality Gate button</td></tr>
-    <tr><td><code>/llm</code></td><td>AI Synthesis</td><td><span class="tag tag-confirmed">Stage 3 Live</span></td><td>Execute a batch or Synthesize All Seeds</td><td>GPT-4o generates MAL records; token/latency badge per batch; Records tab with seed intent vs MAL side-by-side; Validate â†’ button</td></tr>
-    <tr><td><code>/validation</code></td><td>Quality Gate</td><td><span class="tag tag-confirmed">Stage 4 Live</span></td><td>Load MAL from any source, click Validate</td><td>5-stage pipeline results (syntax â†’ schema â†’ policy â†’ dependency â†’ compile); structured errors with line numbers; View Training Registry CTA on pass</td></tr>
-    <tr><td><code>/registry</code></td><td>Training Registry</td><td><span class="tag tag-confirmed">Live</span></td><td>Browse, filter, export</td><td>Validated training records filterable by task type and domain; Export JSON; Demo Report download</td></tr>
-    <tr><td><code>/records</code></td><td>Training Record Browser</td><td><span class="tag tag-confirmed">Live</span></td><td>Browse individual records</td><td>Raw TrainingRecord viewer with JSON expand</td></tr>
-    <tr><td><code>/demo</code></td><td>Demo Walkthrough</td><td><span class="tag tag-confirmed">Live</span></td><td>Click through guided steps</td><td>Manager-friendly pipeline walkthrough â€” all 5 stages now active</td></tr>
-    <tr><td><code>/runs</code></td><td>Pipeline Runs</td><td><span class="tag tag-confirmed">Live</span></td><td>Click Pipeline runs in sidebar</td><td>Table of past run jobs with status, timestamps, record counts</td></tr>
-    <tr><td><code>/runs/:id</code></td><td>Run Detail</td><td><span class="tag tag-confirmed">Live</span></td><td>Click a run row</td><td>Full log for that run and its output records</td></tr>
-  </tbody>
-</table>
-
-<!-- User journey mermaid -->
-<h3>User Journey &mdash; Typical 5-Stage Walkthrough</h3>
-<div class="diagram-box">
-  <div class="diagram-label">End-to-end user flow through the live frontend dashboard</div>
-  <div class="mermaid">
-flowchart TD
-    openApp["Open http://localhost:5173"]
-    openApp --> dashboard["Dashboard â€” pipeline story card and stage health"]
-    dashboard --> navSeeds["Stage 1: Seed Library"]
-    dashboard --> navTemplates["Stage 2: Deterministic Expansion"]
-    dashboard --> navLLM["Stage 3: AI Synthesis"]
-
-    navSeeds --> seedsBrowse["Browse 56 canonical seeds"]
-    seedsBrowse --> seedSync["Sync Scenarios from disk"]
-    seedSync --> seedResult["Seeds listed with record_id, intent, domain"]
-    seedResult --> seedNextCTA["Click Next: Deterministic Expansion CTA"]
-
-    navTemplates --> tmplRun["Click Run Jinja2 expansion"]
-    tmplRun --> tmplStats["336 candidates â€” 6 task types x 56 seeds"]
-    tmplStats --> tmplRows["Expandable rows â€” intent vs MAL side-by-side"]
-    tmplRows --> tmplValidate["Click Load in Quality Gate"]
-
-    navLLM --> llmExecute["Execute batch or Synthesize All Seeds"]
-    llmExecute --> llmBatch["Batch row: token badge, latency, record count"]
-    llmBatch --> llmExpand["Expand row â€” Records tab: seed intent vs AI MAL"]
-    llmExpand --> llmValidate["Click Validate on any record"]
-
-    tmplValidate --> valConsole["Quality Gate /validation"]
-    llmValidate --> valConsole
-    valConsole --> valRun["Run 5-stage pipeline"]
-    valRun --> valPass["All pass â€” View Training Registry CTA"]
-    valRun --> valFail["Fail â€” structured error with line number"]
-    valPass --> registry["Training Registry â€” filter, export, Demo Report"]
-  </div>
-</div>
-
-<!-- Templates page detail -->
-<h3>Deterministic Expansion Page &mdash; Stage 2 UI Step by Step</h3>
-<p>This is where Jinja2 expansion happens. The page is connected to the FastAPI backend and triggers real template expansion against the canonical seed library.</p>
-<div class="timeline-strip">
-  <div class="timeline-box">
-    <div class="timeline-head" style="background:var(--now-col);">Step 1 &mdash; Configure</div>
-    <div class="timeline-body">
-      <ul>
-        <li><strong>Seed source:</strong> "56 canonical seeds" (reads <code>data/seed_scenarios/</code>) or "6 original seeds" (<code>pipeline/seeds/seeds.json</code>)</li>
-        <li><strong>Domain pack:</strong> Telecom (only option today â€” more planned)</li>
-        <li><strong>Variants per seed:</strong> 5, 6, or 10 &mdash; default is 6</li>
-        <li>Live math updates: <em>56 seeds &times; 6 = 336 total</em></li>
-      </ul>
-    </div>
-  </div>
-  <div class="timeline-box">
-    <div class="timeline-head" style="background:var(--next-col);">Step 2 &mdash; Run</div>
-    <div class="timeline-body">
-      <ul>
-        <li>Click <strong>Run Jinja2 expansion</strong></li>
-        <li>Results appear within 1â€“3 seconds (real backend call to Jinja2 expansion API)</li>
-        <li>Results appear in stat strip: total candidates, seeds &times; variants, validation status</li>
-        <li>State saved to <code>localStorage</code> immediately so tab switches don't clear results</li>
-      </ul>
-    </div>
-  </div>
-  <div class="timeline-box">
-    <div class="timeline-head" style="background:var(--later-col);">Step 3 &mdash; Inspect &amp; Export</div>
-    <div class="timeline-body">
-      <ul>
-        <li>Expand any row: <code>record_id</code>, <code>type</code>, <code>domain</code>, <code>intent</code>, constructs badges</li>
-        <li>MAL viewer shows the full generated MAL program</li>
-        <li>Click <strong>Validate this MAL</strong> to open Validation console with MAL pre-loaded</li>
-        <li>Click <strong>Export JSONL</strong> to download all candidates as a <code>.jsonl</code> file</li>
-      </ul>
-    </div>
-  </div>
-</div>
-
-<!-- Record_id decode box -->
-<div class="note">
-  <div class="note-line"><strong>How to read a record_id</strong> &mdash; <code>seed_00001_j02_entity_simcard</code></div>
-  <div class="note-line"><code>seed_00001</code> &rarr; source gold seed &nbsp;&nbsp; <code>j02</code> &rarr; variant 2 from that seed &nbsp;&nbsp; <code>entity_simcard</code> &rarr; construct type + entity name used by the template</div>
-  <div class="note-line">This format lets you trace any candidate directly back to its exact source without opening the JSONL file.</div>
-</div>
-
-<!-- Validation console -->
-<h3>Validation Console &mdash; Three Ways to Load MAL</h3>
-<div class="grid-3">
-  <div class="metric-card">
-    <div class="m-label">Method 1 &mdash; Paste directly</div>
-    <div class="m-value">Manual</div>
-    <div class="m-desc">Type or paste any MAL into the editor and click <strong>Validate</strong>. Good for testing quick edits or MAL from external sources.</div>
-  </div>
-  <div class="metric-card">
-    <div class="m-label">Method 2 &mdash; From Gold Seeds</div>
-    <div class="m-value">Auto-load</div>
-    <div class="m-desc">Click <strong>From gold seeds</strong> in the Validation toolbar. Pulls the last generated seed MAL from <code>localStorage</code> key <code>alm-data-gen:last-generated-mal</code>.</div>
-  </div>
-  <div class="metric-card">
-    <div class="m-label">Method 3 &mdash; From Jinja2</div>
-    <div class="m-value">Variant picker</div>
-    <div class="m-desc">Click <strong>From Jinja2 expansion</strong> in the toolbar. A dropdown lets you pick any of the last-run variants by <code>record_id</code>. Pulls from <code>alm-data-gen:last-jinja2-variants</code>.</div>
-  </div>
-</div>
-
-<!-- State persistence -->
-<h3>State Persistence &mdash; What Survives Tab Changes</h3>
-<table>
-  <thead><tr><th>localStorage Key</th><th>What it stores</th><th>Used by</th></tr></thead>
-  <tbody>
-    <tr><td><code>alm-data-gen:last-jinja2-variants</code></td><td>Up to 50 generated variant records (record_id, MAL, constructs)</td><td>Templates page restore on mount; Validation console picker</td></tr>
-    <tr><td><code>alm-data-gen:last-jinja2-meta</code></td><td>Run config (seedSource, domainPack, variantsPerSeed, totalCount, runAt)</td><td>Templates page restores form state on revisit</td></tr>
-    <tr><td><code>alm-data-gen:last-generated-mal</code></td><td>Most recently generated seed MAL string</td><td>Validation console "From gold seeds" button</td></tr>
-    <tr><td><code>alm-data-gen:gold-seed-runs-v2</code></td><td>Full gold seed run history (id, timestamp, output records)</td><td>Seeds page run history and re-run feature</td></tr>
-    <tr><td><code>alm-dg-theme</code></td><td>Light or dark mode preference</td><td>ThemeToggle across all pages</td></tr>
-    <tr><td><code>alm-dg-welcome-dismissed</code></td><td>Whether the Quick Start sidebar banner was dismissed</td><td>AppShell sidebar banner</td></tr>
-  </tbody>
-</table>
-
-<!-- Connection setup -->
-<h3>Frontend &lt;&rarr;&gt; Backend Connection</h3>
-<div class="grid-2">
-  <div class="card">
-    <div class="ctag gold">Live Mode &mdash; Current Default</div>
-    <h4>VITE_USE_MOCK_API=false</h4>
-    <ul>
-      <li>Set in <code>frontend/.env</code> (default for the shared repo)</li>
-      <li>Start with <code>docker compose up</code> â€” backend on port 8010, frontend on 5173</li>
-      <li>All API calls hit real FastAPI endpoints on <code>http://localhost:8010</code></li>
-      <li>Seeds, Jinja2, AI Synthesis, Quality Gate, Registry all use live backend data</li>
-      <li>Full API reference at <a href="#s13b">Section 13b</a> and <code>http://localhost:8010/docs</code></li>
-    </ul>
-    <div class="stat-pill">Default &mdash; use <code>docker compose up</code> to start</div>
-  </div>
-  <div class="card">
-    <div class="ctag navy">Offline / UI Development Mode</div>
-    <h4>VITE_USE_MOCK_API=true</h4>
-    <ul>
-      <li>Set <code>VITE_USE_MOCK_API=true</code> in <code>frontend/.env</code></li>
-      <li>No backend or Docker needed</li>
-      <li>All API calls return pre-built mock data from <code>mockData.ts</code></li>
-      <li>Useful for UI development or sharing screenshots without a running backend</li>
-      <li>Does not reflect real pipeline state â€” not suitable for demos</li>
-    </ul>
-    <div class="stat-pill warn">Not for demos â€” use live mode instead</div>
-  </div>
-</div>
-<!-- â•â• end user flow â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
-
-<!-- 7c -->
-<h2 id="s7c"><span class="h2-icon"><i data-lucide="terminal" class="lc-md"></i></span>7c. Quick Onboarding Guide</h2>
-<p>Five steps to go from zero to a running pipeline. Tested on a clean Windows/Linux/macOS environment. Expected total setup time: under 10 minutes.</p>
-
-<div class="timeline-strip">
-  <div class="timeline-box">
-    <div class="timeline-head" style="background:var(--now-col);">Step 1 &mdash; Clone the Repository</div>
-    <div class="timeline-body">
-      <pre style="margin:0;font-size:12px;">git clone https://github.com/DIVYAMETAFORE25/ALM-Data-Gen.git
-cd ALM-Data-Gen</pre>
-      <p style="margin-top:8px;font-size:12px;color:var(--muted);">The repo includes the full frontend + backend + pipeline. No separate setup steps needed for the core codebase.</p>
-    </div>
-  </div>
-  <div class="timeline-box">
-    <div class="timeline-head" style="background:var(--next-col);">Step 2 &mdash; Configure Environment</div>
-    <div class="timeline-body">
-      <pre style="margin:0;font-size:12px;">cp backend/.env.example backend/.env
-# Open backend/.env and add:
-#   LLM_API_KEY=sk-...       â† your OpenAI key
-#   LLM_BASE_URL=...         â† or any OpenAI-compatible endpoint</pre>
-      <p style="margin-top:8px;font-size:12px;color:var(--muted);">The LLM key is only required for Stage 3 (AI Synthesis). All other stages work without it.</p>
-    </div>
-  </div>
-  <div class="timeline-box">
-    <div class="timeline-head" style="background:var(--brand);">Step 3 &mdash; Start the Stack</div>
-    <div class="timeline-body">
-      <pre style="margin:0;font-size:12px;">docker compose up</pre>
-      <p style="margin-top:8px;font-size:12px;color:var(--muted);">Starts backend (FastAPI on port 8010), PostgreSQL database, and frontend dev server (Vite on port 5173). All services run in Docker â€” no local Python or Node installation needed.</p>
-    </div>
-  </div>
-  <div class="timeline-box">
-    <div class="timeline-head" style="background:var(--later-col);">Step 4 &mdash; Open the Dashboard</div>
-    <div class="timeline-body">
-      <pre style="margin:0;font-size:12px;">Frontend:  http://localhost:5173
-API Docs:  http://localhost:8010/docs</pre>
-      <p style="margin-top:8px;font-size:12px;color:var(--muted);">The Swagger UI at <code>/docs</code> lets you explore and test every API endpoint directly. Use it to understand the backend before touching the frontend.</p>
-    </div>
-  </div>
-  <div class="timeline-box">
-    <div class="timeline-head" style="background:var(--now-col);">Step 5 &mdash; Run the Pipeline</div>
-    <div class="timeline-body">
-      <ul>
-        <li>Seed Library &rarr; click <strong>Sync Scenarios</strong> (loads 56 seeds from disk)</li>
-        <li>Deterministic Expansion &rarr; click <strong>Run Jinja2 Expansion</strong> (generates 336 variants)</li>
-        <li>AI Synthesis &rarr; click <strong>Synthesize All Seeds</strong> (requires LLM key)</li>
-        <li>Quality Gate &rarr; load any MAL, click <strong>Run Validation Pipeline</strong></li>
-        <li>Training Registry &rarr; browse validated records and export a Demo Report</li>
-      </ul>
-    </div>
-  </div>
-</div>
-
-<table>
-  <thead><tr><th>Port</th><th>Service</th><th>URL</th></tr></thead>
-  <tbody>
-    <tr><td>5173</td><td>Frontend (Vite dev server)</td><td><code>http://localhost:5173</code></td></tr>
-    <tr><td>8010</td><td>Backend API (FastAPI)</td><td><code>http://localhost:8010</code></td></tr>
-    <tr><td>8010/docs</td><td>Swagger UI</td><td><code>http://localhost:8010/docs</code></td></tr>
-    <tr><td>5432</td><td>PostgreSQL (internal)</td><td>Used by backend only</td></tr>
-  </tbody>
-</table>
-
-<!-- 7d -->
-<h2 id="s7d">
-  <span class="h2-icon"><i data-lucide="monitor" class="lc-md"></i></span>
-  7d. Page-by-Page UI Walkthrough
-</h2>
-<p>Visual preview of all six live frontend pages &mdash; what each page shows, what you do there, and how it connects to the pipeline stage. Each card is a layout mockup of the real UI. For setup instructions see <a href="#s7c">&#167;7c</a>; for the user-flow diagram see <a href="#s7b">&#167;7b</a>.</p>
-
-<div class="ppc-grid">
-
-  <!-- ── Page 1: Dashboard ─────────────────────────────────────────────── -->
-  <div class="ppc">
-    <div class="ppc-hdr">
-      <div class="ppc-hdr-ico"><i data-lucide="layout-dashboard" class="lc-md"></i></div>
-      <div>
-        <div class="ppc-hdr-title">Page 1 &mdash; Overview (Dashboard)</div>
-        <div class="ppc-hdr-route">localhost:5173/</div>
-      </div>
-      <div class="ppc-hdr-badge">All Stages</div>
-    </div>
-    <div class="ppc-chrome">
-      <div class="ppc-dots"><span></span><span></span><span></span></div>
-      <div class="ppc-urlbar">localhost:5173/</div>
-      <span class="ppc-livebadge">Live</span>
-    </div>
-    <div class="ppc-app">
-      <div class="ppc-nav">
-        <div class="ppc-ni active"><span class="ni-dot"></span>Overview</div>
-        <div class="ppc-ni"><span class="ni-dot"></span>Seed Library</div>
-        <div class="ppc-ni"><span class="ni-dot"></span>Det. Expansion</div>
-        <div class="ppc-ni"><span class="ni-dot"></span>AI Synthesis</div>
-        <div class="ppc-ni"><span class="ni-dot"></span>Quality Gate</div>
-        <div class="ppc-ni"><span class="ni-dot"></span>Registry</div>
-      </div>
-      <div class="ppc-body">
-        <div class="pz pz-primary">
-          <span class="pz-lbl">Story Card</span>
-          <span class="pz-val"><strong>56</strong> Seeds &rarr; <strong>336</strong> Jinja2 &rarr; <strong>N</strong> AI &rarr; <strong>M</strong> Validated &mdash; animated count-up tiles</span>
-        </div>
-        <div class="pz pz-data">
-          <span class="pz-lbl">Stage Strip</span>
-          <span class="pz-val">&#11044; &ndash;&ndash; &#11044; &ndash;&ndash; &#11044; &ndash;&ndash; &#11044; &ndash;&ndash; &#11044; &nbsp;&nbsp; 5 nodes, all live &amp; green</span>
-        </div>
-        <div class="pz pz-gold">
-          <span class="pz-lbl">Registry Charts</span>
-          <span class="pz-val">Task-type distribution bar &middot; Domain breakdown ring chart</span>
-        </div>
-      </div>
-    </div>
-    <div class="ppc-info">
-      <div class="ppc-row"><span class="pi-tag pi-see">See</span>Count-up tiles, 5-stage health strip, distribution charts &mdash; pipeline health at a glance</div>
-      <div class="ppc-row"><span class="pi-tag pi-do">Do</span>Click any tile number to jump directly to that stage. Entry point for managers &amp; orientation</div>
-    </div>
-  </div>
-
-  <!-- ── Page 2: Seed Library ──────────────────────────────────────────── -->
-  <div class="ppc">
-    <div class="ppc-hdr">
-      <div class="ppc-hdr-ico"><i data-lucide="database" class="lc-md"></i></div>
-      <div>
-        <div class="ppc-hdr-title">Page 2 &mdash; Seed Library</div>
-        <div class="ppc-hdr-route">localhost:5173/seeds &bull; Stage 1</div>
-      </div>
-      <div class="ppc-hdr-badge">56 Seeds</div>
-    </div>
-    <div class="ppc-chrome">
-      <div class="ppc-dots"><span></span><span></span><span></span></div>
-      <div class="ppc-urlbar">localhost:5173/seeds</div>
-      <span class="ppc-livebadge">Live</span>
-    </div>
-    <div class="ppc-app">
-      <div class="ppc-nav">
-        <div class="ppc-ni"><span class="ni-dot"></span>Overview</div>
-        <div class="ppc-ni active"><span class="ni-dot"></span>Seed Library</div>
-        <div class="ppc-ni"><span class="ni-dot"></span>Det. Expansion</div>
-        <div class="ppc-ni"><span class="ni-dot"></span>AI Synthesis</div>
-        <div class="ppc-ni"><span class="ni-dot"></span>Quality Gate</div>
-        <div class="ppc-ni"><span class="ni-dot"></span>Registry</div>
-      </div>
-      <div class="ppc-body">
-        <div class="pz pz-primary">
-          <span class="pz-lbl">Action Bar</span>
-          <span class="pz-val">[Sync Scenarios] &nbsp; [Run All Seeds] &nbsp; Workers: 3</span>
-        </div>
-        <div class="pz pz-data">
-          <span class="pz-lbl">Seed Table</span>
-          <span class="pz-val"><code>seed_00001</code> &middot; Create &middot; telecom &middot; &#10003; Validated<br><code>seed_00002</code> &middot; Modify &middot; billing &middot; &#10003; Validated</span>
-        </div>
-        <div class="pz pz-cta">
-          <span class="pz-lbl">Next CTA</span>
-          <span class="pz-val">Next: Deterministic Expansion &rarr;</span>
-        </div>
-      </div>
-    </div>
-    <div class="ppc-info">
-      <div class="ppc-row"><span class="pi-tag pi-see">See</span>56 canonical scenarios with record_id, intent, domain, task-type badge, validation status</div>
-      <div class="ppc-row"><span class="pi-tag pi-do">Do</span>Sync Scenarios from disk &rarr; Run individual seed or Run All (parallel workers) &rarr; move to Stage 2</div>
-    </div>
-  </div>
-
-  <!-- ── Page 3: Deterministic Expansion ──────────────────────────────── -->
-  <div class="ppc">
-    <div class="ppc-hdr">
-      <div class="ppc-hdr-ico"><i data-lucide="git-fork" class="lc-md"></i></div>
-      <div>
-        <div class="ppc-hdr-title">Page 3 &mdash; Deterministic Expansion</div>
-        <div class="ppc-hdr-route">localhost:5173/templates &bull; Stage 2</div>
-      </div>
-      <div class="ppc-hdr-badge">336 Variants</div>
-    </div>
-    <div class="ppc-chrome">
-      <div class="ppc-dots"><span></span><span></span><span></span></div>
-      <div class="ppc-urlbar">localhost:5173/templates</div>
-      <span class="ppc-livebadge">Live</span>
-    </div>
-    <div class="ppc-app">
-      <div class="ppc-nav">
-        <div class="ppc-ni"><span class="ni-dot"></span>Overview</div>
-        <div class="ppc-ni"><span class="ni-dot"></span>Seed Library</div>
-        <div class="ppc-ni active"><span class="ni-dot"></span>Det. Expansion</div>
-        <div class="ppc-ni"><span class="ni-dot"></span>AI Synthesis</div>
-        <div class="ppc-ni"><span class="ni-dot"></span>Quality Gate</div>
-        <div class="ppc-ni"><span class="ni-dot"></span>Registry</div>
-      </div>
-      <div class="ppc-body">
-        <div class="pz pz-primary">
-          <span class="pz-lbl">Config Panel</span>
-          <span class="pz-val">Seed source &#9662; &nbsp; Domain pack &#9662; &nbsp; Variants/seed: 6 &nbsp; [Run Jinja2]</span>
-        </div>
-        <div class="pz pz-gold">
-          <span class="pz-lbl">Task Pills</span>
-          <span class="pz-val">Create&nbsp;56 &nbsp; Modify&nbsp;56 &nbsp; Repair&nbsp;56 &nbsp; Explain&nbsp;56 &nbsp; Policy&nbsp;56 &nbsp; Disambiguate&nbsp;56</span>
-        </div>
-        <div class="pz pz-data">
-          <span class="pz-lbl">Results Table</span>
-          <span class="pz-val"><code>tmpl_00001</code> &middot; Create &middot; &ldquo;Add Customer&hellip;&rdquo; &nbsp; [&#9656; expand] &nbsp; [Load in QG]</span>
-        </div>
-        <div class="pz pz-cta">
-          <span class="pz-lbl">Next CTA</span>
-          <span class="pz-val">Next: AI Synthesis &rarr;</span>
-        </div>
-      </div>
-    </div>
-    <div class="ppc-info">
-      <div class="ppc-row"><span class="pi-tag pi-see">See</span>Config panel, task-type pill strip (6 types &times; 56 seeds = 336), expandable MAL preview table</div>
-      <div class="ppc-row"><span class="pi-tag pi-do">Do</span>Run Jinja2 expansion &rarr; expand row for full MAL side-by-side &rarr; Load in Quality Gate to validate</div>
-    </div>
-  </div>
-
-  <!-- ── Page 4: AI Synthesis ──────────────────────────────────────────── -->
-  <div class="ppc">
-    <div class="ppc-hdr">
-      <div class="ppc-hdr-ico"><i data-lucide="sparkles" class="lc-md"></i></div>
-      <div>
-        <div class="ppc-hdr-title">Page 4 &mdash; AI Synthesis</div>
-        <div class="ppc-hdr-route">localhost:5173/llm &bull; Stage 3 &mdash; GPT-4o</div>
-      </div>
-      <div class="ppc-hdr-badge">Most Powerful</div>
-    </div>
-    <div class="ppc-chrome">
-      <div class="ppc-dots"><span></span><span></span><span></span></div>
-      <div class="ppc-urlbar">localhost:5173/llm</div>
-      <span class="ppc-livebadge">Live</span>
-    </div>
-    <div class="ppc-app">
-      <div class="ppc-nav">
-        <div class="ppc-ni"><span class="ni-dot"></span>Overview</div>
-        <div class="ppc-ni"><span class="ni-dot"></span>Seed Library</div>
-        <div class="ppc-ni"><span class="ni-dot"></span>Det. Expansion</div>
-        <div class="ppc-ni active"><span class="ni-dot"></span>AI Synthesis</div>
-        <div class="ppc-ni"><span class="ni-dot"></span>Quality Gate</div>
-        <div class="ppc-ni"><span class="ni-dot"></span>Registry</div>
-      </div>
-      <div class="ppc-body">
-        <div class="pz pz-primary">
-          <span class="pz-lbl">Action Cards</span>
-          <span class="pz-val">[Synthesize All Seeds] &nbsp; [Execute Latest Prompt] &nbsp; [Save Prompt] &nbsp; [Catalog]</span>
-        </div>
-        <div class="pz pz-gold">
-          <span class="pz-lbl">Task Pills</span>
-          <span class="pz-val">Distribution across all batches &mdash; per task type</span>
-        </div>
-        <div class="pz pz-data">
-          <span class="pz-lbl">Batch Table</span>
-          <span class="pz-val"><span class="tag tag-confirmed" style="font-size:9px">Executed</span> &nbsp; Live &middot; 12 records &middot; ~2.4k tokens &middot; 3.1s &nbsp; [&#9656;]</span>
-        </div>
-        <div class="pz pz-gold">
-          <span class="pz-lbl">Expanded Row</span>
-          <span class="pz-val">Records tab &middot; Prompt tab &middot; Raw JSON tab &mdash; seed intent vs AI MAL side-by-side</span>
-        </div>
-      </div>
-    </div>
-    <div class="ppc-info">
-      <div class="ppc-row"><span class="pi-tag pi-see">See</span>Action card grid, task pills, batch table (status / mode / tokens / latency), expandable record viewer</div>
-      <div class="ppc-row"><span class="pi-tag pi-do">Do</span>Synthesize All Seeds (with progress bar) &rarr; expand batch &rarr; Validate &rarr; sends record to Quality Gate</div>
-      <div class="ppc-row"><span class="pi-tag pi-tip">Tip</span>Prompt tab shows exact system + user prompt sent to GPT-4o; Raw JSON tab shows full API response</div>
-    </div>
-  </div>
-
-  <!-- ── Page 5: Quality Gate ──────────────────────────────────────────── -->
-  <div class="ppc">
-    <div class="ppc-hdr">
-      <div class="ppc-hdr-ico"><i data-lucide="shield-check" class="lc-md"></i></div>
-      <div>
-        <div class="ppc-hdr-title">Page 5 &mdash; Quality Gate</div>
-        <div class="ppc-hdr-route">localhost:5173/validation &bull; Stage 4</div>
-      </div>
-      <div class="ppc-hdr-badge">5-Stage Validator</div>
-    </div>
-    <div class="ppc-chrome">
-      <div class="ppc-dots"><span></span><span></span><span></span></div>
-      <div class="ppc-urlbar">localhost:5173/validation</div>
-      <span class="ppc-livebadge">Live</span>
-    </div>
-    <div class="ppc-app">
-      <div class="ppc-nav">
-        <div class="ppc-ni"><span class="ni-dot"></span>Overview</div>
-        <div class="ppc-ni"><span class="ni-dot"></span>Seed Library</div>
-        <div class="ppc-ni"><span class="ni-dot"></span>Det. Expansion</div>
-        <div class="ppc-ni"><span class="ni-dot"></span>AI Synthesis</div>
-        <div class="ppc-ni active"><span class="ni-dot"></span>Quality Gate</div>
-        <div class="ppc-ni"><span class="ni-dot"></span>Registry</div>
-      </div>
-      <div class="ppc-body">
-        <div class="pz pz-data">
-          <span class="pz-lbl">Source Loaders</span>
-          <span class="pz-val">[From Gold Seeds &#9662;] &nbsp; [From Jinja2 &#9662;] &nbsp; [From AI Synthesis &#9662;]</span>
-        </div>
-        <div class="pz pz-primary">
-          <span class="pz-lbl">MAL Input</span>
-          <span class="pz-val">Paste or load MAL text &nbsp;&nbsp; [Run Validation Pipeline &#9654;]</span>
-        </div>
-        <div class="pz pz-cta">
-          <span class="pz-lbl">Stage Tabs</span>
-          <span class="pz-val">&#10003; Syntax &nbsp; &#10003; Schema &nbsp; &#10003; Policy &nbsp; &#10003; Dependency &nbsp; &#10003; Compile</span>
-        </div>
-        <div class="pz pz-cta">
-          <span class="pz-lbl">On All Pass</span>
-          <span class="pz-val">Green CTA: &ldquo;View Training Registry &rarr;&rdquo;</span>
-        </div>
-      </div>
-    </div>
-    <div class="ppc-info">
-      <div class="ppc-row"><span class="pi-tag pi-see">See</span>3 source loaders, MAL textarea, 5 validation stage tabs each with errors (red) / warnings (amber) / pass (green)</div>
-      <div class="ppc-row"><span class="pi-tag pi-do">Do</span>Load MAL from any source or paste manually &rarr; Run &rarr; review each stage tab &rarr; if all pass, promote</div>
-    </div>
-  </div>
-
-  <!-- ── Page 6: Training Registry ─────────────────────────────────────── -->
-  <div class="ppc">
-    <div class="ppc-hdr">
-      <div class="ppc-hdr-ico"><i data-lucide="archive" class="lc-md"></i></div>
-      <div>
-        <div class="ppc-hdr-title">Page 6 &mdash; Training Registry</div>
-        <div class="ppc-hdr-route">localhost:5173/registry &bull; Stage 5</div>
-      </div>
-      <div class="ppc-hdr-badge">Export + Report</div>
-    </div>
-    <div class="ppc-chrome">
-      <div class="ppc-dots"><span></span><span></span><span></span></div>
-      <div class="ppc-urlbar">localhost:5173/registry</div>
-      <span class="ppc-livebadge">Live</span>
-    </div>
-    <div class="ppc-app">
-      <div class="ppc-nav">
-        <div class="ppc-ni"><span class="ni-dot"></span>Overview</div>
-        <div class="ppc-ni"><span class="ni-dot"></span>Seed Library</div>
-        <div class="ppc-ni"><span class="ni-dot"></span>Det. Expansion</div>
-        <div class="ppc-ni"><span class="ni-dot"></span>AI Synthesis</div>
-        <div class="ppc-ni"><span class="ni-dot"></span>Quality Gate</div>
-        <div class="ppc-ni active"><span class="ni-dot"></span>Registry</div>
-      </div>
-      <div class="ppc-body">
-        <div class="pz pz-primary">
-          <span class="pz-lbl">Filter + Export</span>
-          <span class="pz-val">Task type &#9662; &nbsp; Domain &#9662; &nbsp;&nbsp; [Export JSON] &nbsp; [Demo Report &#8659;]</span>
-        </div>
-        <div class="pz pz-gold">
-          <span class="pz-lbl">Charts</span>
-          <span class="pz-val">Task-type bar chart &middot; Domain distribution &mdash; updates live on filter change</span>
-        </div>
-        <div class="pz pz-data">
-          <span class="pz-lbl">Records Table</span>
-          <span class="pz-val">record_id &middot; task type &middot; domain &middot; source stage &middot; validation status</span>
-        </div>
-        <div class="pz pz-risk">
-          <span class="pz-lbl">Next Build</span>
-          <span class="pz-val">POST /api/v1/registry/promote &mdash; Promote-to-Registry endpoint not yet wired</span>
-        </div>
-      </div>
-    </div>
-    <div class="ppc-info">
-      <div class="ppc-row"><span class="pi-tag pi-see">See</span>Filterable records table, task-type &amp; domain charts, Export JSON and Demo Report buttons top-right</div>
-      <div class="ppc-row"><span class="pi-tag pi-do">Do</span>Filter by type/domain &rarr; Export JSON for model training &rarr; Demo Report for stakeholder handoff</div>
-      <div class="ppc-row"><span class="pi-tag pi-tip">Note</span>UI + API live; 0 formally promoted records today. Promote endpoint is the next build item (see <a href="#s13b">&#167;13b</a>)</div>
-    </div>
-  </div>
-
-</div><!-- /.ppc-grid -->
-
-<h3>Not-Yet-Built Pages &mdash; Hindsight Backlog</h3>
-<p>Identified during development as needed but not yet implemented. Next round of UI work.</p>
-<table>
-  <thead><tr><th>Proposed Page</th><th>Purpose</th><th>Priority</th></tr></thead>
-  <tbody>
-    <tr><td><strong>One-click Full Pipeline Run</strong></td><td>Single button: Sync &rarr; Jinja2 &rarr; LLM &rarr; Validate &rarr; Registry with a unified progress bar</td><td><span class="tag tag-direction">High</span></td></tr>
-    <tr><td><strong>Promote to Registry</strong></td><td>POST endpoint + UI button to formally mark a QG-passing record as promoted and stored</td><td><span class="tag tag-direction">High</span></td></tr>
-    <tr><td>Annotation / Human Review UI</td><td>Web interface for reviewers to accept, reject, or edit LLM-generated records with a reason code</td><td><span class="tag tag-planned">Medium</span></td></tr>
-    <tr><td>Evaluation Dashboard</td><td>Model quality tracking before/after training rounds &mdash; benchmark scores, accuracy deltas, failure categories</td><td><span class="tag tag-planned">Medium</span></td></tr>
-    <tr><td>Multi-domain Selector</td><td>Switch domain packs (telecom / banking / healthcare), each with its own seeds and templates</td><td>Later</td></tr>
-  </tbody>
-</table>
-<!-- 8 -->
-<h2 id="s8"><span class="h2-icon"><i data-lucide="wrench" class="lc-md"></i></span>8. Jinja2-First Rationale</h2>
-<div class="grid-2">
-  <div class="card">
-    <div class="ctag navy">Immediate Build Path</div>
-    <h4>Controlled and Explainable</h4>
-    <ul>
-      <li>Uses approved templates instead of unconstrained generation</li>
-      <li>Maintains legal MAL structure while varying only allowed fields</li>
-      <li>Makes debugging easier because every change is template-driven</li>
-      <li>Fits cleanly into a seed-to-variant dataset pipeline</li>
-    </ul>
-    <div class="stat-pill">Best first implementation for Phase 2</div>
-  </div>
-  <div class="card">
-    <div class="ctag gold">Practical Benefit</div>
-    <h4>Strong Baseline Before LLM Expansion</h4>
-    <ul>
-      <li>Creates a clean benchmark set for later comparison</li>
-      <li>Provides stable examples for prompt design and few-shot inputs</li>
-      <li>Helps define schema and registry contracts early</li>
-      <li>Reduces early hallucination and grammar-drift risk</li>
-    </ul>
-    <div class="stat-pill warn">Build this before relying on model creativity</div>
-  </div>
-</div>
-
-<div class="diagram-box">
-  <div class="diagram-label">Jinja2 Variation Logic</div>
-  <div class="mermaid">
-flowchart LR
-    seed["Approved Seed Intent"] --> tmpl["Structured Template"]
-    tmpl --> payload["Approved Input Payload"]
-    payload --> variant["Rendered MAL Variant"]
-    variant --> syntaxCheck["Syntax + Schema Checks"]
-    syntaxCheck --> accepted["Accepted Template Variant"]
-  </div>
-</div>
-
-<!-- 9 -->
-<h2 id="s9"><span class="h2-icon"><i data-lucide="cpu" class="lc-md"></i></span>9. Platform Readiness Assessment</h2>
-<p>Phase 2 does not require a new platform &mdash; it needs new workflow and schema layers on top of the architecture that already exists in ALM.</p>
-
-<div class="readiness-grid">
-  <div class="rc">
-    <div class="rc-icon"><i data-lucide="server" class="lc-md"></i></div>
-    <div class="rc-body">
-      <div class="rc-name">FastAPI / Services</div>
-      <div class="rc-sub">Current: Orchestration and validation surface</div>
-      <div class="rc-phase2">Phase 2: Generation, validation, review, and promotion workflows</div>
-      <span class="rc-badge rc-ready">Ready Now</span>
-    </div>
-  </div>
-  <div class="rc">
-    <div class="rc-icon"><i data-lucide="database" class="lc-md"></i></div>
-    <div class="rc-body">
-      <div class="rc-name">PostgreSQL</div>
-      <div class="rc-sub">Current: Durable operational records</div>
-      <div class="rc-phase2">Phase 2: Dataset registry — source of truth for accepted MAL examples</div>
-      <span class="rc-badge rc-partial">Schema additions needed</span>
-    </div>
-  </div>
-  <div class="rc">
-    <div class="rc-icon"><i data-lucide="git-merge" class="lc-md"></i></div>
-    <div class="rc-body">
-      <div class="rc-name">Apache AGE</div>
-      <div class="rc-sub">Current: Compiled graph and traversal engine</div>
-      <div class="rc-phase2">Phase 2: Graph-compile sanity check for every generated MAL record</div>
-      <span class="rc-badge rc-ready">Ready Now</span>
-    </div>
-  </div>
-  <div class="rc">
-    <div class="rc-icon"><i data-lucide="zap" class="lc-md"></i></div>
-    <div class="rc-body">
-      <div class="rc-name">Redis</div>
-      <div class="rc-sub">Current: Context and graph cache</div>
-      <div class="rc-phase2">Phase 2: Repeated prompt and validation fragment caching</div>
-      <span class="rc-badge rc-ready">Ready Now</span>
-    </div>
-  </div>
-  <div class="rc">
-    <div class="rc-icon"><i data-lucide="search" class="lc-md"></i></div>
-    <div class="rc-body">
-      <div class="rc-name">Qdrant</div>
-      <div class="rc-sub">Current: Semantic retrieval over intents and MAL chunks</div>
-      <div class="rc-phase2">Phase 2: Retrieve similar approved MAL examples and correction patterns</div>
-      <span class="rc-badge rc-ready">Ready Now</span>
-    </div>
-  </div>
-</div>
-<div class="note">
-  <div class="note-line"><span class="tag tag-direction">What Phase 2 adds on top</span>Dataset registry tables, batch validation tooling, review states, novelty checks, and evaluation reporting &mdash; no new platform required.</div>
-</div>
-
-<!-- 10 -->
-<h2 id="s10"><span class="h2-icon"><i data-lucide="book-open" class="lc-md"></i></span>10. Execution Playbook</h2>
-<p>Each stage below should be treated as a distinct build target with its own acceptance criteria and completion signal before the next stage begins.</p>
-
-<h3>10.0 Layered Capability Design</h3>
-<p>Seeds and templates should consciously target each capability layer, not just the Create task type.</p>
-<div class="phase-strip cols-4">
-  <div class="phase-box">
-    <div class="n">L1</div>
-    <h4>Syntax &amp; Structure</h4>
-    <p>Block order, keywords, grammar patterns, and simple correction.<br/><br/><strong>Data:</strong> intent to MAL block; malformed to corrected.<br/><br/><strong>Goal:</strong> Parser-aligned MAL fluency.</p>
-  </div>
-  <div class="phase-box">
-    <div class="n">L2</div>
-    <h4>Task Behavior</h4>
-    <p>Create, modify, explain, and repair behaviors.<br/><br/><strong>Data:</strong> user intent to full MAL; change request to evolution.<br/><br/><strong>Goal:</strong> Aligns model with ALM operating modes.</p>
-  </div>
-  <div class="phase-box">
-    <div class="n">L3</div>
-    <h4>Domain &amp; Policy</h4>
-    <p>Telecom domain rules, business approvals, and policy constraints.<br/><br/><strong>Data:</strong> intent + domain pack to domain-valid MAL.<br/><br/><strong>Goal:</strong> Safe, domain-correct output.</p>
-  </div>
-  <div class="phase-box">
-    <div class="n">L4</div>
-    <h4>Robustness &amp; Recovery</h4>
-    <p>Clarification handling, ambiguity, and recovery after failures.<br/><br/><strong>Data:</strong> rejected output + validator feedback to corrected MAL.<br/><br/><strong>Goal:</strong> Fewer production errors.</p>
-  </div>
-</div>
-<div class="note">
-  <div class="note-line"><span class="tag tag-direction">Planning direction</span>Seed authoring and Jinja2 templates should be distributed across all four layers &mdash; not concentrated only on L1 Create examples. Covering L2&ndash;L4 is what makes the dataset production-grade.</div>
-</div>
-
-<h3>10.1 Gold Seed Examples</h3>
-<ul>
-  <li>Target 40 to 60 clean seed examples as the starting range.</li>
-  <li>Cover distinct MAL construct families: entity, workflow, policy, integration, agent, event, evolution.</li>
-  <li>Keep the seed set versioned and manually curated.</li>
-  <li>Treat seeds as reference truth, not just examples.</li>
-</ul>
-
-<h3>10.2 Jinja2 Template Expansion</h3>
-<ul>
-  <li>Use placeholders for names, enums, attributes, steps, integrations, roles, and policy options.</li>
-  <li>Keep business logic stable while varying legal values.</li>
-  <li>Generate JSON payloads separately from template files for auditability.</li>
-  <li>Export generated pairs in a registry-friendly structure.</li>
-</ul>
-
-<h3>10.3 LLM Variant Expansion</h3>
-<div class="grid-2">
-  <div class="card" style="border-top-color:#0f766e;">
-    <div class="ctag">What We Know</div>
-    <h4>Stable Foundation</h4>
-    <ul>
-      <li>Template expansion works and produces syntactically valid MAL.</li>
-      <li>The validation pipeline (parser, schema, policy, graph) is already defined.</li>
-      <li>The provenance model (seed to template to registry) is clear.</li>
-      <li>The registry lifecycle states are agreed: draft, validated, reviewed, accepted, archived.</li>
-      <li>LLM expansion must come after, not before, the template baseline.</li>
-    </ul>
-    <div class="stat-pill">Build on this &mdash; do not skip it</div>
-  </div>
-  <div class="card" style="border-top-color:#a67c2d;">
-    <div class="ctag warn">What We Don't Know Yet</div>
-    <h4>Open Research Questions</h4>
-    <ul>
-      <li>Which model gives the best balance of MAL structure-following and cost.</li>
-      <li>Whether direct instruction, few-shot, chain-of-thought, or repair prompting performs best.</li>
-      <li>How much diversity is useful before outputs drift from grammar.</li>
-      <li>What score or rule set qualifies a candidate for human review.</li>
-      <li>What metadata must be stored now to support future fine-tuning.</li>
-    </ul>
-    <div class="stat-pill warn">These must be answered before scaling LLM generation</div>
-  </div>
-</div>
-
-<div class="pre-wrap">
-  <div class="pre-header">Prompt Template &mdash; Constrained MAL Generation</div>
-  <pre>SYSTEM:
-  You are an expert MAL generator for the ALM platform.
-  - Only produce MAL inside the allowed construct scope below.
-  - Do NOT generate UI constructs (screens, components, nav).
-  - Follow MAL grammar strictly: application, entity, workflow,
-    policy, agent, integration, event, evolution.
-  - Apply the domain pack for all field names and enum values.
-  - Output format: raw MAL text only.
-
-CONSTRAINT SCOPE:
-  allowed_constructs: [entity, workflow, policy]
-  domain: {{ domain_name }}
-  task_type: {{ task_type }}
-
-REFERENCE SEED:
-{{ seed_mal_text }}
-
-USER INTENT:
-{{ user_intent }}</pre>
-</div>
-
-<h3>10.4 Validation and Filtering</h3>
 <div class="grid-3">
   <div class="card">
-    <div class="ctag">Gate 1</div><h4>Syntax and Schema</h4>
-    <ul><li>MAL syntax validity</li><li>Required fields present</li><li>Template payload completeness</li></ul>
+    <div class="ctag">Task Type</div>
+    <div class="card-title">Create</div>
+    <div class="card-sub">Define a new MAL entity, workflow, or policy from scratch</div>
+    <p>Example: "Build a subscriber onboarding system with billing integration." The LLM must generate a complete valid MAL application definition.</p>
   </div>
   <div class="card">
-    <div class="ctag gold">Gate 2</div><h4>Policy and Graph</h4>
-    <ul><li>Policy compliance checks</li><li>Graph-aware validation</li><li>Structural consistency checks</li></ul>
+    <div class="ctag">Task Type</div>
+    <div class="card-title">Modify</div>
+    <div class="card-sub">Extend or update an existing MAL structure</div>
+    <p>Example: "Add a loyalty points field to the existing Subscriber entity." Requires understanding current structure before evolving it.</p>
   </div>
   <div class="card">
-    <div class="ctag plan">Gate 3</div><h4>Quality and Duplication</h4>
-    <ul><li>Near-duplicate filtering</li><li>Diversity scoring</li><li>Low-value output rejection</li></ul>
+    <div class="ctag">Task Type</div>
+    <div class="card-title">Repair</div>
+    <div class="card-sub">Fix a broken or invalid MAL definition</div>
+    <p>Example: "This MAL entity has an invalid relationship reference — fix it." Tests the model's ability to diagnose and correct grammar violations.</p>
+  </div>
+  <div class="card">
+    <div class="ctag">Task Type</div>
+    <div class="card-title">Explain</div>
+    <div class="card-sub">Describe what a given MAL definition does in plain English</div>
+    <p>Example: "What does this MAL workflow describe?" Tests comprehension, not generation — useful for instruction-tuned models.</p>
+  </div>
+  <div class="card">
+    <div class="ctag">Task Type</div>
+    <div class="card-title">Policy</div>
+    <div class="card-sub">Define or reason about MAL access control rules</div>
+    <p>Example: "Add a policy that restricts PlanType changes to admin roles only." Requires understanding MAL's policy block structure and conditions.</p>
+  </div>
+  <div class="card">
+    <div class="ctag">Task Type</div>
+    <div class="card-title">Disambiguate</div>
+    <div class="card-sub">Resolve ambiguous intent into a specific MAL choice</div>
+    <p>Example: "The user said 'track plan changes' — should this be a workflow trigger or an audit policy?" Tests reasoning under ambiguity.</p>
   </div>
 </div>
 
+<h3>Construct Coverage Heatmap</h3>
+<p>MAL has four primary construct families. Each Jinja2 template covers one family. Coverage tracks which task types have templates for which constructs.</p>
+<div class="heatmap">
+  <table>
+    <thead>
+      <tr>
+        <th>Construct</th>
+        <th>Create</th>
+        <th>Modify</th>
+        <th>Repair</th>
+        <th>Explain</th>
+        <th>Policy</th>
+        <th>Disambiguate</th>
+        <th>Template file</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="hm-row-label">Entity</td>
+        <td class="hm-full">Full</td>
+        <td class="hm-full">Full</td>
+        <td class="hm-full">Full</td>
+        <td class="hm-full">Full</td>
+        <td class="hm-part">Part</td>
+        <td class="hm-part">Part</td>
+        <td><code>entity.j2</code></td>
+      </tr>
+      <tr>
+        <td class="hm-row-label">Workflow</td>
+        <td class="hm-full">Full</td>
+        <td class="hm-full">Full</td>
+        <td class="hm-part">Part</td>
+        <td class="hm-full">Full</td>
+        <td class="hm-none">—</td>
+        <td class="hm-part">Part</td>
+        <td><code>workflow.j2</code></td>
+      </tr>
+      <tr>
+        <td class="hm-row-label">Policy</td>
+        <td class="hm-full">Full</td>
+        <td class="hm-part">Part</td>
+        <td class="hm-part">Part</td>
+        <td class="hm-full">Full</td>
+        <td class="hm-full">Full</td>
+        <td class="hm-part">Part</td>
+        <td><code>policy.j2</code></td>
+      </tr>
+      <tr>
+        <td class="hm-row-label">Evolution</td>
+        <td class="hm-none">—</td>
+        <td class="hm-full">Full</td>
+        <td class="hm-full">Full</td>
+        <td class="hm-part">Part</td>
+        <td class="hm-none">—</td>
+        <td class="hm-none">—</td>
+        <td><code>evolution.j2</code></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<p style="font-size:11.5px;color:var(--muted);margin-top:-8px">Full = complete template coverage &nbsp;|&nbsp; Part = partial coverage &nbsp;|&nbsp; — = no template yet</p>
+
+<!-- ═══ S7 — PIPELINE ARCHITECTURE ══════════════════════════════════════= -->
+<h2 id="s7"><span class="snum">7.</span> Pipeline Architecture</h2>
+
 <div class="diagram-box">
-  <div class="diagram-label">Validation Funnel &mdash; Candidate Acceptance Flow</div>
+  <div class="diagram-label">Full 4-Stage Pipeline — Files, APIs &amp; Data Flow</div>
   <div class="mermaid">
 flowchart TD
-    candidate["Generated Candidate"] --> g1["Syntax Check"]
-    g1 --> g2["Schema Check"]
-    g2 --> g3["Policy + Domain Check"]
-    g3 --> g4["Graph Compile Check"]
-    g4 --> g5["Novelty + Duplicate Check"]
-    g5 --> g6["Human Review"]
-    g6 --> accepted["Accepted Registry"]
-    g6 --> rejected["Rejected â€” Reason Logged"]
+  subgraph S1["Stage 1 — Seed Library"]
+    seeds["telecom_v1.jsonl\n50 hand-authored seeds\nGET /api/v1/seed-library/telecom"]
+  end
+  subgraph S2["Stage 2 — Jinja2 Expansion"]
+    jinja["jinja_expand.py\n4 templates · domain pack\nPOST /api/v1/jinja2/expand\n5-10 MAL candidates per seed"]
+  end
+  subgraph S3["Stage 3 — AI Synthesis  (GPT-4o)"]
+    modeA["Mode A — Jinja2-First\nllm_jinja_generate.py\nPOST /api/v1/llm/generate-from-jinja"]
+    modeB["Mode B — Intent-First\nllm_dataset_orchestrator.py\nintent synthesis → MAL generation"]
+  end
+  subgraph S4["Stage 4 — Quality Gate"]
+    val["mal_validation_service.py\n5-stage PEG parser\nmal_repair_service.py\nPOST /api/v1/validate/bulk"]
+  end
+  output["Output\nTraining Registry · Record Browser\nDiversity Metrics · NLD scores"]
+
+  seeds --> jinja
+  jinja --> modeA
+  jinja --> modeB
+  modeA --> val
+  modeB --> val
+  val --> output
+
+  seeddb[("dg_gold_seed_runs\n(seed lifecycle)")]
+  batchdb[("dg_llm_expansion_batches\n(tokens · latency · prompts)")]
+
+  seeds -. "sync" .-> seeddb
+  val   -. "write-back" .-> seeddb
+  modeA -. "batch record" .-> batchdb
+  modeB -. "batch record" .-> batchdb
+  </div>
+</div>
+
+<h3>Stage 1 — Seed Library</h3>
+<p>The grounded starting point for all generated data. Every output record traces back to a human-authored seed. Seeds define an intent, a task type, and a domain — these three fields drive everything downstream.</p>
+<div class="grid-2">
+  <div>
+    <div class="pre-wrap">
+      <div class="pre-header">JSONL — telecom_v1.jsonl (one line = one seed)</div>
+      <pre>{
+  "scenario_id": "seed_00001",
+  "intent":      "Build a subscriber onboarding system",
+  "domain":      "telecom",
+  "type":        "Create"
+}</pre>
+    </div>
+  </div>
+  <div>
+    <ul>
+      <li><strong>50 seeds</strong> in <code>data/seed_scenarios/telecom_v1.jsonl</code></li>
+      <li>Sync API: <code>POST /api/v1/seeds/sync-library</code> — upserts into PostgreSQL</li>
+      <li>Ingest custom: <code>POST /api/v1/seeds/ingest-custom</code></li>
+      <li>DB: <code>dg_gold_seed_runs</code> — one row per seed, full lifecycle</li>
+      <li>Frontend: <code>/seeds</code> — expand, validate, repair, bulk generate</li>
+    </ul>
+  </div>
+</div>
+
+<h3>Stage 2 — Deterministic Jinja2 Expansion</h3>
+<p>Each seed is matched to one or more Jinja2 templates — like mail-merge for code — and filled with domain vocabulary. Output: 5–10 MAL candidates per seed. <strong>Same seed + same domain pack = identical output every time.</strong> No LLM cost.</p>
+<div class="grid-2">
+  <div>
+    <ul>
+      <li>Templates: <code>entity.j2</code>, <code>workflow.j2</code>, <code>policy.j2</code>, <code>evolution.j2</code></li>
+      <li>Domain vocab: <code>pipeline/domain_packs/telecom.json</code></li>
+      <li>Service: <code>jinja_expand.py</code> — domain-agnostic, pure rendering</li>
+      <li>CLI: <code>python pipeline/generate.py</code></li>
+      <li>API: <code>POST /api/v1/jinja2/expand</code></li>
+    </ul>
+  </div>
+  <div>
+    <p><strong>Why deterministic matters:</strong></p>
+    <ul>
+      <li>Bugs are reproducible — same input always gives same output</li>
+      <li>Regression testing is trivial — compare before/after output files</li>
+      <li>No token cost — template rendering is near-instant and free</li>
+      <li>Provides structured context for the LLM in Stage 3 — better than starting from nothing</li>
+      <li>Domain change = swap one JSON file, run again</li>
+    </ul>
+  </div>
+</div>
+
+<h3>Stage 3 — AI Synthesis (Two Modes)</h3>
+<p>Stage 3 is where creative diversity is added. GPT-4o takes the Jinja2-structured inputs and generates new MAL records that follow the grammar but explore a much broader semantic space than templates alone can produce. Two distinct modes are available — choose based on how much novelty you need.</p>
+
+<div class="mode-compare">
+  <div class="mode-card mode-a">
+    <div class="mode-label">Mode A — Jinja2-First</div>
+    <div class="mode-title">Standard generation</div>
+    <ul>
+      <li>Jinja2 candidates used as structured examples for the LLM</li>
+      <li>LLM generates new MAL variants that stay close to template patterns</li>
+      <li>Good for: conservative expansion, high pass rate, faster runs</li>
+      <li>Orchestrator: <code>llm_jinja_generate.py</code></li>
+      <li>Route: <code>POST /api/v1/llm/generate-from-jinja</code></li>
+    </ul>
+  </div>
+  <div class="mode-card mode-b">
+    <div class="mode-label">Mode B — Intent-First</div>
+    <div class="mode-title">Primary AI mode</div>
+    <ul>
+      <li>2-pass: Stage A generates intents, Stage B generates MAL from each intent</li>
+      <li>Every saved record is a fresh (intent, MAL) pair — seed intent never reused</li>
+      <li>Domain-filtered and deduplicated between Stage A and B</li>
+      <li>Failed records retried automatically before discard</li>
+      <li>Orchestrator: <code>llm_dataset_orchestrator.py</code></li>
+    </ul>
   </div>
 </div>
 
 <div class="diagram-box">
-  <div class="diagram-label">Rejection Feedback Loop &mdash; Closed-Loop Pipeline Improvement</div>
+  <div class="diagram-label">Mode B — Intent-First Two-Pass Flow</div>
   <div class="mermaid">
-flowchart LR
-    rejected["Rejected Candidate"] --> reasonLog["Reason Log"]
-    reasonLog --> analysis["Root Cause Analysis"]
-    analysis --> tmplFix["Template Fix"]
-    analysis --> promptFix["Prompt Refinement"]
-    analysis --> seedFix["Seed Review"]
-    tmplFix --> reenter["Re-enter Pipeline"]
-    promptFix --> reenter
-    seedFix --> reenter
+flowchart TD
+  seed["Seed anchor\n(intent + task type + domain)"]
+  jinja_ex["Jinja2 examples\n(Stage 2 output as context)"]
+  stageA["Stage A — Intent Synthesis\nllm_intent_synthesize.py\nLLM generates N intent variants"]
+  filter["Domain filter + deduplication\nRemove off-domain, remove near-duplicates"]
+  stageB["Stage B — MAL from Intent\nllm_mal_from_intent.py\nLLM generates MAL for each intent"]
+  retry["Retry on failure\n(up to N attempts)"]
+  store["Store batch\ndg_llm_expansion_batches\nprompt + output + tokens + latency"]
+  discard["Discard\n(max retries exceeded)"]
+
+  seed --> stageA
+  jinja_ex --> stageA
+  stageA --> filter
+  filter --> stageB
+  stageB --> retry
+  retry -->|still failing| discard
+  stageB -->|success| store
   </div>
 </div>
 
-<h3>10.5 Human Review and Approval</h3>
-<table>
-  <thead><tr><th>Criterion</th><th>Pass Condition</th><th>Reviewer Action if Fail</th></tr></thead>
-  <tbody>
-    <tr><td><strong>MAL syntax validity</strong></td><td>Parser returns zero errors</td><td>Reject &mdash; log syntax error category and source</td></tr>
-    <tr><td><strong>Required fields</strong></td><td>All mandatory construct fields are populated</td><td>Reject &mdash; note which fields are missing</td></tr>
-    <tr><td><strong>Policy compliance</strong></td><td>Domain policy check passes without warnings</td><td>Reject &mdash; flag specific policy violation</td></tr>
-    <tr><td><strong>Graph compile</strong></td><td>Graph compiler accepts the MAL without errors</td><td>Reject &mdash; log compile failure and construct type</td></tr>
-    <tr><td><strong>Novelty</strong></td><td>Cosine similarity to existing registry records &lt; 0.92</td><td>Reject &mdash; mark as near-duplicate</td></tr>
-    <tr><td><strong>Correctness</strong></td><td>Output correctly fulfills the stated user intent</td><td>Correct and re-submit, or reject with correction note</td></tr>
-    <tr><td><strong>Domain accuracy</strong></td><td>All field names, enums, and roles match the approved domain pack</td><td>Correct using domain pack, or reject if drift is significant</td></tr>
-  </tbody>
-</table>
+<p style="margin-top:16px"><strong>Shared controls (both modes):</strong></p>
+<div class="grid-3">
+  <div class="card" style="margin-bottom:0">
+    <div class="ctag">Prompt management</div>
+    <ul style="margin:0">
+      <li>Dry run toggle — preview prompt, no LLM call, zero cost</li>
+      <li>Save prompt for review — stores as <code>preview</code> batch</li>
+      <li>Custom system instructions override</li>
+      <li>Task type filter (select which types to generate)</li>
+    </ul>
+  </div>
+  <div class="card" style="margin-bottom:0">
+    <div class="ctag">Generation controls</div>
+    <ul style="margin:0">
+      <li>Temperature slider</li>
+      <li>Chunk size (Jinja2 candidates per call)</li>
+      <li>Max tokens per completion</li>
+      <li>Context sample size</li>
+    </ul>
+  </div>
+  <div class="card" style="margin-bottom:0">
+    <div class="ctag">Observability (stored per batch)</div>
+    <ul style="margin:0">
+      <li><code>prompt_system</code> + <code>prompt_user</code> — exact text sent</li>
+      <li><code>prompt_tokens</code> + <code>completion_tokens</code></li>
+      <li><code>latency_ms</code> — wall-clock LLM call time</li>
+      <li><code>status</code>: preview / completed / failed</li>
+    </ul>
+  </div>
+</div>
 
+<h3>Stage 4 — Quality Gate</h3>
+<p>Every generated record must pass all 5 validation stages before it enters the training corpus. Validation runs in-process — no external service dependency. Fail at any stage and the record is rejected with the exact rule and line that failed.</p>
+
+<div class="grid-2">
+  <div>
+    <p style="margin-bottom:10px"><strong>5-stage validation pipeline:</strong></p>
+    <div class="ticket-row" style="border-color:rgba(34,197,94,.3)">
+      <span class="tag tag-done" style="min-width:32px;justify-content:center">1</span>
+      <div><strong style="color:var(--text)">Syntax</strong> <span style="color:var(--muted);font-size:11.5px">— Is the MAL parseable by the embedded PEG grammar?</span></div>
+    </div>
+    <div class="ticket-row" style="border-color:rgba(34,197,94,.3)">
+      <span class="tag tag-done" style="min-width:32px;justify-content:center">2</span>
+      <div><strong style="color:var(--text)">Schema</strong> <span style="color:var(--muted);font-size:11.5px">— Do all entity fields have valid types?</span></div>
+    </div>
+    <div class="ticket-row" style="border-color:rgba(34,197,94,.3)">
+      <span class="tag tag-done" style="min-width:32px;justify-content:center">3</span>
+      <div><strong style="color:var(--text)">Policy</strong> <span style="color:var(--muted);font-size:11.5px">— Are policy rules internally consistent?</span></div>
+    </div>
+    <div class="ticket-row" style="border-color:rgba(34,197,94,.3)">
+      <span class="tag tag-done" style="min-width:32px;justify-content:center">4</span>
+      <div><strong style="color:var(--text)">Dependency</strong> <span style="color:var(--muted);font-size:11.5px">— Are all referenced entities defined?</span></div>
+    </div>
+    <div class="ticket-row" style="border-color:rgba(34,197,94,.3)">
+      <span class="tag tag-done" style="min-width:32px;justify-content:center">5</span>
+      <div><strong style="color:var(--text)">Compile check</strong> <span style="color:var(--muted);font-size:11.5px">— Would this compile in the ALM runtime?</span></div>
+    </div>
+  </div>
+  <div>
+    <p style="margin-bottom:10px"><strong>Services and routes:</strong></p>
+    <ul>
+      <li><code>mal_validation_service.py</code> — in-process PEG validator (5 stages)</li>
+      <li><code>mal_repair_service.py</code> — auto-fixes common MAL structural errors</li>
+      <li><code>POST /api/v1/validate/bulk</code> — validate many records, optional DB write-back</li>
+      <li><code>POST /api/v1/validation</code> — validate a single record, self-contained</li>
+    </ul>
+    <h4>Frontend: /validation (Master Validator)</h4>
+    <ul>
+      <li><strong>Batch Browser tab:</strong> select LLM batch or Jinja2 session → validate all records</li>
+      <li><strong>Single Record tab:</strong> load from seeds/Jinja2/LLM/paste → per-stage result tabs</li>
+      <li><strong>All Records tab:</strong> bulk validate all stored Jinja2 or LLM output</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══ S7b — FRONTEND INTERFACE ══════════════════════════════════════════ -->
+<h2 id="s7b"><span class="snum">7b.</span> Frontend Interface &amp; Pages</h2>
+
+<p>The frontend is a React/TypeScript/Vite SPA. All navigation is client-side — no full page reloads. Data fetching is handled by TanStack Query with automatic caching and refetching. The sidebar is fixed-position and does not scroll with the page content.</p>
+
+<h3>Wired Routes (accessible by navigation)</h3>
+<div class="tbl-wrap">
+  <table class="std">
+    <thead>
+      <tr><th>Route</th><th>Page</th><th>What it does</th><th>Key features</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>/demo</code></td>
+        <td>Demo Mode</td>
+        <td>Guided entry point — explains pipeline visually</td>
+        <td>Stage strip with links, stage cards with "Open console" buttons, telecom domain pack description</td>
+      </tr>
+      <tr>
+        <td><code>/</code></td>
+        <td>Overview</td>
+        <td>Full pipeline summary at a glance</td>
+        <td>4 story tiles (seeds → variants → LLM → validated), pipeline timeline widget, stat cards, distribution charts</td>
+      </tr>
+      <tr>
+        <td><code>/seeds</code></td>
+        <td>Seed Library</td>
+        <td>Stage 1 console — view, generate, validate, repair seeds</td>
+        <td>Table with expand-row (MAL viewer + 5-stage breakdown), search/filter, row-level Generate, bulk Generate/Repair/Delete, BulkProgressBar</td>
+      </tr>
+      <tr>
+        <td><code>/templates</code></td>
+        <td>Deterministic Expansion</td>
+        <td>Stage 2 console — Jinja2 expansion and validation</td>
+        <td>Generate &amp; Validate button, variant list with construct badges, expand → MAL text, export JSONL, AI Synthesis handoff button</td>
+      </tr>
+      <tr>
+        <td><code>/llm</code></td>
+        <td>AI Synthesis</td>
+        <td>Stage 3 console — LLM generation and batch management</td>
+        <td>Seed Status grid, Generate card with all controls, Recent Batches table, batch expand (Records / Prompt / Raw JSON tabs), dry run, Synthesize All Seeds bulk mode</td>
+      </tr>
+      <tr>
+        <td><code>/validation</code></td>
+        <td>Quality Gate</td>
+        <td>Stage 4 console — validate any batch or record</td>
+        <td>Batch Browser (LLM Batches / Jinja2 Sessions sub-tabs), Single Record tab with per-stage results, All Records bulk validation</td>
+      </tr>
+      <tr>
+        <td><code>/registry</code></td>
+        <td>Training Registry</td>
+        <td>Summary view of all validated records</td>
+        <td>Distribution charts (by type + domain), filters, table with source badge, Export JSON, Demo Report (markdown download)</td>
+      </tr>
+      <tr>
+        <td><code>/records</code></td>
+        <td>Record Browser</td>
+        <td>Per-record view of validated MAL</td>
+        <td>Type filter, search, RecordCard with MAL viewer, canonical JSON dialog</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h3>Built but Not Yet Wired (routes missing from App.tsx)</h3>
+<div class="callout warn">
+  <div class="callout-icon">⚠️</div>
+  <p>These three pages are fully built and functional but their routes are not registered in <code>frontend/src/App.tsx</code>. Clicking sidebar links to these pages will 404 (redirect to <code>/</code>). Each is a one-line fix to wire.</p>
+</div>
+<div class="tbl-wrap">
+  <table class="std">
+    <thead><tr><th>Route</th><th>Page file</th><th>What it shows</th><th>Fix needed</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>/diversity</code></td>
+        <td><code>DiversityPage.tsx</code></td>
+        <td>NLD diversity metrics — 4 gauge cards, comparison table, bar charts per stage transition. Data available via <code>GET /api/v1/diversity/metrics</code>.</td>
+        <td>Add route to App.tsx</td>
+      </tr>
+      <tr>
+        <td><code>/runs</code></td>
+        <td><code>RunsPage.tsx</code></td>
+        <td>Pipeline run history — all seed run records from <code>dg_gold_seed_runs</code></td>
+        <td>Add route to App.tsx</td>
+      </tr>
+      <tr>
+        <td><code>/runs/:id</code></td>
+        <td><code>RunDetailPage.tsx</code></td>
+        <td>Detail view for a single pipeline run</td>
+        <td>Add route to App.tsx</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══ S8 — STAGE 2 RATIONALE & TRANSITION ══════════════════════════════ -->
+<h2 id="s8"><span class="snum">8.</span> Stage 2 Rationale &amp; Transition</h2>
+
+<div class="oi">
+  <div class="oi-icon">💡</div>
+  <div class="oi-body">
+    <strong>Jinja2 was the right first choice.</strong> It gave the pipeline deterministic structure, low cost, easy debugging, and a reproducible baseline — all without LLM involvement. But as the system grows toward multiple domains and production-grade generation, Jinja2's fixed-template model becomes the bottleneck.
+  </div>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="ctag">Why Jinja2 was right at Stage 1</div>
+    <ul>
+      <li>Zero LLM cost — template rendering is instant and free</li>
+      <li>Deterministic output — same input always gives same result</li>
+      <li>Easy to debug — template fill is transparent, no black box</li>
+      <li>Provides structured context for Stage 3 — better LLM output than zero-shot</li>
+      <li>Proved the pipeline worked before spending tokens</li>
+      <li>Domain change = swap one JSON vocabulary file</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="ctag">Why Jinja2 becomes a bottleneck</div>
+    <ul>
+      <li>Coverage is fixed — new MAL structures require new template files</li>
+      <li>All variants from the same template look structurally similar — low structural diversity</li>
+      <li>Adding a new domain means authoring 3–4 template files from scratch</li>
+      <li>Cannot generate novel structural combinations — fills slots, does not invent</li>
+      <li>LLM in Stage 3 ends up "correcting" template patterns instead of exploring</li>
+      <li>Guidelines (which patterns to prefer) are baked implicitly into templates — not explicit</li>
+    </ul>
+  </div>
+</div>
+
+<div class="callout info">
+  <div class="callout-icon">🔬</div>
+  <p><strong>RE-476 research goal:</strong> Find a replacement for Stage 2 that is <em>domain-agnostic in engine code</em> but <em>domain-aware in behavior</em> — using a Grammar + Domain Pack + Guidelines plugin contract. When a domain is plugged in, the system generates output that is structurally correct, semantically meaningful, and contextually smart. See Part III for the full research framing.</p>
+</div>
