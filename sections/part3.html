@@ -7,9 +7,16 @@
   </div>
 </div>
 
-<!-- ═══ S11 — JINJA2 REPLACEMENT RESEARCH ════════════════════════════════ -->
-<h2 id="s11"><span class="snum">11.</span> Jinja2 Replacement Research <span class="tag tag-wip" style="font-size:11px;vertical-align:middle">RE-476 — In Research</span></h2>
+<!-- TL;DR -->
+<div class="tldr"><strong>TL;DR</strong> Two open research questions: what smarter system should replace Jinja2 at Stage 2, and how should the LLM stage evolve from a prototype to production-grade. Both are actively being researched under ticket RE-474.</div>
 
+<!-- ═══ S11 — JINJA2 REPLACEMENT RESEARCH ════════════════════════════════ -->
+<h2 id="s11"><span class="snum">11.</span> Stage 2 Upgrade — Moving Beyond Templates <span class="tag tag-wip" style="font-size:11px;vertical-align:middle">RE-476 — In Research</span></h2>
+
+<div class="callout warn" style="margin-bottom:14px">
+  <div class="callout-icon">⚠️</div>
+  <p><strong>The problem in one sentence:</strong> Jinja2 templates are rigid — adding a new MAL construct or domain means manually writing a new template file, which doesn't scale and bakes domain logic into code.</p>
+</div>
 <div class="oi">
   <div class="oi-icon">🎯</div>
   <div class="oi-body">
@@ -18,6 +25,10 @@
 </div>
 
 <h3>The Plugin Contract — What Any Solution Must Support</h3>
+<div class="callout info" style="margin-bottom:12px">
+  <div class="callout-icon">💡</div>
+  <p>Grammar = rules the language must follow. Domain Pack = the vocabulary of names and values for a specific industry. Guidelines = style instructions that make output smart, not just valid. Any replacement for Jinja2 must consume all three as data — no code changes per domain.</p>
+</div>
 <div class="plugin-contract">
   <div class="pc-label">Domain Plugin — 3 Artefacts an Author Writes</div>
   <div class="pc-row">
@@ -165,12 +176,16 @@
 </div>
 
 <!-- ═══ S12 — PRODUCTION-GRADE LLM ARCHITECTURE ═══════════════════════════ -->
-<h2 id="s12"><span class="snum">12.</span> Production-Grade LLM Architecture <span class="tag tag-wip" style="font-size:11px;vertical-align:middle">RE-477 — In Research</span></h2>
+<h2 id="s12"><span class="snum">12.</span> Making AI Synthesis Smarter — Research Agenda <span class="tag tag-wip" style="font-size:11px;vertical-align:middle">RE-477 — In Research</span></h2>
 
+<div class="callout warn" style="margin-bottom:14px">
+  <div class="callout-icon">⚠️</div>
+  <p><strong>The problem in one sentence:</strong> The current LLM stage runs once, uses a static prompt, and scores output with a single signal (string edit distance) — it cannot learn from its own quality results or adjust between runs.</p>
+</div>
 <div class="oi">
   <div class="oi-icon">🏗️</div>
   <div class="oi-body">
-    <strong>Goal:</strong> Evolve Stage 3 from a useful prototype (single-pass, static prompt, NLD-only quality) to a production-grade data generation service (quality-gated loops, multi-signal scoring, cost visibility, operator observability). "Production-grade" for this project does not mean infinite scale — it means <em>adaptive, observable, and reliably improving</em>.
+    <strong>Goal:</strong> Evolve Stage 3 from a useful prototype (single-pass, static prompt, NLD-only quality) to a production-grade data generation service (quality-gated loops, multi-signal scoring, cost visibility, operator observability). "Production-grade" here does not mean infinite scale — it means <em>adaptive, observable, and reliably improving</em>.
   </div>
 </div>
 

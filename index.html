@@ -46,6 +46,7 @@
 
 <div id="read-progress"></div>
 <button id="back-top" aria-label="Back to top">&#8679;</button>
+<button id="theme-toggle" aria-label="Toggle light/dark mode" title="Toggle light/dark mode">☀️</button>
 
 <div class="page">
 
@@ -54,9 +55,12 @@
     <div class="eyebrow">Phase 2 — Living Technical Report &mdash; v5.0</div>
     <h1>ALM Synthetic Data Pipeline<br /><span>Engineering &amp; Architecture Blueprint</span></h1>
     <div class="sub">
-      An end-to-end MAL training data factory — from hand-authored seed scenarios through
-      deterministic Jinja2 expansion and Intent-First LLM synthesis, gated by a 5-stage
-      MAL quality validator, into a browsable training registry.
+      A synthetic training data factory for MAL — the formal language powering the ALM platform.
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin:14px auto 20px;max-width:560px;font-size:13px;color:var(--text-2)">
+      <span style="display:flex;align-items:center;gap:7px"><span style="color:var(--brand);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.08em">What</span> 50 hand-authored seeds → auto-generated MAL training records</span>
+      <span style="display:flex;align-items:center;gap:7px"><span style="color:var(--brand);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.08em">How</span> Seeds → Jinja2 expansion → GPT-4o synthesis → 5-stage quality gate</span>
+      <span style="display:flex;align-items:center;gap:7px"><span style="color:var(--brand);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.08em">Why</span> So ALM can fine-tune on structurally correct, domain-rich MAL examples</span>
     </div>
     <div class="meta">
       <span class="brand">Project: ALM / MAL</span>
@@ -186,32 +190,32 @@
     <div class="toc-cols">
       <div class="toc-col">
         <div>
-          <div class="toc-group-head">Part I &mdash; Current State</div>
+          <div class="toc-group-head">Part I &mdash; Current State <span style="font-weight:400;color:var(--muted);font-size:10px;text-transform:none;letter-spacing:0">— Everything is built and live. Research is next.</span></div>
           <a class="toc-pill" href="#s1"><span class="toc-num">1.</span>Executive Summary</a>
           <a class="toc-pill" href="#s2"><span class="toc-num">2.</span>Live System Dashboard</a>
           <a class="toc-pill" href="#s3"><span class="toc-num">3.</span>Next Steps &amp; Research Agenda</a>
         </div>
         <div>
-          <div class="toc-group-head">Part III &mdash; Research Direction</div>
-          <a class="toc-pill" href="#s11"><span class="toc-num">11.</span>Jinja2 Replacement Research</a>
-          <a class="toc-pill" href="#s12"><span class="toc-num">12.</span>Production-Grade LLM Architecture</a>
+          <div class="toc-group-head">Part III &mdash; Research Direction <span style="font-weight:400;color:var(--muted);font-size:10px;text-transform:none;letter-spacing:0">— Two open questions: what replaces Jinja2, how to make LLM smarter.</span></div>
+          <a class="toc-pill" href="#s11"><span class="toc-num">11.</span>Stage 2 Upgrade — Moving Beyond Templates</a>
+          <a class="toc-pill" href="#s12"><span class="toc-num">12.</span>Making AI Synthesis Smarter — Research Agenda</a>
         </div>
       </div>
       <div class="toc-col">
         <div>
-          <div class="toc-group-head">Part II &mdash; Pipeline Deep Dive</div>
+          <div class="toc-group-head">Part II &mdash; Pipeline Deep Dive <span style="font-weight:400;color:var(--muted);font-size:10px;text-transform:none;letter-spacing:0">— Exactly how each stage works and which files run it.</span></div>
           <a class="toc-pill" href="#s6"><span class="toc-num">6.</span>Task Coverage &amp; Construct Map</a>
           <a class="toc-pill" href="#s7"><span class="toc-num">7.</span>Pipeline Architecture</a>
           <a class="toc-pill" href="#s7b"><span class="toc-num">7b.</span>Frontend Interface &amp; Pages</a>
           <a class="toc-pill" href="#s8"><span class="toc-num">8.</span>Stage 2 Rationale &amp; Transition</a>
         </div>
         <div>
-          <div class="toc-group-head">Part IV &mdash; Engineering Reference</div>
+          <div class="toc-group-head">Part IV &mdash; Engineering Reference <span style="font-weight:400;color:var(--muted);font-size:10px;text-transform:none;letter-spacing:0">— APIs, schemas, services, tests — for reference.</span></div>
           <a class="toc-pill" href="#s13b"><span class="toc-num">13b.</span>API Quick Reference</a>
           <a class="toc-pill" href="#s14"><span class="toc-num">14.</span>Data Schemas &amp; Services</a>
         </div>
         <div>
-          <div class="toc-group-head">Part V &mdash; Roadmap &amp; Glossary</div>
+          <div class="toc-group-head">Part V &mdash; Roadmap &amp; Glossary <span style="font-weight:400;color:var(--muted);font-size:10px;text-transform:none;letter-spacing:0">— Where we are headed and what terms mean.</span></div>
           <a class="toc-pill" href="#s18"><span class="toc-num">18.</span>Roadmap</a>
           <a class="toc-pill" href="#s22"><span class="toc-num">22.</span>Glossary</a>
           <a class="toc-pill" href="#s21"><span class="toc-num">21.</span>Changelog</a>

@@ -7,6 +7,9 @@
   </div>
 </div>
 
+<!-- TL;DR -->
+<div class="tldr"><strong>TL;DR</strong> Here is exactly how each pipeline stage works, which files run it, what the frontend looks like, and why Jinja2 is being reconsidered.</div>
+
 <!-- ═══ S6 — TASK COVERAGE & CONSTRUCT MAP ═══════════════════════════════ -->
 <h2 id="s6"><span class="snum">6.</span> Task Coverage &amp; Construct Map</h2>
 
@@ -141,7 +144,7 @@ flowchart LR
 </div>
 
 <h3>Stage 1 — Seed Library</h3>
-<p>The seed library is the grounded starting point for all generated data. Every output record traces back to a human-authored seed scenario. Seeds define intent, task type, and domain — these three fields drive everything downstream.</p>
+<p>The seed library is the grounded starting point for all generated data. Every output record traces back to a human-authored seed scenario. Seeds define an intent, a task type, and a domain — these three fields drive everything downstream. Think of each seed as a single exam question that the factory must answer in many creative ways.</p>
 <div class="grid-2">
   <div>
     <h4>Seed schema</h4>
@@ -169,7 +172,7 @@ flowchart LR
 </div>
 
 <h3>Stage 2 — Deterministic Jinja2 Expansion</h3>
-<p>Each seed is matched to one or more Jinja2 templates and filled with vocabulary from the domain pack. The output is 5–10 MAL candidate strings. Same seed + same domain pack = same output every time. No LLM involved.</p>
+<p>Each seed is matched to one or more Jinja2 templates — think of it as mail-merge for code — and filled with vocabulary from the domain pack. The output is 5–10 MAL candidate strings. <strong>Same seed + same domain pack = same output every time.</strong> No LLM involved, no token cost. These candidates feed Stage 3 as structured examples.</p>
 <div class="grid-2">
   <div>
     <h4>How it works</h4>
@@ -194,7 +197,7 @@ flowchart LR
 </div>
 
 <h3>Stage 3 — AI Synthesis (Two Modes)</h3>
-<p>Stage 3 is where creative diversity is added. The LLM takes structured inputs and generates new MAL records that follow the grammar but explore a broader space than templates alone. Two modes are available.</p>
+<p>Stage 3 is where creative diversity is added. GPT-4o takes the Jinja2-structured inputs and generates new MAL records that follow the grammar but explore a much broader semantic space than templates alone can produce. Two distinct modes are available — choose based on how much novelty you need.</p>
 
 <div class="mode-compare">
   <div class="mode-card mode-a">

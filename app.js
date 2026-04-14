@@ -288,7 +288,50 @@ function initH3Toggles() {
   });
 }
 
+/* ── Theme toggle ─────────────────────────────────────────────────────────── */
+function getMermaidVars(theme) {
+  return theme === 'light'
+    ? { primaryColor:'#ededf5', primaryTextColor:'#111128', primaryBorderColor:'#d0d0e4',
+        lineColor:'#6040e8', secondaryColor:'#f4f4fa', tertiaryColor:'#ffffff',
+        tertiaryTextColor:'#30305a', edgeLabelBackground:'#ededf5',
+        clusterBkg:'#f4f4fa', clusterBorder:'#d0d0e4', fontSize:'12.5px' }
+    : { primaryColor:'#1c1c24', primaryTextColor:'#f0f0f5', primaryBorderColor:'#2a2a36',
+        lineColor:'#7c5cff', secondaryColor:'#141418', tertiaryColor:'#0d0d10',
+        tertiaryTextColor:'#c4c4d4', edgeLabelBackground:'#1c1c24',
+        clusterBkg:'#141418', clusterBorder:'#2a2a36', fontSize:'12.5px' };
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('alm-theme', theme);
+  const btn = document.getElementById('theme-toggle');
+  if (btn) btn.textContent = theme === 'light' ? '🌙' : '☀️';
+  if (typeof mermaid !== 'undefined') {
+    mermaid.initialize({ startOnLoad: false, theme: 'base',
+      themeVariables: getMermaidVars(theme), flowchart: { curve: 'basis', padding: 20 } });
+    document.querySelectorAll('.mermaid').forEach(el => {
+      const src = el.getAttribute('data-mermaid-src') || el.textContent;
+      el.setAttribute('data-mermaid-src', src);
+      el.removeAttribute('data-processed');
+      el.innerHTML = src;
+    });
+    mermaid.init(undefined, '.mermaid');
+  }
+}
+
+function initThemeToggle() {
+  const btn = document.getElementById('theme-toggle');
+  if (!btn) return;
+  const saved = localStorage.getItem('alm-theme') || 'dark';
+  applyTheme(saved);
+  btn.addEventListener('click', () => {
+    const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+    applyTheme(cur === 'dark' ? 'light' : 'dark');
+  });
+}
+
 /* ── Kick off ─────────────────────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
+  initThemeToggle();
   loadSections();
 });

@@ -10,7 +10,16 @@
 <!-- ═══ S13b — API QUICK REFERENCE ══════════════════════════════════════= -->
 <h2 id="s13b"><span class="snum">13b.</span> API Quick Reference</h2>
 
-<p>FastAPI backend at <code>http://localhost:8010</code> (Docker). Interactive docs at <code>/docs</code> (OpenAPI) and <code>/redoc</code>. All routes below are mounted and reachable. <code>pipeline.py</code> defines <code>GET /pipeline/stats</code> but is <strong>not mounted</strong> in <code>main.py</code>.</p>
+<div class="tldr"><strong>TL;DR</strong> 23 endpoints, all mounted. FastAPI at <code>localhost:8010</code>, interactive docs at <code>/docs</code>. Grouped below by the pipeline workflow step they belong to.</div>
+
+<p style="font-size:12.5px;color:var(--muted);margin-bottom:20px"><code>pipeline.py</code> defines <code>GET /pipeline/stats</code> but is <strong>not mounted</strong> in <code>main.py</code> — do not call it.</p>
+
+<!-- Step 1 -->
+<div class="workflow-step">
+  <span class="ws-num">Step 1</span>
+  <span class="ws-title">Load &amp; Manage Seeds</span>
+  <span class="ws-desc">— Browse the seed library, sync seeds to the database, manage lifecycle records</span>
+</div>
 
 <h3>Health</h3>
 <div class="tbl-wrap">
@@ -27,9 +36,9 @@
   <table class="std">
     <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
     <tbody>
-      <tr><td><span class="method get">GET</span></td><td><code>/api/v1/seed-library/telecom</code></td><td>Returns full seed library from disk (<code>telecom_v1.jsonl</code>). Used by /seeds frontend page.</td></tr>
-      <tr><td><span class="method post">POST</span></td><td><code>/api/v1/seeds/sync-library</code></td><td>Upserts all disk seeds into <code>dg_gold_seed_runs</code>. Idempotent — safe to run multiple times.</td></tr>
-      <tr><td><span class="method post">POST</span></td><td><code>/api/v1/seeds/ingest-custom</code></td><td>Adds a user-defined seed to the library. Source tagged as <code>custom</code> (vs <code>library</code>).</td></tr>
+      <tr><td><span class="method get">GET</span></td><td><code>/api/v1/seed-library/telecom</code></td><td>Returns full seed library from disk. Used by the /seeds frontend page.</td></tr>
+      <tr><td><span class="method post">POST</span></td><td><code>/api/v1/seeds/sync-library</code></td><td>Upserts all disk seeds into the database. Idempotent — safe to run multiple times.</td></tr>
+      <tr><td><span class="method post">POST</span></td><td><code>/api/v1/seeds/ingest-custom</code></td><td>Adds a user-defined seed to the library. Source tagged as <code>custom</code> vs <code>library</code>.</td></tr>
     </tbody>
   </table>
 </div>
@@ -40,11 +49,18 @@
     <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
     <tbody>
       <tr><td><span class="method get">GET</span></td><td><code>/api/v1/seed-runs</code></td><td>List all seed run records from <code>dg_gold_seed_runs</code></td></tr>
-      <tr><td><span class="method get">GET</span></td><td><code>/api/v1/seed-runs/by-scenario/{scenario_id}</code></td><td>Get the run record for a specific seed by scenario ID</td></tr>
+      <tr><td><span class="method get">GET</span></td><td><code>/api/v1/seed-runs/by-scenario/{scenario_id}</code></td><td>Get the run record for a specific seed by ID</td></tr>
       <tr><td><span class="method put">PUT</span></td><td><code>/api/v1/seed-runs/{scenario_id}</code></td><td>Update a seed run record (e.g. after validation)</td></tr>
       <tr><td><span class="method del">DELETE</span></td><td><code>/api/v1/seed-runs/{scenario_id}</code></td><td>Delete a seed run record</td></tr>
     </tbody>
   </table>
+</div>
+
+<!-- Step 2 -->
+<div class="workflow-step">
+  <span class="ws-num">Step 2</span>
+  <span class="ws-title">Expand — Deterministic Jinja2</span>
+  <span class="ws-desc">— Turn one seed into 5–10 MAL template candidates via Jinja2 + domain pack</span>
 </div>
 
 <h3>Seeds Console (Generate / Repair)</h3>
@@ -53,14 +69,14 @@
     <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
     <tbody>
       <tr><td><span class="method post">POST</span></td><td><code>/api/v1/seeds-console/generate</code></td><td>Generate MAL for a single seed via LLM. Requires <code>seed_id</code> and <code>intent</code> in body.</td></tr>
-      <tr><td><span class="method post">POST</span></td><td><code>/api/v1/seeds-console/repair</code></td><td>Auto-repair a failed MAL record using <code>mal_repair_service.py</code></td></tr>
-      <tr><td><span class="method post">POST</span></td><td><code>/api/v1/seeds-console/bulk-generate</code></td><td>Bulk generate MAL for multiple seeds. Streams progress via the BulkProgressBar widget.</td></tr>
-      <tr><td><span class="method post">POST</span></td><td><code>/api/v1/seeds-console/bulk-repair</code></td><td>Bulk repair all failed seeds in one call</td></tr>
+      <tr><td><span class="method post">POST</span></td><td><code>/api/v1/seeds-console/repair</code></td><td>Auto-repair a failed MAL record. No LLM call — uses structural repair rules.</td></tr>
+      <tr><td><span class="method post">POST</span></td><td><code>/api/v1/seeds-console/bulk-generate</code></td><td>Bulk generate MAL for multiple seeds. Streams progress via BulkProgressBar widget.</td></tr>
+      <tr><td><span class="method post">POST</span></td><td><code>/api/v1/seeds-console/bulk-repair</code></td><td>Bulk repair all failed seeds in one call.</td></tr>
     </tbody>
   </table>
 </div>
 
-<h3>Stage 2 — Jinja2 Expansion</h3>
+<h3>Jinja2 Expansion</h3>
 <div class="tbl-wrap">
   <table class="std">
     <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
@@ -70,29 +86,43 @@
   </table>
 </div>
 
-<h3>Stage 3 — LLM Expansion</h3>
+<!-- Step 3 -->
+<div class="workflow-step">
+  <span class="ws-num">Step 3</span>
+  <span class="ws-title">Synthesize — AI Generation</span>
+  <span class="ws-desc">— GPT-4o generates diverse MAL records in Jinja2-First or Intent-First mode</span>
+</div>
+
+<h3>LLM Expansion</h3>
 <div class="tbl-wrap">
   <table class="std">
     <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
     <tbody>
-      <tr><td><span class="method post">POST</span></td><td><code>/api/v1/llm/expand</code></td><td>Core LLM expansion — generates MAL variants from a seed scenario. Supports <code>dry_run</code> flag.</td></tr>
+      <tr><td><span class="method post">POST</span></td><td><code>/api/v1/llm/expand</code></td><td>Core LLM expansion — generates MAL variants from a seed. Supports <code>dry_run</code> flag to preview prompt for free.</td></tr>
       <tr><td><span class="method post">POST</span></td><td><code>/api/v1/llm/generate-from-jinja</code></td><td>Jinja2-First mode — uses Jinja2 candidates as LLM examples. Minimum <code>chunk_size: 3</code>.</td></tr>
-      <tr><td><span class="method post">POST</span></td><td><code>/api/v1/llm/generate-from-database</code></td><td>Generates from stored database records. Used for catalog-level batch generation.</td></tr>
-      <tr><td><span class="method post">POST</span></td><td><code>/api/v1/llm/batches/{batch_id}/execute</code></td><td>Execute a stored preview batch (status: preview → completed)</td></tr>
-      <tr><td><span class="method post">POST</span></td><td><code>/api/v1/llm/execute-latest-preview</code></td><td>Execute the most recent preview batch for a scenario</td></tr>
-      <tr><td><span class="method get">GET</span></td><td><code>/api/v1/llm/expansions</code></td><td>List all LLM expansion batches from <code>dg_llm_expansion_batches</code></td></tr>
-      <tr><td><span class="method get">GET</span></td><td><code>/api/v1/llm/expansions/{batch_id}</code></td><td>Get a specific batch by ID — includes prompt, items, tokens, latency</td></tr>
+      <tr><td><span class="method post">POST</span></td><td><code>/api/v1/llm/generate-from-database</code></td><td>Generates from stored database records — used for catalog-level batch generation.</td></tr>
+      <tr><td><span class="method post">POST</span></td><td><code>/api/v1/llm/batches/{batch_id}/execute</code></td><td>Execute a stored preview batch (status: preview → completed).</td></tr>
+      <tr><td><span class="method post">POST</span></td><td><code>/api/v1/llm/execute-latest-preview</code></td><td>Execute the most recent preview batch for a scenario.</td></tr>
+      <tr><td><span class="method get">GET</span></td><td><code>/api/v1/llm/expansions</code></td><td>List all LLM batches — includes status, token counts, latency per batch.</td></tr>
+      <tr><td><span class="method get">GET</span></td><td><code>/api/v1/llm/expansions/{batch_id}</code></td><td>Get a specific batch — full prompt, output items, tokens, latency.</td></tr>
     </tbody>
   </table>
 </div>
 
-<h3>Stage 4 — Validation</h3>
+<!-- Step 4 -->
+<div class="workflow-step">
+  <span class="ws-num">Step 4</span>
+  <span class="ws-title">Validate, Browse &amp; Measure</span>
+  <span class="ws-desc">— Gate records through the 5-stage MAL validator and check corpus diversity</span>
+</div>
+
+<h3>Validation</h3>
 <div class="tbl-wrap">
   <table class="std">
     <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
     <tbody>
       <tr><td><span class="method post">POST</span></td><td><code>/api/v1/validate/bulk</code></td><td>Validate many MAL records in one call. Optional DB write-back of results. Returns per-record stage breakdown.</td></tr>
-      <tr><td><span class="method post">POST</span></td><td><code>/api/v1/validation</code></td><td>Validate a single MAL record. Self-contained — no DB dependency. Used by single-record tab in /validation page.</td></tr>
+      <tr><td><span class="method post">POST</span></td><td><code>/api/v1/validation</code></td><td>Validate a single MAL record. Self-contained — no DB dependency. Used by the single-record tab in /validation.</td></tr>
     </tbody>
   </table>
 </div>
@@ -102,7 +132,7 @@
   <table class="std">
     <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
     <tbody>
-      <tr><td><span class="method get">GET</span></td><td><code>/api/v1/diversity/metrics</code></td><td>NLD diversity scores across all pipeline transitions. 120s TTL cache. Use <code>?refresh=true</code> to force recompute. Returns seed→Jinja2, Jinja2→LLM, intra-Jinja2, intra-LLM NLD scores.</td></tr>
+      <tr><td><span class="method get">GET</span></td><td><code>/api/v1/diversity/metrics</code></td><td>NLD diversity scores across all pipeline transitions. 120s TTL cache. Use <code>?refresh=true</code> to force recompute. High NLD = more useful training data.</td></tr>
     </tbody>
   </table>
 </div>

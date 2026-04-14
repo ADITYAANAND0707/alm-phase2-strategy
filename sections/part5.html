@@ -7,6 +7,9 @@
   </div>
 </div>
 
+<!-- TL;DR -->
+<div class="tldr"><strong>TL;DR</strong> Stages 1–4 are done. Roadmap is now research-first: understand what to build before building it. Glossary at the end explains every term used in this document.</div>
+
 <!-- ═══ S18 — ROADMAP ════════════════════════════════════════════════════ -->
 <h2 id="s18"><span class="snum">18.</span> Roadmap</h2>
 
@@ -21,33 +24,32 @@
 <div class="roadmap">
   <div class="rm-col">
     <div class="rm-label now">Completed — RE-475</div>
-    <div class="rm-item">Full codebase audit against working tree (routes, services, DB schema, frontend routes)</div>
+    <div style="font-size:11px;color:var(--ok);margin-bottom:10px;padding:6px 10px;background:var(--ok-bg);border-radius:4px">Unlocks: clean verified baseline for all future work</div>
+    <div class="rm-item">Full codebase audit against working tree</div>
     <div class="rm-item">7 integration test modules — first test coverage in project</div>
-    <div class="rm-item">Fixed 4 real backend bugs discovered by test suite</div>
-    <div class="rm-item">TTL cache on diversity metrics endpoint (was timing out)</div>
-    <div class="rm-item">MAL repair service for auto-fixing common validation failures</div>
-    <div class="rm-item">Refreshed all <code>docs/research/</code> files (correct routes, services, seed count)</div>
-    <div class="rm-item">Created TICKET_RE474_RESEARCH.md with structured research prompts</div>
-    <div class="rm-item">Handoff doc for team: HANDOFF_UI_BACKEND_ADITYA.md</div>
-    <div class="rm-item">Frontend fixes: SPA navigation (<code>&lt;a&gt;</code> → <code>&lt;Link&gt;</code>), React key warnings, error states, dynamic seed count</div>
-    <div class="rm-item">Sidebar: fixed-position, collapsible secondary nav, Metafore styling</div>
+    <div class="rm-item">Fixed 4 real backend bugs found by tests</div>
+    <div class="rm-item">TTL cache on diversity endpoint (was timing out)</div>
+    <div class="rm-item">MAL repair service — auto-fix before re-validate</div>
+    <div class="rm-item">Refreshed all <code>docs/research/</code> files</div>
+    <div class="rm-item">Frontend: SPA navigation, React key warnings, error states</div>
+    <div class="rm-item">Sidebar: fixed position, collapsible nav, Metafore styling</div>
   </div>
   <div class="rm-col">
     <div class="rm-label next">In Research — RE-476 &amp; RE-477</div>
-    <div class="rm-item">RE-476: Research Jinja2 Stage 2 replacement approaches</div>
-    <div class="rm-item">Candidates: PCFG / Earley grammar sampler, Outlines constrained LLM, DSPY, hybrid</div>
-    <div class="rm-item">Success criteria: Grammar + Domain Pack + Guidelines plugin contract satisfied</div>
-    <div class="rm-item">RE-477: Research production-grade LLM expansion architecture</div>
-    <div class="rm-item">Focus: quality-gated loops, multi-signal scoring beyond NLD, cost visibility, observability</div>
-    <div class="rm-item">Context files ready in <code>docs/research/</code> for LLM-assisted research</div>
+    <div style="font-size:11px;color:var(--warn);margin-bottom:10px;padding:6px 10px;background:var(--warn-bg);border-radius:4px">Unlocks: evidence-based architecture decision before coding</div>
+    <div class="rm-item">RE-476: Jinja2 Stage 2 replacement approaches (PCFG, Outlines, DSPy, hybrid)</div>
+    <div class="rm-item">Success: Grammar + Domain Pack + Guidelines plugin contract satisfied</div>
+    <div class="rm-item">RE-477: Production-grade LLM expansion — quality loops, multi-signal scoring, cost visibility</div>
+    <div class="rm-item">Context files in <code>docs/research/</code> ready for LLM-assisted research</div>
   </div>
   <div class="rm-col">
     <div class="rm-label later">Planned — RE-478 &amp; RE-479</div>
-    <div class="rm-item">RE-478: Write Architecture Recommendation Doc from RE-476 + RE-477 findings</div>
+    <div style="font-size:11px;color:var(--info);margin-bottom:10px;padding:6px 10px;background:var(--info-bg);border-radius:4px">Unlocks: platform-grade pipeline, second domain ready</div>
+    <div class="rm-item">RE-478: Architecture Recommendation Doc from research findings</div>
     <div class="rm-item">Present to team, get scope approval</div>
     <div class="rm-item">RE-479: Implement approved changes in sprint</div>
-    <div class="rm-item">Quick wins (any time): wire <code>/diversity</code>, <code>/runs</code>, <code>/runs/:id</code> in App.tsx (3 one-line fixes)</div>
-    <div class="rm-item">Quick wins: surface token/cost data from DB into LLM page UI</div>
+    <div class="rm-item">Quick wins: wire <code>/diversity</code>, <code>/runs</code> routes (3 one-line changes)</div>
+    <div class="rm-item">Quick wins: surface token/cost data already in DB into the UI</div>
   </div>
 </div>
 
@@ -87,7 +89,7 @@
 
 <div class="glossary">
   <div class="gl-item">
-    <div class="gl-term">MAL</div>
+    <div class="gl-term">MAL <span style="font-size:10px;font-weight:400;color:var(--muted)">(rhymes with "pal")</span></div>
     <div class="gl-def">Meta Application Language — a formal language for describing software applications as entities, workflows, and policies. The target language of this training data factory.</div>
   </div>
   <div class="gl-item">
@@ -111,11 +113,11 @@
     <div class="gl-def">Stage 3 Mode A — the standard LLM generation strategy where Jinja2 template candidates are used as structured examples in the LLM prompt. LLM generates new MAL variants that stay close to template patterns.</div>
   </div>
   <div class="gl-item">
-    <div class="gl-term">PEG Parser</div>
+    <div class="gl-term">PEG Parser <span style="font-size:10px;font-weight:400;color:var(--muted)">("peg")</span></div>
     <div class="gl-def">Parsing Expression Grammar parser — the embedded MAL grammar validator in <code>mal_validation_service.py</code>. Runs in-process with no external service dependency. Checks 5 sequential stages: syntax → schema → policy → dependency → compile_check.</div>
   </div>
   <div class="gl-item">
-    <div class="gl-term">NLD</div>
+    <div class="gl-term">NLD <span style="font-size:10px;font-weight:400;color:var(--muted)">(say each letter: N-L-D)</span></div>
     <div class="gl-def">Normalised Levenshtein Distance — measures string similarity between 0 (identical) and 1 (completely different). Used by the diversity metrics endpoint to score how varied the generated corpus is. High NLD = more useful training data.</div>
   </div>
   <div class="gl-item">
@@ -143,8 +145,8 @@
     <div class="gl-def">An open-source library (dottxt-ai/outlines) for grammar-constrained LLM generation. Enforces an EBNF grammar at the token level — generated output can only form valid grammar strings. RE-476 research candidate for replacing Jinja2 Stage 2.</div>
   </div>
   <div class="gl-item">
-    <div class="gl-term">DSPY</div>
-    <div class="gl-def">A Stanford framework for declarative LLM programming. Define typed signatures (what output looks like) instead of raw prompts. DSPY optimizes prompts automatically using examples. RE-476 research candidate.</div>
+    <div class="gl-term">DSPy <span style="font-size:10px;font-weight:400;color:var(--muted)">("dee-es-pie")</span></div>
+    <div class="gl-def">A Stanford framework for declarative LLM programming. Define typed signatures (what output looks like) instead of raw prompts. DSPy optimizes prompts automatically using examples. RE-476 research candidate.</div>
   </div>
   <div class="gl-item">
     <div class="gl-term">Fine-tuning</div>
