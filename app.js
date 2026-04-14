@@ -9,12 +9,16 @@ if (typeof mermaid !== 'undefined') {
     startOnLoad: false,
     theme: 'base',
     themeVariables: {
-      primaryColor:       '#ede8ff',
-      primaryTextColor:   '#1b0b47',
-      primaryBorderColor: '#6416ea',
-      lineColor:          '#6416ea',
-      secondaryColor:     '#f5f3fc',
-      tertiaryColor:      '#ffffff',
+      primaryColor:       '#1c1c24',   /* surface-2 */
+      primaryTextColor:   '#f0f0f5',   /* text */
+      primaryBorderColor: '#2a2a36',   /* border */
+      lineColor:          '#7c5cff',   /* brand purple */
+      secondaryColor:     '#141418',   /* surface */
+      tertiaryColor:      '#0d0d10',   /* bg */
+      tertiaryTextColor:  '#c4c4d4',
+      edgeLabelBackground:'#1c1c24',
+      clusterBkg:         '#141418',
+      clusterBorder:      '#2a2a36',
       fontSize:           '12.5px'
     },
     flowchart: { curve: 'basis', padding: 20 }
@@ -55,6 +59,11 @@ function postLoad() {
   /* Re-run mermaid on newly inserted diagrams */
   if (typeof mermaid !== 'undefined') {
     mermaid.init(undefined, '.mermaid');
+  }
+
+  /* Render Lucide icons injected by HTML sections */
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
   }
 
   initReveal();

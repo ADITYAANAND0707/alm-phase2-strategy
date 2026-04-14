@@ -1,124 +1,314 @@
+<!-- ══ PART IV — ENGINEERING REFERENCE ═════════════════════════════════════ -->
 <div class="part-div">
-  <div class="pd-num">Part IV</div>
-  <div class="pd-title">Engineering Standards</div>
-  <div class="pd-desc">Governance practices, data schemas, and contract definitions for the pipeline</div>
-</div>
-
-<!-- 13 -->
-<h2 id="s13">13. Governance &amp; Engineering Standards</h2>
-<table>
-  <thead><tr><th>Method</th><th>Why It Matters</th><th>Recommendation</th></tr></thead>
-  <tbody>
-    <tr><td>Dataset governance</td><td>Prevents silent drift in accepted training data</td><td>Version the dataset, registry, templates, prompts, and model choices separately</td></tr>
-    <tr><td>Decision log</td><td>Helps the team remember why approaches were chosen</td><td>Track confirmed choices, deferred choices, and rationale in the Decision Log (Section 19)</td></tr>
-    <tr><td>Acceptance criteria</td><td>Prevents subjective approvals and inconsistent review quality</td><td>Use the checklist in the Execution Playbook (Section 10.5) &mdash; update as new quality issues emerge</td></tr>
-    <tr><td>Provenance tracking</td><td>Allows every training record to be traced back to seed, template, prompt, and reviewer</td><td>Store origin metadata on every accepted record</td></tr>
-    <tr><td>Failure analysis</td><td>Improves later stages faster than only counting accepted records</td><td>Keep a reject log with reason codes and sample examples</td></tr>
-    <tr><td>Promotion workflow</td><td>Separates draft candidates from trusted registry data</td><td>Use draft, validated, reviewed, accepted, and archived states</td></tr>
-  </tbody>
-</table>
-
-<!-- 14 -->
-<!-- TAG: feature | module:data-schema | impact:high -->
-<h2 id="s14" data-context="feature:data-schema-contracts">14. Data Schemas &amp; Contracts</h2>
-<p>Define these artifacts early so the pipeline stays maintainable from the first record forward.</p>
-
-<h3>14.1 &ndash; 14.3 Schemas Side-by-Side</h3>
-<p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Three artifacts that live at different stages of the pipeline. The <code>record_id</code> format flows through all three: the seed defines the base, the Jinja2 payload produces the variant, and the registry record preserves the full provenance.</p>
-<div class="compare-wrap">
-  <div class="compare-header" style="grid-template-columns:1fr 30px 1fr 30px 1fr;">
-    <div class="ch-left">14.1 Seed Record &mdash; gold source</div>
-    <div class="ch-arrow">&#8594;</div>
-    <div class="ch-right" style="color:var(--accent);">14.2 Jinja2 Payload &mdash; generate.py context</div>
-    <div class="ch-arrow">&#8594;</div>
-    <div class="ch-right">14.3 Registry Record &mdash; accepted</div>
-  </div>
-  <div class="compare-body" style="grid-template-columns:1fr 1fr 1fr;">
-    <div class="compare-panel">
-      <div class="pre-wrap">
-        <div class="pre-header">JSON &mdash; Seed Record</div>
-        <pre>{
-  "record_id": "seed_00001",
-  "type":      "Create",
-  "domain":    "telecom",
-  "input": {
-    "intent": "Build a subscriber
-      onboarding system",
-    "domain_pack":        null,
-    "current_graph":      null,
-    "policy_constraints": []
-  },
-  "output": {
-    "mal":        "application ...",
-    "constructs": ["entity","workflow"],
-    "explanation": null
-  },
-  "metadata": {
-    "source":        "production",
-    "validated":     true,
-    "graph_compiled": true,
-    "quality_score": 0.95
-  }
-}</pre>
-      </div>
-    </div>
-    <div class="compare-panel">
-      <div class="pre-wrap">
-        <div class="pre-header">JSON &mdash; Jinja2 Payload</div>
-        <pre>{
-  "application_name":
-    "OnboardCustomer",
-  "entity_name":
-    "Subscriber",
-  "attributes": [
-    { "name": "address",
-      "type": "STRING" },
-    { "name": "phone",
-      "type": "STRING" }
-  ],
-  "workflow_steps": [
-    "validate_kyc",
-    "verify_otp",
-    "activate_subscriber"
-  ],
-  "policy_name": "KYCPolicy"
-}</pre>
-      </div>
-    </div>
-    <div class="compare-panel">
-      <div class="pre-wrap">
-        <div class="pre-header">JSON &mdash; Registry Record</div>
-        <pre>{
-  "record_id":
-    "seed_00001_j01
-     _entity_subscriber",
-  "origin_type":  "jinja2",
-  "source_seed":  "seed_00001",
-  "validation_status": "passed",
-  "review_status": "accepted",
-  "review_score":  4.7,
-  "domain":        "telecom",
-  "task_type":     "create",
-  "layer":         "L2",
-  "stage":         "jinja2",
-  "generated_at":
-    "2026-04-08T18:44:27Z",
-  "mal_text":
-    "application SubscriberApp ..."
-}</pre>
-      </div>
-    </div>
+  <div>
+    <div class="part-label">Part IV</div>
+    <div class="part-title">Engineering Reference</div>
+    <div class="part-desc">All API endpoints, database schema, service directory, test coverage</div>
   </div>
 </div>
 
-<h3>14.4 Registry Lifecycle</h3>
-<table>
-  <thead><tr><th>Status</th><th>Meaning</th><th>When It Moves Forward</th></tr></thead>
-  <tbody>
-    <tr><td><code>draft</code></td><td>Freshly generated from seed, Jinja2, or LLM</td><td>After automated validation starts</td></tr>
-    <tr><td><code>validated</code></td><td>Passed parser, policy, and compile checks</td><td>After novelty and duplicate review</td></tr>
-    <tr><td><code>reviewed</code></td><td>Seen by a reviewer and scored</td><td>After acceptance decision</td></tr>
-    <tr><td><code>accepted</code></td><td>Approved for registry use</td><td>Available for prompting, evaluation, and later adaptation</td></tr>
-    <tr><td><code>archived</code></td><td>Kept for history but not active for current usage</td><td>When records are replaced or superseded</td></tr>
-  </tbody>
-</table>
+<!-- ═══ S13b — API QUICK REFERENCE ══════════════════════════════════════= -->
+<h2 id="s13b"><span class="snum">13b.</span> API Quick Reference</h2>
+
+<p>FastAPI backend at <code>http://localhost:8010</code> (Docker). Interactive docs at <code>/docs</code> (OpenAPI) and <code>/redoc</code>. All routes below are mounted and reachable. <code>pipeline.py</code> defines <code>GET /pipeline/stats</code> but is <strong>not mounted</strong> in <code>main.py</code>.</p>
+
+<h3>Health</h3>
+<div class="tbl-wrap">
+  <table class="std">
+    <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><span class="method get">GET</span></td><td><code>/health</code></td><td>Service health check — returns <code>{"status":"ok"}</code></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3>Seed Library</h3>
+<div class="tbl-wrap">
+  <table class="std">
+    <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><span class="method get">GET</span></td><td><code>/api/v1/seed-library/telecom</code></td><td>Returns full seed library from disk (<code>telecom_v1.jsonl</code>). Used by /seeds frontend page.</td></tr>
+      <tr><td><span class="method post">POST</span></td><td><code>/api/v1/seeds/sync-library</code></td><td>Upserts all disk seeds into <code>dg_gold_seed_runs</code>. Idempotent — safe to run multiple times.</td></tr>
+      <tr><td><span class="method post">POST</span></td><td><code>/api/v1/seeds/ingest-custom</code></td><td>Adds a user-defined seed to the library. Source tagged as <code>custom</code> (vs <code>library</code>).</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3>Seed Runs (Lifecycle)</h3>
+<div class="tbl-wrap">
+  <table class="std">
+    <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><span class="method get">GET</span></td><td><code>/api/v1/seed-runs</code></td><td>List all seed run records from <code>dg_gold_seed_runs</code></td></tr>
+      <tr><td><span class="method get">GET</span></td><td><code>/api/v1/seed-runs/by-scenario/{scenario_id}</code></td><td>Get the run record for a specific seed by scenario ID</td></tr>
+      <tr><td><span class="method put">PUT</span></td><td><code>/api/v1/seed-runs/{scenario_id}</code></td><td>Update a seed run record (e.g. after validation)</td></tr>
+      <tr><td><span class="method del">DELETE</span></td><td><code>/api/v1/seed-runs/{scenario_id}</code></td><td>Delete a seed run record</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3>Seeds Console (Generate / Repair)</h3>
+<div class="tbl-wrap">
+  <table class="std">
+    <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><span class="method post">POST</span></td><td><code>/api/v1/seeds-console/generate</code></td><td>Generate MAL for a single seed via LLM. Requires <code>seed_id</code> and <code>intent</code> in body.</td></tr>
+      <tr><td><span class="method post">POST</span></td><td><code>/api/v1/seeds-console/repair</code></td><td>Auto-repair a failed MAL record using <code>mal_repair_service.py</code></td></tr>
+      <tr><td><span class="method post">POST</span></td><td><code>/api/v1/seeds-console/bulk-generate</code></td><td>Bulk generate MAL for multiple seeds. Streams progress via the BulkProgressBar widget.</td></tr>
+      <tr><td><span class="method post">POST</span></td><td><code>/api/v1/seeds-console/bulk-repair</code></td><td>Bulk repair all failed seeds in one call</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3>Stage 2 — Jinja2 Expansion</h3>
+<div class="tbl-wrap">
+  <table class="std">
+    <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><span class="method post">POST</span></td><td><code>/api/v1/jinja2/expand</code></td><td>Expand a seed via Jinja2 templates + domain pack. Returns 5–10 MAL candidates. Body: <code>{"scenario": {...}, "domain": "telecom"}</code></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3>Stage 3 — LLM Expansion</h3>
+<div class="tbl-wrap">
+  <table class="std">
+    <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><span class="method post">POST</span></td><td><code>/api/v1/llm/expand</code></td><td>Core LLM expansion — generates MAL variants from a seed scenario. Supports <code>dry_run</code> flag.</td></tr>
+      <tr><td><span class="method post">POST</span></td><td><code>/api/v1/llm/generate-from-jinja</code></td><td>Jinja2-First mode — uses Jinja2 candidates as LLM examples. Minimum <code>chunk_size: 3</code>.</td></tr>
+      <tr><td><span class="method post">POST</span></td><td><code>/api/v1/llm/generate-from-database</code></td><td>Generates from stored database records. Used for catalog-level batch generation.</td></tr>
+      <tr><td><span class="method post">POST</span></td><td><code>/api/v1/llm/batches/{batch_id}/execute</code></td><td>Execute a stored preview batch (status: preview → completed)</td></tr>
+      <tr><td><span class="method post">POST</span></td><td><code>/api/v1/llm/execute-latest-preview</code></td><td>Execute the most recent preview batch for a scenario</td></tr>
+      <tr><td><span class="method get">GET</span></td><td><code>/api/v1/llm/expansions</code></td><td>List all LLM expansion batches from <code>dg_llm_expansion_batches</code></td></tr>
+      <tr><td><span class="method get">GET</span></td><td><code>/api/v1/llm/expansions/{batch_id}</code></td><td>Get a specific batch by ID — includes prompt, items, tokens, latency</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3>Stage 4 — Validation</h3>
+<div class="tbl-wrap">
+  <table class="std">
+    <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><span class="method post">POST</span></td><td><code>/api/v1/validate/bulk</code></td><td>Validate many MAL records in one call. Optional DB write-back of results. Returns per-record stage breakdown.</td></tr>
+      <tr><td><span class="method post">POST</span></td><td><code>/api/v1/validation</code></td><td>Validate a single MAL record. Self-contained — no DB dependency. Used by single-record tab in /validation page.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3>Diversity Metrics</h3>
+<div class="tbl-wrap">
+  <table class="std">
+    <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><span class="method get">GET</span></td><td><code>/api/v1/diversity/metrics</code></td><td>NLD diversity scores across all pipeline transitions. 120s TTL cache. Use <code>?refresh=true</code> to force recompute. Returns seed→Jinja2, Jinja2→LLM, intra-Jinja2, intra-LLM NLD scores.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══ S14 — DATA SCHEMAS & SERVICES ════════════════════════════════════ -->
+<h2 id="s14"><span class="snum">14.</span> Data Schemas &amp; Services</h2>
+
+<h3>Database Tables</h3>
+<p>Two PostgreSQL tables track pipeline state. All tables inherit <code>id</code> (UUID PK), <code>created_at</code>, and <code>updated_at</code> from the SQLAlchemy base.</p>
+
+<h4>dg_gold_seed_runs — Seed lifecycle (one row per seed)</h4>
+<div class="tbl-wrap">
+  <table class="std">
+    <thead><tr><th>Column</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>scenario_id</code></td><td>String (unique)</td><td>Unique seed identifier, e.g. <code>seed_00001</code></td></tr>
+      <tr><td><code>scenario_content_hash</code></td><td>String</td><td>SHA hash of seed content — used to detect changes and skip unchanged seeds on sync</td></tr>
+      <tr><td><code>source</code></td><td>String</td><td><code>library</code> (from disk) or <code>custom</code> (user-entered)</td></tr>
+      <tr><td><code>raw_intent</code></td><td>Text</td><td>The intent string from the seed</td></tr>
+      <tr><td><code>scenario_json</code></td><td>JSON</td><td>Full seed object (scenario_id, intent, domain, type)</td></tr>
+      <tr><td><code>jinja_candidates_json</code></td><td>JSON</td><td>Stage 2 output — array of Jinja2 MAL candidates</td></tr>
+      <tr><td><code>generation_json</code></td><td>JSON</td><td>Stage 3 output — array of LLM-generated MAL records</td></tr>
+      <tr><td><code>validation_json</code></td><td>JSON</td><td>Stage 4 output — per-record validation results (all 5 stage results)</td></tr>
+      <tr><td><code>normalized_record_json</code></td><td>JSON</td><td>Final clean record — ready for training corpus</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h4>dg_llm_expansion_batches — LLM call tracking (one row per batch)</h4>
+<div class="tbl-wrap">
+  <table class="std">
+    <thead><tr><th>Column</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>scenario_id</code></td><td>String</td><td>Which seed this batch belongs to</td></tr>
+      <tr><td><code>seed_content_hash</code></td><td>String</td><td>Seed hash — used for dedup detection</td></tr>
+      <tr><td><code>status</code></td><td>String</td><td><code>preview</code> (saved prompt, not executed) / <code>completed</code> / <code>failed</code></td></tr>
+      <tr><td><code>dry_run</code></td><td>Boolean</td><td>True = prompt saved but no LLM call made</td></tr>
+      <tr><td><code>num_variants_requested</code></td><td>Integer</td><td>How many records were requested</td></tr>
+      <tr><td><code>seed_json</code></td><td>JSON</td><td>Seed object at time of generation</td></tr>
+      <tr><td><code>jinja_candidates_json</code></td><td>JSON</td><td>Jinja2 candidates used as LLM examples</td></tr>
+      <tr><td><code>prompt_system</code></td><td>Text</td><td>Exact system prompt sent to LLM</td></tr>
+      <tr><td><code>prompt_user</code></td><td>Text</td><td>Exact user prompt sent to LLM</td></tr>
+      <tr><td><code>model_name</code></td><td>String</td><td>LLM model used, e.g. <code>gpt-4o</code></td></tr>
+      <tr><td><code>raw_response_text</code></td><td>Text</td><td>Raw LLM response text before parsing</td></tr>
+      <tr><td><code>items_json</code></td><td>JSON</td><td>Parsed LLM output — array of MAL records</td></tr>
+      <tr><td><code>error_message</code></td><td>Text</td><td>Error detail if status is <code>failed</code></td></tr>
+      <tr><td><code>prompt_tokens</code></td><td>Integer</td><td>Input token count (null for dry runs)</td></tr>
+      <tr><td><code>completion_tokens</code></td><td>Integer</td><td>Output token count (null for dry runs)</td></tr>
+      <tr><td><code>latency_ms</code></td><td>Integer</td><td>Wall-clock LLM call time in milliseconds</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3>Services Directory</h3>
+<p>All service files are in <code>backend/app/services/</code>. All are domain-agnostic in code — domain is configured via data artefacts, not hardcoded.</p>
+
+<div class="tbl-wrap">
+  <table class="std">
+    <thead><tr><th>File</th><th>Group</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>jinja_expand.py</code></td>
+        <td><span class="tag tag-stage2">Stage 2</span></td>
+        <td>Renders Jinja2 templates with domain vocabulary. Pure template rendering — no MAL coupling.</td>
+      </tr>
+      <tr>
+        <td><code>llm_jinja_generate.py</code></td>
+        <td><span class="tag tag-stage3">Stage 3 — Mode A</span></td>
+        <td>Jinja2-First orchestrator. Builds prompt from Jinja2 candidates, runs LLM generation, parses output.</td>
+      </tr>
+      <tr>
+        <td><code>llm_expand_runner.py</code></td>
+        <td><span class="tag tag-stage3">Stage 3 — Mode A</span></td>
+        <td>Batch execution runner. Manages preview → execute lifecycle, handles stored batch execution.</td>
+      </tr>
+      <tr>
+        <td><code>llm_intent_synthesize.py</code></td>
+        <td><span class="tag tag-stage3">Stage 3 — Mode B</span></td>
+        <td>Intent-First Stage A. Generates intent variants from seed anchors + Jinja2 context. Domain-filters and deduplicates.</td>
+      </tr>
+      <tr>
+        <td><code>llm_mal_from_intent.py</code></td>
+        <td><span class="tag tag-stage3">Stage 3 — Mode B</span></td>
+        <td>Intent-First Stage B. Generates valid MAL from each accepted intent. Retries failures before discard.</td>
+      </tr>
+      <tr>
+        <td><code>llm_dataset_orchestrator.py</code></td>
+        <td><span class="tag tag-stage3">Stage 3 — Mode B</span></td>
+        <td>Intent-First orchestration. Coordinates Stage A → filter → Stage B flow. Manages overall batch lifecycle.</td>
+      </tr>
+      <tr>
+        <td><code>llm_prompt_build.py</code></td>
+        <td><span class="tag tag-stage3">Stage 3 — Shared</span></td>
+        <td>Constructs system + user prompts from inputs. No MAL or domain coupling — prompt is assembled from parameters.</td>
+      </tr>
+      <tr>
+        <td><code>llm_response_parse.py</code></td>
+        <td><span class="tag tag-stage3">Stage 3 — Shared</span></td>
+        <td>Parses structured LLM output into typed records. Generic — no domain awareness needed at parse time.</td>
+      </tr>
+      <tr>
+        <td><code>llm_openai_compatible.py</code></td>
+        <td><span class="tag tag-stage3">Stage 3 — Shared</span></td>
+        <td>HTTP client for OpenAI-compatible APIs. Handles auth, retries, token accounting. Domain-agnostic.</td>
+      </tr>
+      <tr>
+        <td><code>llm_catalog_generate.py</code></td>
+        <td><span class="tag tag-stage3">Stage 3 — Catalog</span></td>
+        <td>Catalog-level generation — runs LLM generation from database records (not from Jinja2 candidates).</td>
+      </tr>
+      <tr>
+        <td><code>llm_catalog_records.py</code></td>
+        <td><span class="tag tag-stage3">Stage 3 — Catalog</span></td>
+        <td>Catalog record handling and formatting for catalog-mode generation.</td>
+      </tr>
+      <tr>
+        <td><code>llm_training_records.py</code></td>
+        <td><span class="tag tag-stage3">Stage 3 — Catalog</span></td>
+        <td>Shapes and normalizes generated output into training-ready record format.</td>
+      </tr>
+      <tr>
+        <td><code>mal_validation_service.py</code></td>
+        <td><span class="tag tag-stage4">Stage 4</span></td>
+        <td>5-stage in-process PEG-parser MAL validator. Runs syntax → schema → policy → dependency → compile_check. Returns per-stage results with error detail.</td>
+      </tr>
+      <tr>
+        <td><code>mal_repair_service.py</code></td>
+        <td><span class="tag tag-stage4">Stage 4</span></td>
+        <td>Auto-repair service. Detects and fixes common MAL structural errors before re-running validation. Reduces reject rate.</td>
+      </tr>
+      <tr>
+        <td><code>diversity_metrics.py</code></td>
+        <td><span class="tag tag-confirmed">Output</span></td>
+        <td>Normalised Levenshtein Distance computation across corpus. In-memory TTL cache (120s) prevents timeout. <code>?refresh=true</code> forces recompute.</td>
+      </tr>
+      <tr>
+        <td><code>seed_library_loader.py</code></td>
+        <td><span class="tag tag-stage1">Stage 1</span></td>
+        <td>Loads seeds from <code>data/seed_scenarios/telecom_v1.jsonl</code>. Falls back to <code>pipeline/seeds/seeds.json</code> if disk path not found.</td>
+      </tr>
+      <tr>
+        <td><code>seed_pipeline_sync.py</code></td>
+        <td><span class="tag tag-stage1">Stage 1</span></td>
+        <td>Upserts disk seeds into <code>dg_gold_seed_runs</code>. Uses content hash for change detection — skips unchanged seeds.</td>
+      </tr>
+      <tr>
+        <td><code>seed_content_hash.py</code></td>
+        <td><span class="tag tag-stage1">Stage 1</span></td>
+        <td>Generates SHA hash of seed content for deduplication and change detection.</td>
+      </tr>
+      <tr>
+        <td><code>pipeline_bridge.py</code></td>
+        <td><span class="tag tag-planned">Utility</span></td>
+        <td>Bridge utility between pipeline stages. Small helper module for stage-to-stage data handoff.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h3>Test Coverage</h3>
+<p>First integration test suite for this project. 7 test modules in <code>backend/tests/</code> using Pytest + httpx. Tests target the live Docker environment at <code>localhost:8010</code>.</p>
+
+<div class="tbl-wrap">
+  <table class="std">
+    <thead><tr><th>File</th><th>What it covers</th><th>Key bugs found</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>test_health.py</code></td>
+        <td><code>GET /health</code> — 200, correct body shape</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td><code>test_seed_library.py</code></td>
+        <td><code>GET /api/v1/seed-library/telecom</code> — shape, count, required fields</td>
+        <td>Found wrong route path initially (<code>/seeds/scenarios</code> → <code>/seed-library/telecom</code>)</td>
+      </tr>
+      <tr>
+        <td><code>test_jinja2_expand.py</code></td>
+        <td><code>POST /api/v1/jinja2/expand</code> — expansion output, required <code>domain</code> field</td>
+        <td>Found missing <code>domain</code> field in payload causing 500 <code>KeyError</code></td>
+      </tr>
+      <tr>
+        <td><code>test_validate.py</code></td>
+        <td><code>POST /api/v1/validate/bulk</code> + <code>/api/v1/validation</code> — valid/invalid MAL, stage results</td>
+        <td>Found incorrect MAL grammar format in test payload (missing <code>application</code> wrapper block)</td>
+      </tr>
+      <tr>
+        <td><code>test_llm_routes.py</code></td>
+        <td><code>POST /api/v1/llm/generate-from-jinja</code> dry run — 200, preview status, token fields</td>
+        <td>Found <code>chunk_size</code> must be ≥ 3 (422 error with value 1 in test)</td>
+      </tr>
+      <tr>
+        <td><code>test_seeds_console.py</code></td>
+        <td><code>POST /api/v1/seeds-console/generate</code> — generate for a single seed</td>
+        <td>Found missing required fields <code>seed_id</code> and <code>intent</code> in initial payload</td>
+      </tr>
+      <tr>
+        <td><code>test_diversity.py</code></td>
+        <td><code>GET /api/v1/diversity/metrics</code> — shape, NLD score ranges, TTL cache behavior</td>
+        <td>Confirmed NLD computation timeout → implemented 120s TTL cache fix</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="callout ok">
+  <div class="callout-icon">✅</div>
+  <p><strong>All 4 real bugs found by the test suite were fixed.</strong> The test suite itself is the contribution — it established the first reliable baseline for backend correctness in this project.</p>
+</div>

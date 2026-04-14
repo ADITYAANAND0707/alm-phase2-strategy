@@ -1,165 +1,228 @@
+<!-- ══ PART I — CURRENT STATE ══════════════════════════════════════════════ -->
 <div class="part-div">
-  <div class="pd-num">Part I</div>
-  <div class="pd-title">Context &amp; Direction</div>
-  <div class="pd-desc">Strategic overview, scope definition, baseline gaps, and immediate priorities</div>
-</div>
-
-<!-- 1 -->
-<h2 id="s1">1. Executive Summary</h2>
-<p>The ALM platform generates, validates, and manages enterprise application models written in MAL — a purpose-built domain language. It already handles user intent, live validation, and versioned persistence. What it lacks is an <strong>offline data factory</strong>: a repeatable pipeline that creates high-quality training and evaluation examples at scale.</p>
-<p>Phase 2 builds that factory in three stages. First, a Jinja2-based template engine produces controlled MAL variants from manually authored "gold seeds" — the safest, most explainable starting point. Second, LLM-driven expansion adds diversity once the template baseline is solid. Third, a human review layer promotes accepted records into a registry that feeds prompting, evaluation, and eventually fine-tuning.</p>
-<ul class="exec-list">
-  <li><strong>Scope: MAL only.</strong> Phase 2 generates examples for <code>application</code>, <code>entity</code>, <code>workflow</code>, <code>policy</code>, <code>agent</code>, <code>integration</code>, <code>event</code>, and <code>evolution</code>. UI constructs are excluded from the first data wave.</li>
-  <li><strong>Stage 2 integrated.</strong> The Jinja2 pipeline is built and merged into the shared team repo &mdash; 56 canonical gold seeds (Divya&rsquo;s <code>data/seed_scenarios/telecom_v1.jsonl</code>), 4 grammar-compliant templates, a telecom domain pack, 336 candidate records generated, and a React/Vite frontend dashboard active in mock mode.</li>
-  <li><strong>LLM expansion comes later.</strong> Introduce it only after validation gates, graph-compile checks, and registry discipline are in place. Do not skip the template baseline.</li>
-  <li><strong>This document is a living report.</strong> Update the progress tracker, decision log, coverage grid, and example library as Phase 2 matures.</li>
-</ul>
-
-<!-- 2 -->
-<!-- TAG: improvement | module:dashboard | impact:medium -->
-<h2 id="s2" data-context="dashboard:pipeline-progress">2. Status Dashboard</h2>
-<div class="grid-3">
-  <div class="metric-card">
-    <div class="m-label">What Exists Today</div>
-    <div class="m-value">Runtime ALM</div>
-    <div class="m-desc">Intent parsing, MAL generation, validation, graph compilation, retrieval, and versioned persistence are all live in the current platform.</div>
-  </div>
-  <div class="metric-card">
-    <div class="m-label">What Phase 2 Adds</div>
-    <div class="m-value">Data Factory</div>
-    <div class="m-desc">A repeatable offline pipeline for seeds, templates, model variants, validation, review, and accepted-dataset promotion.</div>
-  </div>
-  <div class="metric-card">
-    <div class="m-label">What Success Looks Like</div>
-    <div class="m-value">Accepted Registry</div>
-    <div class="m-desc">High-quality MAL examples that support prompting, evaluation, specification work, and later efficient fine-tuning.</div>
+  <div>
+    <div class="part-label">Part I</div>
+    <div class="part-title">Current State</div>
+    <div class="part-desc">Executive summary, live system status, and what comes next</div>
   </div>
 </div>
 
-<h3>Pipeline Progress &mdash; Update Each Sprint</h3>
+<!-- ═══ S1 — EXECUTIVE SUMMARY ════════════════════════════════════════════ -->
+<h2 id="s1"><span class="snum">1.</span> Executive Summary</h2>
+
+<div class="oi">
+  <div class="oi-icon">🏭</div>
+  <div class="oi-body">
+    <strong>The ALM Data Generation platform is a 4-stage synthetic training data factory for MAL</strong> — the formal domain language used by the ALM platform. All four stages are now fully live and integrated. The system takes 50 hand-authored telecom seed scenarios, produces deterministic Jinja2 template expansions, synthesizes diverse AI-generated records via GPT-4o, and gates everything through a 5-stage in-process MAL validator before storage. The full pipeline is accessible through a React/Vite frontend with 8 routes and a FastAPI backend with 23 mounted endpoints.
+  </div>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="ctag">What was built</div>
+    <div class="card-title">4-Stage Pipeline — End to End</div>
+    <ul>
+      <li><strong>Stage 1:</strong> 50-seed telecom library with sync API and per-seed DB lifecycle tracking</li>
+      <li><strong>Stage 2:</strong> Jinja2 deterministic expansion — 4 templates, 1 domain pack, reproducible output</li>
+      <li><strong>Stage 3:</strong> LLM synthesis in 2 modes — Jinja2-First and Intent-First (2-pass)</li>
+      <li><strong>Stage 4:</strong> 5-stage PEG-parser MAL validation + auto-repair service</li>
+      <li>Training registry, record browser, and diversity metrics (NLD + TTL cache)</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="ctag">Additional engineering delivered</div>
+    <div class="card-title">Backend Reliability &amp; Coverage</div>
+    <ul>
+      <li><strong>7 integration test modules</strong> — first test coverage in the project</li>
+      <li>In-memory TTL cache (120s) on diversity metrics to prevent NLD timeouts</li>
+      <li>MAL repair service — auto-fixes common structural errors before re-validation</li>
+      <li>Token + latency stored per LLM batch in <code>dg_llm_expansion_batches</code></li>
+      <li>Fixed sidebar navigation (fixed position, collapsible secondary items)</li>
+      <li>React key warning fix, <code>&lt;a&gt;</code> → <code>&lt;Link&gt;</code> SPA navigation fixes</li>
+      <li>Team handoff documentation + research context pack in <code>docs/research/</code></li>
+    </ul>
+  </div>
+</div>
+
+<div class="callout brand">
+  <div class="callout-icon">🔬</div>
+  <p><strong>Where we are now:</strong> The prototype is working end-to-end. Research is underway (ticket RE-474) to determine the next major architectural step — replacing Jinja2 Stage 2 with a smarter generation layer, and making the LLM expansion stage production-grade with quality-gated loops and multi-signal scoring.</p>
+</div>
+
+<h3>Design Principle (non-negotiable)</h3>
+<div class="plugin-contract">
+  <div class="pc-label">Domain Plugin Architecture</div>
+  <div class="pc-row">
+    <div class="pc-icon">📐</div>
+    <div class="pc-key">Grammar</div>
+    <div class="pc-val">Hard structural constraint — only valid MAL structures pass the quality gate. Embedded in <code>mal_validation_service.py</code> as an in-process PEG parser.</div>
+  </div>
+  <div class="pc-row">
+    <div class="pc-icon">📦</div>
+    <div class="pc-key">Domain Pack</div>
+    <div class="pc-val">Vocabulary config — entity names, field types, enum values, relations. Current: <code>pipeline/domain_packs/telecom.json</code>. Swapping this file changes the domain.</div>
+  </div>
+  <div class="pc-row">
+    <div class="pc-icon">📋</div>
+    <div class="pc-key">Guidelines</div>
+    <div class="pc-val">Generation hints — preferred patterns, anti-patterns, domain rules. Currently implicit in Jinja2 templates and LLM prompts. Target: explicit plugin artefact.</div>
+  </div>
+  <div class="pc-row">
+    <div class="pc-icon">⚙️</div>
+    <div class="pc-key">Engine code</div>
+    <div class="pc-val">All service and route code is domain-agnostic. Verified: only 4 data artefacts are domain-specific — seed JSONL, domain pack JSON, template files, grammar. Zero engine code changes needed to add a new domain.</div>
+  </div>
+</div>
+
+<!-- ═══ S2 — LIVE SYSTEM DASHBOARD ═══════════════════════════════════════ -->
+<h2 id="s2"><span class="snum">2.</span> Live System Dashboard</h2>
+
 <div class="grid-4">
-  <div class="metric-card tracker">
-    <div class="m-label">Gold Seeds Defined</div>
-    <div class="m-value">56 / 60</div>
-    <div class="m-bar"><div class="m-bar-fill done" style="width:93%"></div></div>
-    <div class="m-desc">56 canonical telecom seeds in <code>data/seed_scenarios/telecom_v1.jsonl</code> (Divya&rsquo;s authoritative source). Aditya&rsquo;s 6 hand-authored seeds remain in <code>pipeline/seeds/seeds.json</code> as the fallback.</div>
-    <div class="stat-pill">Canonical Source Active</div>
+  <div class="metric-card">
+    <div class="mc-num">50</div>
+    <div class="mc-label">Seed Scenarios</div>
+    <div class="mc-sub">telecom domain, all verified</div>
+    <div class="mc-desc">50 hand-authored seed scenarios in <code>data/seed_scenarios/telecom_v1.jsonl</code>. Each seed has an intent, task type (Create/Modify/Repair/Explain/Policy/Disambiguate), and domain. Synced to DB via <code>POST /api/v1/seeds/sync-library</code>. Per-seed lifecycle tracked in <code>dg_gold_seed_runs</code>.</div>
   </div>
-  <div class="metric-card tracker">
-    <div class="m-label">Jinja2 Templates Built</div>
-    <div class="m-value">4 Built</div>
-    <div class="m-bar"><div class="m-bar-fill done" style="width:100%"></div></div>
-    <div class="m-desc">entity.j2, workflow.j2, policy.j2, evolution.j2 &mdash; all grammar-compliant. generate.py and telecom domain pack integrated into shared repo.</div>
-    <div class="stat-pill">Stage 2 Integrated</div>
+  <div class="metric-card">
+    <div class="mc-num">23</div>
+    <div class="mc-label">API Endpoints</div>
+    <div class="mc-sub">FastAPI, all mounted</div>
+    <div class="mc-desc">23 HTTP endpoints across 9 route groups. Auto-documented at <code>/docs</code> (OpenAPI). Includes seed management, Jinja2 expansion, LLM generation (3 routes), validation (bulk + single), diversity metrics, and seeds console (generate, repair, bulk). <code>pipeline.py</code> exists but is NOT mounted.</div>
   </div>
-  <div class="metric-card tracker">
-    <div class="m-label">Candidates Generated</div>
-    <div class="m-value">336</div>
-    <div class="m-bar"><div class="m-bar-fill done" style="width:100%"></div></div>
-    <div class="m-desc">56 seeds &times; 6 variants each = 336 Jinja2 candidates. Output to <code>data/jinja2_expansion/</code>. Micro-validator called on each &mdash; <code>validated: null</code> until ALM parser is on PYTHONPATH.</div>
-    <div class="stat-pill">Stage 2 Done</div>
+  <div class="metric-card">
+    <div class="mc-num">2</div>
+    <div class="mc-label">LLM Modes</div>
+    <div class="mc-sub">Jinja2-First + Intent-First</div>
+    <div class="mc-desc"><strong>Mode A (Jinja2-First):</strong> Jinja2 candidates used as structured examples for the LLM. <strong>Mode B (Intent-First):</strong> 2-pass — Stage A generates intent variants from seeds, Stage B generates MAL from each accepted intent. Every saved record is a fresh (intent, MAL) pair — seed intent never reused as output.</div>
   </div>
-  <div class="metric-card tracker">
-    <div class="m-label">Records in Registry</div>
-    <div class="m-value">0</div>
-    <div class="m-bar"><div class="m-bar-fill zero" style="width:0%"></div></div>
-    <div class="m-desc">Human-reviewed and accepted records promoted into the official dataset registry.</div>
-    <div class="stat-pill warn">Not started</div>
-  </div>
-</div>
-<p style="font-size:12px;color:var(--muted);margin-top:-8px;">Click any card to expand details. Update the four tracker cards above each sprint &mdash; they are the single source of truth for Phase 2 dataset progress.</p>
-
-<div class="diagram-box">
-  <div class="diagram-label">How Phase 2 Fits Into The ALM Project</div>
-  <div class="mermaid">
-flowchart LR
-    userIntent["User Intent"] --> almRuntime["ALM Runtime"]
-    almRuntime --> malGen["MAL Generation"]
-    malGen --> graphCompile["Graph Compile"]
-    userIntent --> seedLib["Approved Seed Library"]
-    seedLib --> jinjaFactory["Jinja2 Expansion"]
-    jinjaFactory --> llmFactory["LLM Variant Expansion"]
-    llmFactory --> valFunnel["Validation Funnel"]
-    valFunnel --> review["Human Review"]
-    review --> registry["Accepted Dataset Registry"]
-    registry --> promptUse["Prompt Grounding"]
-    registry --> evalUse["Evaluation and Testing"]
-    registry --> ftUse["Efficient Fine-Tuning"]
+  <div class="metric-card">
+    <div class="mc-num">7</div>
+    <div class="mc-label">Test Modules</div>
+    <div class="mc-sub">first integration test coverage</div>
+    <div class="mc-desc">7 Pytest + httpx integration test files covering all mounted backend routes: health, seed-library, jinja2-expand, validate, llm-routes, seeds-console, diversity. Found and fixed 4 real bugs during initial run (including MAL grammar format, chunk_size constraint, payload validation).</div>
   </div>
 </div>
 
-<!-- 3 -->
-<h2 id="s3">3. Immediate Action Map</h2>
-<div class="timeline-strip">
-  <div class="timeline-box">
-    <div class="timeline-head" style="background:var(--now-col);">Now &mdash; Foundation</div>
-    <div class="timeline-body">
-      <ul>
-        <li>&#10003; Freeze MAL-only scope for the first data wave.</li>
-        <li>&#10003; Gold seed library &mdash; 56 canonical seeds active (<code>data/seed_scenarios/telecom_v1.jsonl</code>).</li>
-        <li>&#10003; <strong>Jinja2 pipeline built and integrated</strong> &mdash; generate.py, 4 templates, telecom domain pack, 336 candidates, merged into shared repo (PR&nbsp;#1).</li>
-        <li>&#10003; Micro-validator called on each candidate &mdash; graceful null fallback when ALM.parser absent.</li>
-        <li>&#10003; Frontend dashboard active (mock mode) &mdash; Templates page, Validation console, stage badges.</li>
-        <li>&#8594; Route real validation output &mdash; set PYTHONPATH to enable live ALM parser scoring.</li>
-        <li>&#8594; Define dataset registry schema and lifecycle statuses.</li>
-      </ul>
+<h3>Stage-by-Stage Status</h3>
+<div class="grid-2">
+  <div class="stage-card s1">
+    <div class="sc-num">Stage 1</div>
+    <div class="sc-title">Seed Library</div>
+    <div class="sc-sub">50 telecom seeds &mdash; <span class="tag tag-done">Live</span></div>
+    <div class="sc-body">Hand-authored seed scenarios are the grounded starting point. Each seed defines intent and task type. Stored in <code>telecom_v1.jsonl</code> on disk, synced to PostgreSQL, full lifecycle tracked per seed. Frontend: <code>/seeds</code> page with expand, validate, repair, bulk generate controls.</div>
+    <div class="sc-meta">
+      <span class="sc-file">telecom_v1.jsonl</span>
+      <span class="sc-file">seed_library_loader.py</span>
+      <span class="sc-file">seed_pipeline_sync.py</span>
+      <span class="sc-file">dg_gold_seed_runs</span>
     </div>
   </div>
-  <div class="timeline-box">
-    <div class="timeline-head" style="background:var(--next-col);">Next &mdash; Expansion</div>
-    <div class="timeline-body">
-      <ul>
-        <li>Activate real backend (connect frontend to FastAPI; remove mock mode).</li>
-        <li>Automate parser, validator, and graph-compile checks end-to-end.</li>
-        <li>Add novelty and duplicate filtering.</li>
-        <li>Introduce human review and promotion workflow.</li>
-        <li>Pilot constrained LLM candidate generation.</li>
-        <li>Measure acceptance rate and construct coverage.</li>
-      </ul>
+  <div class="stage-card s2">
+    <div class="sc-num">Stage 2</div>
+    <div class="sc-title">Deterministic Expansion</div>
+    <div class="sc-sub">Jinja2 templates + domain pack &mdash; <span class="tag tag-done">Live</span></div>
+    <div class="sc-body">Each seed is expanded into 5–10 MAL candidates using 4 Jinja2 template files filled with telecom vocabulary. Running the same seed twice always produces identical output — deterministic, debuggable, reproducible. Candidates feed Stage 3 as structured examples. CLI: <code>python pipeline/generate.py</code>.</div>
+    <div class="sc-meta">
+      <span class="sc-file">jinja_expand.py</span>
+      <span class="sc-file">entity.j2 / workflow.j2</span>
+      <span class="sc-file">policy.j2 / evolution.j2</span>
+      <span class="sc-file">telecom.json</span>
     </div>
   </div>
-  <div class="timeline-box">
-    <div class="timeline-head" style="background:var(--later-col);">Later &mdash; Maturity</div>
-    <div class="timeline-body">
-      <ul>
-        <li>Compare models and prompting strategies.</li>
-        <li>Use accepted data for retrieval and evaluation sets.</li>
-        <li>Start efficient fine-tuning experiments.</li>
-        <li>Track feedback loops from rejected examples.</li>
-        <li>Grow and maintain the accepted dataset registry.</li>
-      </ul>
+  <div class="stage-card s3">
+    <div class="sc-num">Stage 3</div>
+    <div class="sc-title">AI Synthesis</div>
+    <div class="sc-sub">GPT-4o, 2 modes &mdash; <span class="tag tag-done">Live</span></div>
+    <div class="sc-body">Two generation modes. <strong>Mode A (Jinja2-First):</strong> Jinja2 candidates as LLM examples → diverse MAL variants. <strong>Mode B (Intent-First):</strong> LLM generates fresh intents from seed anchors (Stage A), then MAL from each intent (Stage B). Every batch stored with full prompt, output, tokens, latency. Dry run previews prompts for free.</div>
+    <div class="sc-meta">
+      <span class="sc-file">llm_jinja_generate.py</span>
+      <span class="sc-file">llm_intent_synthesize.py</span>
+      <span class="sc-file">llm_mal_from_intent.py</span>
+      <span class="sc-file">llm_dataset_orchestrator.py</span>
+    </div>
+  </div>
+  <div class="stage-card s4">
+    <div class="sc-num">Stage 4</div>
+    <div class="sc-title">Quality Gate</div>
+    <div class="sc-sub">5-stage PEG validation + repair &mdash; <span class="tag tag-done">Live</span></div>
+    <div class="sc-body">Every generated MAL record passes 5 sequential checks in-process (no external dependency). Fail at any stage → rejected with exact rule and line. Auto-repair service catches and fixes common structural errors before re-validation. Bulk validation endpoint processes entire batches. Frontend: <code>/validation</code> with Batch Browser + Single Record + All Records tabs.</div>
+    <div class="sc-meta">
+      <span class="sc-file">mal_validation_service.py</span>
+      <span class="sc-file">mal_repair_service.py</span>
+      <span class="sc-file">POST /validate/bulk</span>
+      <span class="sc-file">POST /validation</span>
     </div>
   </div>
 </div>
 
-<!-- 4 -->
-<h2 id="s4">4. Scope Definition</h2>
-<p>Phase 2 synthetic-data work is MAL-specific and tightly bounded. This document defines what is in scope, what is excluded, and what the objective is — so the team stays aligned as the pipeline grows.</p>
-<div class="note">
-  <div class="note-line"><span class="tag tag-confirmed">Confirmed from repo</span>Current ALM code supports MAL generation, deterministic intent parsing, validation, graph handling, vector retrieval, and versioned storage.</div>
-  <div class="note-line"><span class="tag tag-direction">Planning direction</span>The pipeline design defines five stages: gold seeds, Jinja2 expansion, LLM expansion, validation/filtering, and human review.</div>
-  <div class="note-line"><span class="tag tag-planned">Proposed for Phase 2</span>The offline synthetic-data factory is new work to be added outside the existing runtime flow.</div>
+<h3>Known Gaps</h3>
+<div class="grid-2">
+  <div class="callout warn">
+    <div class="callout-icon">⚠️</div>
+    <p><strong>3 frontend pages not wired:</strong> <code>DiversityPage</code>, <code>RunsPage</code>, <code>RunDetailPage</code> are built and functional but their routes (<code>/diversity</code>, <code>/runs</code>, <code>/runs/:id</code>) are not yet registered in <code>App.tsx</code>. Diversity data is accessible via API: <code>GET /api/v1/diversity/metrics</code>.</p>
+  </div>
+  <div class="callout warn">
+    <div class="callout-icon">⚠️</div>
+    <p><strong>Token/cost data not surfaced in UI:</strong> <code>prompt_tokens</code>, <code>completion_tokens</code>, and <code>latency_ms</code> are stored per batch in <code>dg_llm_expansion_batches</code> but are not yet displayed in the dashboard. No cost-per-run view exists.</p>
+  </div>
 </div>
-<table>
-  <thead><tr><th>Phase 2 Scope Rule</th><th>Decision</th></tr></thead>
-  <tbody>
-    <tr><td>Primary language scope</td><td>MAL only</td></tr>
-    <tr><td>Supported construct families</td><td><code>application</code>, <code>entity</code>, <code>workflow</code>, <code>policy</code>, <code>agent</code>, <code>integration</code>, <code>event</code>, <code>evolution</code></td></tr>
-    <tr><td>Excluded from first data wave</td><td>UI constructs such as screens, components, actions, and navigation</td></tr>
-    <tr><td>Primary objective</td><td>Produce validator-approved user-intent to MAL examples for generation quality, specification support, and later model adaptation</td></tr>
-  </tbody>
-</table>
 
-<!-- 5 -->
-<h2 id="s5">5. Baseline &amp; Gap Analysis</h2>
-<table>
-  <thead><tr><th>Area</th><th>Current ALM Repository</th><th>Phase 2 Need</th></tr></thead>
-  <tbody>
-    <tr><td>MAL generation</td><td>Supported through backend orchestration and MAL Agent</td><td>Generate large volumes of controlled synthetic MAL pairs for training and evaluation</td></tr>
-    <tr><td>Prompting</td><td>String-based prompts and DOCX-loaded prompt assets exist</td><td>Standardized template-driven generation and dataset authoring flow</td></tr>
-    <tr><td>Synthetic dataset creation</td><td>Not implemented as an offline pipeline</td><td>Dedicated seed, expansion, filtering, review, and registry process</td></tr>
-    <tr><td>Jinja2-based templating</td><td>Built and integrated into shared repo &mdash; 4 templates, 336 candidates, merged via PR&nbsp;#1</td><td>Primary concrete build-now mechanism for structured variant creation</td></tr>
-    <tr><td>LLM expansion</td><td>LLM generation exists for runtime MAL tasks</td><td>Controlled second-stage offline expansion with strict validation and review</td></tr>
-    <tr><td>Review and registry</td><td>Versioning and validation concepts exist in product flow</td><td>Dataset-specific approval, scoring, provenance, and promotion workflow</td></tr>
-  </tbody>
-</table>
+<!-- ═══ S3 — NEXT STEPS / RESEARCH AGENDA ════════════════════════════════ -->
+<h2 id="s3"><span class="snum">3.</span> Next Steps &amp; Research Agenda</h2>
+
+<div class="callout info">
+  <div class="callout-icon">🎫</div>
+  <p><strong>Ticket RE-474:</strong> System Assessment, Research &amp; Architecture Fixes — Jinja2 Replacement + LLM Layer Architecture Changes. Due Apr 16, 2026. All subtasks below are tracked in this ticket.</p>
+</div>
+
+<div class="roadmap">
+  <div class="rm-col">
+    <div class="rm-label now">RE-475 — Done</div>
+    <div class="rm-item">Audit entire system against working-tree codebase</div>
+    <div class="rm-item">Fixed 4 backend bugs via integration test suite</div>
+    <div class="rm-item">Refreshed all docs/research/ files with correct routes, services, counts</div>
+    <div class="rm-item">Updated DEMO_SCRIPT.md with correct wired/unwired route status</div>
+    <div class="rm-item">Created TICKET_RE474_RESEARCH.md with structured research prompts</div>
+  </div>
+  <div class="rm-col">
+    <div class="rm-label next">RE-476 + RE-477 — In Research</div>
+    <div class="rm-item">RE-476: Research Jinja2 replacement options (DSPY, Outlines, PCFG, hybrid)</div>
+    <div class="rm-item">RE-477: Research production-grade LLM expansion architecture</div>
+    <div class="rm-item">Scope: domain-agnostic engine + domain-aware behavior via Grammar + Domain Pack + Guidelines plugins</div>
+    <div class="rm-item">Context files ready in <code>docs/research/</code> for LLM-assisted research</div>
+  </div>
+  <div class="rm-col">
+    <div class="rm-label later">RE-478 + RE-479 — Planned</div>
+    <div class="rm-item">RE-478: Write Architecture Recommendation Doc from research findings</div>
+    <div class="rm-item">RE-479: Implement approved changes after team review</div>
+    <div class="rm-item">Quick wins (regardless of RE-474): wire /diversity, /runs routes; surface token cost in UI</div>
+  </div>
+</div>
+
+<h3>Ticket Subtask Tracker</h3>
+<div class="ticket-row">
+  <span class="ticket-id">RE-475</span>
+  <span class="ticket-title">Check: Audit &amp; Fix Current System</span>
+  <span class="ticket-status"><span class="tag tag-done">Done</span></span>
+</div>
+<div class="ticket-row">
+  <span class="ticket-id">RE-476</span>
+  <span class="ticket-title">Research: Architecture Options for Jinja2 Replacement</span>
+  <span class="ticket-status"><span class="tag tag-wip">In Research</span></span>
+</div>
+<div class="ticket-row">
+  <span class="ticket-id">RE-477</span>
+  <span class="ticket-title">Research: Production-Grade LLM Expansion Architecture</span>
+  <span class="ticket-status"><span class="tag tag-wip">In Research</span></span>
+</div>
+<div class="ticket-row">
+  <span class="ticket-id">RE-478</span>
+  <span class="ticket-title">Plan: Architecture Recommendation Doc</span>
+  <span class="ticket-status"><span class="tag tag-todo">To Do</span></span>
+</div>
+<div class="ticket-row">
+  <span class="ticket-id">RE-479</span>
+  <span class="ticket-title">Fix: Implement Approved Changes</span>
+  <span class="ticket-status"><span class="tag tag-todo">To Do</span></span>
+</div>

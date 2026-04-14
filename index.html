@@ -3,82 +3,46 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ALM Phase 2 &mdash; Synthetic Data Strategy v4.0</title>
-<meta name="description" content="Phase 2 strategy and planning document for the ALM synthetic data pipeline — covering MAL seed authoring, Jinja2 expansion, LLM variant generation, validation, and dataset registry." />
-<meta name="author" content="Metafore AI — ALM Team" />
-<meta property="og:title" content="ALM Phase 2 — Synthetic Data Strategy" />
-<meta property="og:description" content="Living technical report for MAL synthetic data pipeline: seeds, Jinja2 templates, LLM expansion, validation, and registry design." />
+<title>ALM Phase 2 &mdash; Synthetic Data Pipeline v5.0</title>
+<meta name="description" content="Living technical report for the ALM synthetic data generation platform — all 4 pipeline stages live, Intent-First LLM synthesis, 5-stage MAL validation, and research roadmap." />
+<meta name="author" content="Aditya Anand — Metafore AI" />
+<meta property="og:title" content="ALM Phase 2 — Synthetic Data Pipeline" />
+<meta property="og:description" content="End-to-end MAL training data factory: 50 seeds, Jinja2 expansion, Intent-First LLM synthesis, 5-stage quality gate, registry." />
 <meta property="og:type" content="article" />
-<meta name="theme-color" content="#12314a" />
+<meta name="theme-color" content="#7c5cff" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
 <link rel="stylesheet" href="style.css" />
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 </head>
 <body>
 
-<!-- ══ HIDDEN META-LOG — machine-readable work log for LLM extraction ═══════
-     Never rendered. Query with: document.getElementById('meta-log-data').textContent
-     Schema: id, date, task, type, status, impact, notes.
-  ══════════════════════════════════════════════════════════════════════════════ -->
+<!-- ══ HIDDEN META-LOG ══════════════════════════════════════════════════════ -->
 <div id="meta-log" style="display:none" aria-hidden="true">
   <script type="application/json" id="meta-log-data">
 [
   {
+    "id": "log_2026_04_14_01",
+    "date": "2026-04-14",
+    "task": "Strategy doc v5.0 — full Metafore dark UI, all 4 stages live, Intent-First LLM mode documented, correct seed count (50), real API endpoints (23 mounted), real DB schema, services directory, research direction aligned to RE-474 ticket.",
+    "type": "improvement",
+    "status": "completed",
+    "impact": "high",
+    "notes": "Removed noise sections (Demo Playbook, KPI trackers, Risk Register, Decision Log, Doc Maintenance, Future Vision s23-26). Added Intent-First LLM mode (llm_intent_synthesize → llm_mal_from_intent → llm_dataset_orchestrator). Removed Apache AGE and Qdrant (not in codebase). Corrected seeds: 56 → 50. Added 7 integration test modules, 19 service files, all 23 real API endpoints. Applied Metafore dark theme throughout."
+  },
+  {
     "id": "log_2026_04_08_04",
     "date": "2026-04-08",
-    "task": "Strategy doc v4.0 — repo integration, 56-seed canonical source, 336 candidates, record_id naming, micro-validator graceful fallback, frontend dashboard, updated schemas, decision log entries, changelog.",
+    "task": "Strategy doc v4.0 — repo integration, 56-seed canonical source, 336 candidates, micro-validator graceful fallback, frontend dashboard.",
     "type": "improvement",
     "status": "completed",
     "impact": "high",
-    "notes": "Merged Aditya's Jinja2 work into DIVYAMETAFORE25/ALM-Data-Gen via PR #1. generate.py now reads from data/seed_scenarios/*.jsonl (56 seeds, Divya's canonical source) with fallback to pipeline/seeds/seeds.json. Output path moved to data/jinja2_expansion/. record_id format updated to seed_NNNNN_jNN_construct_entity_slug. Micro-validator integrated with graceful null fallback. Frontend React/Vite/TypeScript dashboard active (mock mode): TemplatesPage, ValidationPage, AppShell stage badges, localStorage state persistence."
-  },
-  {
-    "id": "log_2026_04_08_03",
-    "date": "2026-04-08",
-    "task": "Strategy doc v3.0 — file split into shell + CSS + JS + dynamic section partials. Quick Brief added. Lighter theme, heatmap coverage grid, KPI progress bars, click-to-expand cards, executive summary rewritten.",
-    "type": "improvement",
-    "status": "completed",
-    "impact": "high",
-    "notes": "index.html reduced from 2639 to ~130 lines. CSS extracted to style.css. JS extracted to app.js with section loader and toggle logic. Content split into sections/part1-5.html. New Quick Brief section with pipeline progress and stat strip."
-  },
-  {
-    "id": "log_2026_04_08_02",
-    "date": "2026-04-08",
-    "task": "Strategy doc v2.2 — Stage 2 pipeline built, emoji replaced with inline SVGs, dashboard updated",
-    "type": "improvement",
-    "status": "completed",
-    "impact": "high",
-    "notes": "4 Jinja2 templates built (entity, workflow, policy, evolution). generate.py produces 35 candidates from 6 gold seeds. Telecom domain pack complete. All emoji icons in flow diagram and template cards replaced with inline SVGs. Status tracker updated: seeds 6/50, templates 4, candidates 35."
-  },
-  {
-    "id": "log_2026_04_07_01",
-    "date": "2026-04-07",
-    "task": "Strategy doc v2.1 — Jinja2 pipeline visual added to Section 7, decisions confirmed",
-    "type": "feature",
-    "status": "completed",
-    "impact": "high",
-    "notes": "Replaced Section 7 phase strip with full visual pipeline overview: stage strip, data flow diagram, 6 task type cards, 4 Jinja2 template cards, variant expansion demo, input/output schemas. Confirmed seed JSON schema, type field classification, grammar doc as MAL authority, evolution format, and validation ownership. Added 5 confirmed decisions to decision log."
-  },
-  {
-    "id": "log_2026_04_06_01",
-    "date": "2026-04-06",
-    "task": "Strategy doc v2.0 — major structural expansion",
-    "type": "feature",
-    "status": "completed",
-    "impact": "high",
-    "notes": "Added TOC with anchor navigation, color legend banner, pipeline progress tracker, layered capability design L1-L4, known vs unknown cards, constrained prompt template, domain pack example, rejection feedback loop diagram, construct coverage grid, two new example pairs, Synthetic Data Methods section, acceptance criteria checklist, decision log, and version history."
+    "notes": "Merged Jinja2 work into shared repo. generate.py reads from data/seed_scenarios. Micro-validator integrated. Frontend dashboard active (mock mode)."
   }
 ]
   </script>
 </div>
-
-<!-- ══ DAILY SUMMARY TEMPLATE ══════════════════════════════════════════════ -->
-<template id="daily-summary-template">
-  <div class="daily-summary-entry" data-date="">
-    <p><strong>Tasks completed:</strong> <span class="ds-tasks"></span></p>
-    <p><strong>Blockers:</strong> <span class="ds-blockers"></span></p>
-    <p><strong>Learnings:</strong> <span class="ds-learnings"></span></p>
-  </div>
-</template>
 
 <div id="read-progress"></div>
 <button id="back-top" aria-label="Back to top">&#8679;</button>
@@ -87,23 +51,23 @@
 
   <!-- ══ COVER ══════════════════════════════════════════════════════════════ -->
   <div class="cover">
-    <div class="eyebrow">Phase 2 Strategy Report &mdash; Living Document v4.0</div>
-    <h1>ALM Synthetic Data Pipeline<br />Planning and Execution Blueprint</h1>
+    <div class="eyebrow">Phase 2 — Living Technical Report &mdash; v5.0</div>
+    <h1>ALM Synthetic Data Pipeline<br /><span>Engineering &amp; Architecture Blueprint</span></h1>
     <div class="sub">
-      A maintained strategy document for Phase 2 of ALM, focused on a MAL-specific
-      synthetic-data factory starting with controlled Jinja2 and Python expansion,
-      then growing toward validator-gated model variation, review, and dataset promotion.
+      An end-to-end MAL training data factory — from hand-authored seed scenarios through
+      deterministic Jinja2 expansion and Intent-First LLM synthesis, gated by a 5-stage
+      MAL quality validator, into a browsable training registry.
     </div>
     <div class="meta">
-      <span>Project: ALM / MAL</span>
+      <span class="brand">Project: ALM / MAL</span>
       <span>Phase: 2</span>
-      <span>Scope: MAL only</span>
-      <span>Status: Stage 2 Integrated</span>
-      <span>Seeds: 56 canonical (telecom)</span>
-      <span>Frontend: Active (mock mode)</span>
-      <span>LLM expansion: planned</span>
-      <span>Document type: living report</span>
-      <span>Version: 4.0</span>
+      <span class="live">All 4 Stages Live</span>
+      <span>50 Canonical Seeds</span>
+      <span class="live">AI Synthesis: GPT-4o</span>
+      <span class="live">Quality Gate: 5-stage</span>
+      <span>8 Frontend Routes</span>
+      <span>23 API Endpoints</span>
+      <span>Version: 5.0 &mdash; Apr 2026</span>
     </div>
   </div>
 
@@ -111,33 +75,33 @@
   <div class="quick-brief">
     <div class="qb-label">Quick Brief &mdash; What is this and where are we?</div>
     <div class="qb-what">
-      We are building an <strong>offline data factory for MAL</strong> &mdash; the domain language used by the ALM platform. The factory takes manually written seed examples, expands them into hundreds of validated variants using Jinja2 templates, then uses LLMs to add diversity, and finally routes everything through human review into an accepted dataset registry. The registry feeds model prompting, evaluation benchmarks, and eventually fine-tuning. <strong>Stage 2 (Jinja2 expansion) is built and integrated</strong> into the shared team repo with 56 canonical seeds, 336 candidates, and a live frontend dashboard. See <a href="#s7b" style="color:var(--accent);">Section 7b</a> for the full user flow &mdash; every page, every button, and what each step produces. Stage 3 (validation routing) is next.
+      We are building an <strong>offline data factory for MAL</strong> &mdash; the formal domain language used by the ALM platform. The factory takes 50 hand-authored seed scenarios, expands them deterministically via Jinja2 templates, then synthesizes diverse training records using GPT-4o in either <strong>Jinja2-First</strong> or <strong>Intent-First</strong> mode, routes everything through a 5-stage MAL quality gate, and stores validated results in a browsable training registry. <strong>All 4 pipeline stages are fully live</strong> with a React/Vite/TypeScript frontend dashboard, 23 mounted API endpoints, and 7 integration test modules. The system currently processes the telecom domain. Research is now underway (RE-474) to replace Jinja2 Stage&nbsp;2 with a smarter generation layer and make the LLM stage production-grade.
     </div>
 
-    <!-- 5-stage pipeline progress -->
+    <!-- 4-stage pipeline progress -->
     <div class="pipeline-progress">
-      <div class="pp-step active">
+      <div class="pp-step">
         <div class="pp-node done"></div>
-        <div class="pp-title">Gold Seeds</div>
+        <div class="pp-title">Seed Library</div>
       </div>
       <div class="pp-line done"></div>
-      <div class="pp-step active">
+      <div class="pp-step">
         <div class="pp-node done"></div>
         <div class="pp-title">Jinja2 Expansion</div>
       </div>
-      <div class="pp-line"></div>
+      <div class="pp-line done"></div>
       <div class="pp-step">
-        <div class="pp-node">3</div>
-        <div class="pp-title">MAL Validation</div>
+        <div class="pp-node done"></div>
+        <div class="pp-title">AI Synthesis</div>
       </div>
-      <div class="pp-line"></div>
+      <div class="pp-line done"></div>
       <div class="pp-step">
-        <div class="pp-node">4</div>
-        <div class="pp-title">Human Review</div>
+        <div class="pp-node done"></div>
+        <div class="pp-title">Quality Gate</div>
       </div>
-      <div class="pp-line"></div>
+      <div class="pp-line done"></div>
       <div class="pp-step">
-        <div class="pp-node">5</div>
+        <div class="pp-node done"></div>
         <div class="pp-title">Registry</div>
       </div>
     </div>
@@ -145,55 +109,71 @@
     <!-- stat strip -->
     <div class="qb-stats">
       <div class="qb-stat">
-        <div class="qs-num">56</div>
+        <div class="qs-num">50</div>
         <div class="qs-label">Gold Seeds</div>
-        <div class="qs-sub">canonical telecom seeds active</div>
+        <div class="qs-sub">telecom_v1.jsonl — hand-authored</div>
       </div>
       <div class="qb-stat">
-        <div class="qs-num">4</div>
-        <div class="qs-label">Jinja2 Templates</div>
-        <div class="qs-sub">entity, workflow, policy, evolution</div>
+        <div class="qs-num">23</div>
+        <div class="qs-label">API Endpoints</div>
+        <div class="qs-sub">9 route groups, all mounted</div>
       </div>
       <div class="qb-stat">
-        <div class="qs-num">336</div>
-        <div class="qs-label">Candidates Generated</div>
-        <div class="qs-sub">56 seeds &times; 6 variants each</div>
+        <div class="qs-num">2</div>
+        <div class="qs-label">LLM Modes</div>
+        <div class="qs-sub">Jinja2-First + Intent-First</div>
       </div>
       <div class="qb-stat">
-        <div class="qs-num">0</div>
-        <div class="qs-label">Accepted Records</div>
-        <div class="qs-sub">registry not yet active</div>
+        <div class="qs-num">5</div>
+        <div class="qs-label">Validation Stages</div>
+        <div class="qs-sub">syntax → schema → policy → dep → compile</div>
+      </div>
+      <div class="qb-stat">
+        <div class="qs-num">8</div>
+        <div class="qs-label">Frontend Routes</div>
+        <div class="qs-sub">wired in App.tsx, all live</div>
+      </div>
+      <div class="qb-stat">
+        <div class="qs-num">7</div>
+        <div class="qs-label">Test Modules</div>
+        <div class="qs-sub">first integration test coverage</div>
       </div>
     </div>
 
-    <!-- prerequisites + tech stack -->
+    <!-- tech stack -->
     <div class="qb-grid">
       <div>
-        <div class="qb-section-title">Prerequisites to continue</div>
+        <div class="qb-section-title">Current System Status</div>
         <table class="qb-table">
-          <thead><tr><th>What is needed</th><th>Status</th></tr></thead>
+          <thead><tr><th>Capability</th><th>Status</th></tr></thead>
           <tbody>
-            <tr><td>Gold seed library (40&ndash;60 seeds)</td><td>Done &mdash; 56 canonical seeds active</td></tr>
-            <tr><td>Jinja2 templates for all construct families</td><td>Done &mdash; 4 templates</td></tr>
-            <tr><td>Domain pack (telecom)</td><td>Done</td></tr>
-            <tr><td>MAL micro-validator service</td><td>Integrated &mdash; graceful null fallback when ALM.parser absent</td></tr>
-            <tr><td>Frontend dashboard (React/Vite/TypeScript)</td><td>Active in mock mode &mdash; Templates + Validation console</td></tr>
-            <tr><td>Dataset registry schema + lifecycle states</td><td>Defined in Section 14 &mdash; not yet built</td></tr>
-            <tr><td>Near-duplicate detection</td><td>Not started</td></tr>
+            <tr><td>Seed library (50 telecom seeds)</td><td>Live ✓</td></tr>
+            <tr><td>Jinja2 expansion (4 templates, domain pack)</td><td>Live ✓</td></tr>
+            <tr><td>LLM synthesis — Jinja2-First mode</td><td>Live ✓</td></tr>
+            <tr><td>LLM synthesis — Intent-First mode</td><td>Live ✓</td></tr>
+            <tr><td>5-stage MAL quality gate + repair</td><td>Live ✓</td></tr>
+            <tr><td>Training registry + record browser</td><td>Live ✓</td></tr>
+            <tr><td>Diversity metrics (NLD, TTL cached)</td><td>API live, UI route pending</td></tr>
+            <tr><td>Integration test suite (7 modules)</td><td>Live ✓ — first test coverage</td></tr>
+            <tr><td>Jinja2 replacement research (RE-476)</td><td class="na">In research</td></tr>
+            <tr><td>Production-grade LLM architecture (RE-477)</td><td class="na">In research</td></tr>
           </tbody>
         </table>
       </div>
       <div>
-        <div class="qb-section-title">Tech stack</div>
+        <div class="qb-section-title">Tech Stack</div>
         <table class="qb-table">
-          <thead><tr><th>Component</th><th>Role in Phase 2</th></tr></thead>
+          <thead><tr><th>Component</th><th>Role</th></tr></thead>
           <tbody>
-            <tr><td>Python + Jinja2</td><td>Template expansion engine (Stage 2)</td></tr>
-            <tr><td>FastAPI</td><td>Orchestration and review workflow surface</td></tr>
-            <tr><td>PostgreSQL</td><td>Dataset registry and accepted record storage</td></tr>
-            <tr><td>Apache AGE</td><td>Graph-compile checks on generated MAL</td></tr>
-            <tr><td>Qdrant</td><td>Similarity search for duplicate detection</td></tr>
-            <tr><td>LLM (TBD)</td><td>Stage 3 variant expansion &mdash; model not yet chosen</td></tr>
+            <tr><td>Python + Jinja2</td><td>Stage 2 deterministic expansion</td></tr>
+            <tr><td>FastAPI</td><td>REST API — 23 endpoints, OpenAPI docs at /docs</td></tr>
+            <tr><td>PostgreSQL + SQLAlchemy</td><td>Persistent storage — 2 DB tables</td></tr>
+            <tr><td>OpenAI SDK (GPT-4o)</td><td>Stage 3 AI synthesis — 2 modes</td></tr>
+            <tr><td>Embedded PEG parser</td><td>Stage 4 in-process MAL validation</td></tr>
+            <tr><td>React + TypeScript + Vite</td><td>Frontend dashboard — 8 routes</td></tr>
+            <tr><td>TanStack Query + Tailwind</td><td>Data fetching, UI styling</td></tr>
+            <tr><td>Docker Compose</td><td>Local dev — API:8010, UI:8080</td></tr>
+            <tr><td>Pytest + httpx</td><td>Backend integration tests</td></tr>
           </tbody>
         </table>
       </div>
@@ -206,42 +186,34 @@
     <div class="toc-cols">
       <div class="toc-col">
         <div>
-          <div class="toc-group-head">Part I &mdash; Context &amp; Direction</div>
+          <div class="toc-group-head">Part I &mdash; Current State</div>
           <a class="toc-pill" href="#s1"><span class="toc-num">1.</span>Executive Summary</a>
-          <a class="toc-pill" href="#s2"><span class="toc-num">2.</span>Status Dashboard</a>
-          <a class="toc-pill" href="#s3"><span class="toc-num">3.</span>Immediate Action Map</a>
-          <a class="toc-pill" href="#s4"><span class="toc-num">4.</span>Scope Definition</a>
-          <a class="toc-pill" href="#s5"><span class="toc-num">5.</span>Baseline &amp; Gap Analysis</a>
+          <a class="toc-pill" href="#s2"><span class="toc-num">2.</span>Live System Dashboard</a>
+          <a class="toc-pill" href="#s3"><span class="toc-num">3.</span>Next Steps &amp; Research Agenda</a>
         </div>
         <div>
-          <div class="toc-group-head">Part III &mdash; Strategy &amp; Methods</div>
-          <a class="toc-pill" href="#s11"><span class="toc-num">11.</span>Model Adaptation Strategy</a>
-          <a class="toc-pill" href="#s12"><span class="toc-num">12.</span>Research Methods Reference</a>
-        </div>
-        <div>
-          <div class="toc-group-head">Part IV &mdash; Engineering Standards</div>
-          <a class="toc-pill" href="#s13"><span class="toc-num">13.</span>Governance &amp; Engineering Standards</a>
-          <a class="toc-pill" href="#s14"><span class="toc-num">14.</span>Data Schemas &amp; Contracts</a>
+          <div class="toc-group-head">Part III &mdash; Research Direction</div>
+          <a class="toc-pill" href="#s11"><span class="toc-num">11.</span>Jinja2 Replacement Research</a>
+          <a class="toc-pill" href="#s12"><span class="toc-num">12.</span>Production-Grade LLM Architecture</a>
         </div>
       </div>
       <div class="toc-col">
         <div>
-          <div class="toc-group-head">Part II &mdash; Pipeline Design</div>
+          <div class="toc-group-head">Part II &mdash; Pipeline Deep Dive</div>
           <a class="toc-pill" href="#s6"><span class="toc-num">6.</span>Task Coverage &amp; Construct Map</a>
           <a class="toc-pill" href="#s7"><span class="toc-num">7.</span>Pipeline Architecture</a>
-          <a class="toc-pill" href="#s7b"><span class="toc-num">7b.</span>Frontend Interface &amp; User Flow</a>
-          <a class="toc-pill" href="#s8"><span class="toc-num">8.</span>Jinja2-First Rationale</a>
-          <a class="toc-pill" href="#s9"><span class="toc-num">9.</span>Platform Readiness Assessment</a>
-          <a class="toc-pill" href="#s10"><span class="toc-num">10.</span>Execution Playbook</a>
+          <a class="toc-pill" href="#s7b"><span class="toc-num">7b.</span>Frontend Interface &amp; Pages</a>
+          <a class="toc-pill" href="#s8"><span class="toc-num">8.</span>Stage 2 Rationale &amp; Transition</a>
         </div>
         <div>
-          <div class="toc-group-head">Part V &mdash; Reference &amp; Governance</div>
-          <a class="toc-pill" href="#s15"><span class="toc-num">15.</span>Example Library</a>
-          <a class="toc-pill" href="#s16"><span class="toc-num">16.</span>Risk Register</a>
-          <a class="toc-pill" href="#s17"><span class="toc-num">17.</span>Recommendation</a>
+          <div class="toc-group-head">Part IV &mdash; Engineering Reference</div>
+          <a class="toc-pill" href="#s13b"><span class="toc-num">13b.</span>API Quick Reference</a>
+          <a class="toc-pill" href="#s14"><span class="toc-num">14.</span>Data Schemas &amp; Services</a>
+        </div>
+        <div>
+          <div class="toc-group-head">Part V &mdash; Roadmap &amp; Glossary</div>
           <a class="toc-pill" href="#s18"><span class="toc-num">18.</span>Roadmap</a>
-          <a class="toc-pill" href="#s19"><span class="toc-num">19.</span>Decision Log</a>
-          <a class="toc-pill" href="#s20"><span class="toc-num">20.</span>Document Maintenance</a>
+          <a class="toc-pill" href="#s22"><span class="toc-num">22.</span>Glossary</a>
           <a class="toc-pill" href="#s21"><span class="toc-num">21.</span>Changelog</a>
         </div>
       </div>
@@ -251,10 +223,10 @@
   <!-- ══ LEGEND BANNER ══════════════════════════════════════════════════════ -->
   <div class="legend-bar">
     <span class="legend-label">Color Key:</span>
-    <span class="legend-item"><span class="tag tag-confirmed">Confirmed from repo</span> Verified in the existing ALM codebase</span>
-    <span class="legend-item"><span class="tag tag-direction">Planning direction</span> Agreed strategic direction, not yet built</span>
-    <span class="legend-item"><span class="tag tag-planned">Proposed for Phase 2</span> Proposed but not yet decided or confirmed</span>
-    <span class="legend-item"><span class="tag tag-open">Open question</span> Active research question requiring a decision</span>
+    <span class="legend-item"><span class="tag tag-confirmed">Confirmed</span> Verified in working tree</span>
+    <span class="legend-item"><span class="tag tag-direction">In Progress</span> Active work or research</span>
+    <span class="legend-item"><span class="tag tag-planned">Planned</span> Approved, not yet started</span>
+    <span class="legend-item"><span class="tag tag-open">Research</span> Active research question</span>
   </div>
 
   <!-- ══ DYNAMIC SECTIONS ════════════════════════════════════════════════════ -->
