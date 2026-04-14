@@ -165,21 +165,26 @@
         </table>
       </div>
       <div>
-        <div class="qb-section-title">Tech Stack</div>
+        <div class="qb-section-title">Tech Stack — aligned with Metafore platform</div>
         <table class="qb-table">
-          <thead><tr><th>Component</th><th>Role</th></tr></thead>
+          <thead><tr><th>Component</th><th>Role</th><th style="text-align:center">Metafore ✓</th></tr></thead>
           <tbody>
-            <tr><td>Python + Jinja2</td><td>Stage 2 deterministic expansion</td></tr>
-            <tr><td>FastAPI</td><td>REST API — 23 endpoints, OpenAPI docs at /docs</td></tr>
-            <tr><td>PostgreSQL + SQLAlchemy</td><td>Persistent storage — 2 DB tables</td></tr>
-            <tr><td>OpenAI SDK (GPT-4o)</td><td>Stage 3 AI synthesis — 2 modes</td></tr>
-            <tr><td>Embedded PEG parser</td><td>Stage 4 in-process MAL validation</td></tr>
-            <tr><td>React + TypeScript + Vite</td><td>Frontend dashboard — 8 routes</td></tr>
-            <tr><td>TanStack Query + Tailwind</td><td>Data fetching, UI styling</td></tr>
-            <tr><td>Docker Compose</td><td>Local dev — API:8010, UI:8080</td></tr>
-            <tr><td>Pytest + httpx</td><td>Backend integration tests</td></tr>
+            <tr><td><strong>React 19</strong> + TypeScript ~6</td><td>Frontend SPA — 8 routes, dashboard, pipeline controls</td><td style="text-align:center;color:var(--ok)">✓</td></tr>
+            <tr><td><strong>Vite 8</strong> + Tailwind v4</td><td>Build tool + utility CSS — instant HMR, design tokens</td><td style="text-align:center;color:var(--ok)">✓</td></tr>
+            <tr><td><strong>Radix UI</strong> + Shadcn components</td><td>Accessible, unstyled primitives — same pattern as Varnam</td><td style="text-align:center;color:var(--ok)">✓</td></tr>
+            <tr><td><strong>TanStack Query v5</strong></td><td>Server state, caching, background refetch for all API calls</td><td style="text-align:center;color:var(--ok)">✓</td></tr>
+            <tr><td><strong>Lucide React</strong> + Framer Motion</td><td>Icons + animations — same icon set as Metafore Varnam</td><td style="text-align:center;color:var(--ok)">✓</td></tr>
+            <tr><td><strong>FastAPI</strong> ≥0.115 + uvicorn</td><td>Async REST API — 23 endpoints, OpenAPI docs at /docs</td><td style="text-align:center;color:var(--ok)">✓</td></tr>
+            <tr><td><strong>Pydantic v2</strong></td><td>Request/response validation, settings — zero manual parsing</td><td style="text-align:center;color:var(--ok)">✓</td></tr>
+            <tr><td><strong>PostgreSQL</strong> + SQLAlchemy 2</td><td>2 DB tables — full pipeline state, LLM batch tracking</td><td style="text-align:center;color:var(--ok)">✓</td></tr>
+            <tr><td><strong>OpenAI SDK</strong> (GPT-4o)</td><td>Stage 3 AI synthesis — Jinja2-First + Intent-First modes</td><td style="text-align:center;color:var(--muted)">—</td></tr>
+            <tr><td><strong>parsimonious</strong> (PEG parser)</td><td>Embedded MAL grammar validator — 5-stage, in-process</td><td style="text-align:center;color:var(--muted)">—</td></tr>
+            <tr><td><strong>Jinja2</strong> ≥3.1 + PyYAML</td><td>Stage 2 deterministic expansion — <em>under research for replacement</em></td><td style="text-align:center;color:var(--warn)">~</td></tr>
+            <tr><td><strong>Docker Compose</strong></td><td>Local dev — API:8010, UI:8080, DB:5432</td><td style="text-align:center;color:var(--ok)">✓</td></tr>
+            <tr><td><strong>Pytest</strong> + httpx</td><td>7 integration test modules — all mounted routes covered</td><td style="text-align:center;color:var(--muted)">—</td></tr>
           </tbody>
         </table>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px">✓ Matches Metafore platform stack &nbsp;|&nbsp; ~ In transition &nbsp;|&nbsp; — Project-specific</div>
       </div>
     </div>
   </div>
@@ -213,6 +218,7 @@
           <div class="toc-group-head">Part IV &mdash; Engineering Reference <span style="font-weight:400;color:var(--muted);font-size:10px;text-transform:none;letter-spacing:0">— APIs, schemas, services, tests — for reference.</span></div>
           <a class="toc-pill" href="#s13b"><span class="toc-num">13b.</span>API Quick Reference</a>
           <a class="toc-pill" href="#s14"><span class="toc-num">14.</span>Data Schemas &amp; Services</a>
+          <a class="toc-pill" href="#s15"><span class="toc-num">15.</span>Tech Stack — Why Each Tool</a>
         </div>
         <div>
           <div class="toc-group-head">Part V &mdash; Roadmap &amp; Glossary <span style="font-weight:400;color:var(--muted);font-size:10px;text-transform:none;letter-spacing:0">— Where we are headed and what terms mean.</span></div>

@@ -342,3 +342,160 @@
   <div class="callout-icon">✅</div>
   <p><strong>All 4 real bugs found by the test suite were fixed.</strong> The test suite itself is the contribution — it established the first reliable baseline for backend correctness in this project.</p>
 </div>
+
+<!-- ═══ S15 — TECH STACK DEEP DIVE ════════════════════════════════════════ -->
+<h2 id="s15"><span class="snum">15.</span> Tech Stack — Why Each Tool Was Chosen</h2>
+
+<div class="tldr"><strong>TL;DR</strong> Every tool was chosen to match or complement the Metafore platform stack. The frontend is a direct subset of Varnam's UI layer. The backend mirrors Metafore's FastAPI + PostgreSQL + Pydantic pattern. One exception: Jinja2, which is actively being researched for replacement.</div>
+
+<div class="callout brand" style="margin-bottom:24px">
+  <div class="callout-icon">🔗</div>
+  <p><strong>Metafore Platform Alignment:</strong> The ALM Data Gen platform deliberately mirrors the Metafore/Varnam tech stack — same frontend primitives (React, Vite, Radix UI, Lucide, TanStack Query, Tailwind), same backend pattern (FastAPI, Pydantic, PostgreSQL, Docker). This means any Metafore engineer can read and contribute to this codebase without a new tool learning curve.</p>
+</div>
+
+<h3>Frontend Layer</h3>
+<div class="tbl-wrap">
+  <table class="std">
+    <thead><tr><th>Library</th><th>Version</th><th>Why chosen</th><th>Metafore</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>React</strong></td><td>19.x</td>
+        <td>Latest stable — concurrent rendering, Suspense, server component ready. Core UI framework matching Metafore's entire product suite.</td>
+        <td><span class="tag tag-confirmed">✓ Same</span></td>
+      </tr>
+      <tr>
+        <td><strong>TypeScript</strong></td><td>~6.0</td>
+        <td>Type safety across the full frontend — catches API shape mismatches at compile time, not runtime. Matches Metafore's strict TS config.</td>
+        <td><span class="tag tag-confirmed">✓ Same</span></td>
+      </tr>
+      <tr>
+        <td><strong>Vite</strong></td><td>8.x</td>
+        <td>Fastest available HMR — ESM-native, 10–50× faster than Webpack for dev server restarts. Production bundle is tree-shaken and optimized. Same build tool as Varnam.</td>
+        <td><span class="tag tag-confirmed">✓ Same</span></td>
+      </tr>
+      <tr>
+        <td><strong>Tailwind CSS</strong></td><td>v4</td>
+        <td>Utility-first CSS — design tokens defined once, applied everywhere via class names. No style conflicts. v4 uses native CSS variables natively, matching Metafore's <code>theme.css</code> token system.</td>
+        <td><span class="tag tag-confirmed">✓ Same</span></td>
+      </tr>
+      <tr>
+        <td><strong>Radix UI</strong></td><td>latest</td>
+        <td>Accessible, unstyled component primitives — Dialog, Select, Tabs, Tooltip, Dropdown. The base of the Shadcn component pattern used throughout Metafore Varnam. Zero accessibility work needed.</td>
+        <td><span class="tag tag-confirmed">✓ Same</span></td>
+      </tr>
+      <tr>
+        <td><strong>TanStack Query</strong></td><td>v5</td>
+        <td>Server state management — fetches, caches, background-refetches, and deduplicates all API calls automatically. Eliminates manual <code>useEffect + fetch + loading state</code> boilerplate across all 8 pages.</td>
+        <td><span class="tag tag-confirmed">✓ Same</span></td>
+      </tr>
+      <tr>
+        <td><strong>React Router</strong></td><td>v7</td>
+        <td>SPA routing — 8 client-side routes, no full page reloads. Declarative nested routing. Latest stable version matching Metafore's routing pattern.</td>
+        <td><span class="tag tag-confirmed">✓ Same</span></td>
+      </tr>
+      <tr>
+        <td><strong>Lucide React</strong></td><td>latest</td>
+        <td>SVG icon library — same icon set used in Metafore Varnam (<code>lucide-react</code>). Consistent icon language across both products. 1000+ icons, tree-shaken per import.</td>
+        <td><span class="tag tag-confirmed">✓ Same</span></td>
+      </tr>
+      <tr>
+        <td><strong>Framer Motion</strong></td><td>12.x</td>
+        <td>Animation library — smooth transitions for stage cards, sidebar, and page reveals. Keeps UI feeling polished without custom CSS animation code.</td>
+        <td><span class="tag tag-direction">~ Similar</span></td>
+      </tr>
+      <tr>
+        <td><strong>Recharts</strong></td><td>3.x</td>
+        <td>SVG charting library — used for diversity metrics and pipeline statistics visualization. React-native, composable, responsive.</td>
+        <td><span class="tag tag-todo">— Specific</span></td>
+      </tr>
+      <tr>
+        <td><strong>Sonner</strong></td><td>2.x</td>
+        <td>Toast notification system — lightweight (2kb), zero dependencies, works with React 19. Used for LLM generation success/failure feedback and validation results.</td>
+        <td><span class="tag tag-todo">— Specific</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h3>Backend Layer</h3>
+<div class="tbl-wrap">
+  <table class="std">
+    <thead><tr><th>Library</th><th>Version</th><th>Why chosen</th><th>Metafore</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>FastAPI</strong></td><td>≥0.115</td>
+        <td>Async-first Python web framework — auto-generates OpenAPI docs at <code>/docs</code> and <code>/redoc</code>, validates requests via Pydantic, handles 23 routes across 9 groups. Chosen because Metafore's backend pattern is FastAPI-centric.</td>
+        <td><span class="tag tag-confirmed">✓ Same</span></td>
+      </tr>
+      <tr>
+        <td><strong>Pydantic</strong></td><td>v2</td>
+        <td>Request/response schema validation — every API endpoint body and response type is a Pydantic model. v2 is 5–10× faster than v1. Settings management via <code>pydantic-settings</code>. Zero manual JSON parsing.</td>
+        <td><span class="tag tag-confirmed">✓ Same</span></td>
+      </tr>
+      <tr>
+        <td><strong>SQLAlchemy</strong></td><td>2.x</td>
+        <td>Modern ORM with full type annotation support — declarative models for <code>dg_gold_seed_runs</code> and <code>dg_llm_expansion_batches</code>. JSONB columns for flexible stage output storage. v2 async session compatible.</td>
+        <td><span class="tag tag-confirmed">✓ Same</span></td>
+      </tr>
+      <tr>
+        <td><strong>psycopg</strong></td><td>v3 (binary)</td>
+        <td>Next-gen PostgreSQL driver — async-native (unlike psycopg2), binary protocol for faster data transfer. Required by SQLAlchemy 2 async sessions.</td>
+        <td><span class="tag tag-confirmed">✓ Same</span></td>
+      </tr>
+      <tr>
+        <td><strong>httpx</strong></td><td>≥0.27</td>
+        <td>Async HTTP client — used for OpenAI-compatible API calls in <code>llm_openai_compatible.py</code>. Also used in the test suite for hitting live FastAPI endpoints. Replaces <code>requests</code> in async context.</td>
+        <td><span class="tag tag-todo">— Specific</span></td>
+      </tr>
+      <tr>
+        <td><strong>parsimonious</strong></td><td>≥0.10</td>
+        <td>PEG (Parsing Expression Grammar) parser — runs the 5-stage MAL grammar validator in-process. No external service needed. Chosen over ANTLR/Lark for its simple Python-native API and zero binary dependency.</td>
+        <td><span class="tag tag-todo">— Specific</span></td>
+      </tr>
+      <tr>
+        <td><strong>Jinja2</strong></td><td>≥3.1</td>
+        <td>Stage 2 template engine — fills 4 MAL structure templates with telecom domain vocabulary deterministically. Original choice for speed and simplicity. <strong>Now under research (RE-476)</strong> — rigid template authoring doesn't scale to new domains or constructs.</td>
+        <td><span class="tag tag-open">~ In Transition</span></td>
+      </tr>
+      <tr>
+        <td><strong>PyYAML</strong></td><td>≥6.0</td>
+        <td>Domain pack and config file loading. The <code>telecom.json</code> domain pack and generation guidelines are loaded via PyYAML. Will be part of the formal plugin contract in the replacement architecture.</td>
+        <td><span class="tag tag-todo">— Specific</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h3>Infrastructure &amp; AI</h3>
+<div class="tbl-wrap">
+  <table class="std">
+    <thead><tr><th>Component</th><th>Why chosen</th><th>Metafore</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>PostgreSQL</strong></td>
+        <td>Reliable relational DB with JSONB support — stage outputs (Jinja2 candidates, LLM records, validation results) stored as typed JSON columns. Single source of truth for all pipeline state. Matches Metafore's persistence layer.</td>
+        <td><span class="tag tag-confirmed">✓ Same</span></td>
+      </tr>
+      <tr>
+        <td><strong>Docker Compose</strong></td>
+        <td>3-service local dev environment — API at <code>:8010</code>, UI at <code>:8080</code>, DB at <code>:5432</code>. Single <code>docker compose up</code> gives a fully working pipeline. Matches Metafore's local development workflow.</td>
+        <td><span class="tag tag-confirmed">✓ Same</span></td>
+      </tr>
+      <tr>
+        <td><strong>OpenAI SDK / GPT-4o</strong></td>
+        <td>Best available general-purpose LLM for structured DSL generation. GPT-4o understands formal language patterns well enough to generate valid MAL without fine-tuning. OpenAI-compatible API — any model endpoint (Azure, Anthropic via proxy, local Ollama) can be swapped in via config.</td>
+        <td><span class="tag tag-todo">— Specific</span></td>
+      </tr>
+      <tr>
+        <td><strong>Pytest + httpx</strong></td>
+        <td>Python testing standard — fixture system, parametrize, async support. httpx provides the HTTP client for integration tests against the live Docker API at <code>localhost:8010</code>. 7 test modules, first coverage in the project.</td>
+        <td><span class="tag tag-todo">— Specific</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="callout info">
+  <div class="callout-icon">💡</div>
+  <p><strong>Key insight:</strong> 8 out of 13 core dependencies directly match the Metafore platform stack. A Metafore frontend engineer already knows React 19, Vite, Tailwind v4, Radix UI, TanStack Query, and Lucide. A Metafore backend engineer already knows FastAPI, Pydantic v2, SQLAlchemy 2, and PostgreSQL. The only new tools are project-specific: parsimonious (PEG parser), Jinja2 (Stage 2, under replacement), and the OpenAI SDK.</p>
+</div>
